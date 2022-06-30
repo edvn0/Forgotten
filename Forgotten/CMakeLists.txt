@@ -5,7 +5,6 @@ find_package(Vulkan REQUIRED)
 
 add_subdirectory(vendor/imgui)
 add_subdirectory(vendor/glfw)
-add_subdirectory(vendor/stb)
 
 file(GLOB sources include/*.hpp src/*.cpp src/imgui/*.cpp test/*.hpp test/*.cpp)
 
