@@ -11,6 +11,7 @@
 #include <vulkan/vulkan.h>
 
 struct GLFWwindow;
+struct ImGui_ImplVulkanH_Window;
 void check_vk_result(VkResult err);
 
 namespace Forgotten {
@@ -51,6 +52,11 @@ public:
 	static void flush_command_buffer(VkCommandBuffer command_buffer);
 
 	static void submit_resource_free(std::function<void()>&& free_func);
+
+	static void render_and_present(ImGuiIO& io, ImGui_ImplVulkanH_Window* window_data, const ImVec4& cc);
+	static void resize_swap_chain(GLFWwindow* wh);
+
+	static float get_frame_time();
 
 private:
 	void construct();

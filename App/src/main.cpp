@@ -16,6 +16,11 @@ public:
 	void on_ui_render() override
 	{
 		{
+			ImGui::Begin("App Info");
+			ImGui::TextColored({ 1, 1, 0, 1.0 }, "%f", Application::get_frame_time());
+			ImGui::End();
+		}
+		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 			ImGui::Begin("Viewport");
 

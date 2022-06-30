@@ -12,6 +12,7 @@
 #include <iostream>
 
 // Emedded font
+#include "Timer.hpp"
 #include "imgui/Roboto-Regular.embed"
 
 extern bool is_application_running;
@@ -28,6 +29,8 @@ static VkQueue global_queue = VK_NULL_HANDLE;
 static VkDebugReportCallbackEXT global_debug_report = VK_NULL_HANDLE;
 static VkPipelineCache global_pipeline_cache = VK_NULL_HANDLE;
 static VkDescriptorPool global_descriptor_pool = VK_NULL_HANDLE;
+
+static float frames{ 0.0f };
 
 static ImGui_ImplVulkanH_Window global_main_window_data;
 static int global_min_image_count = 2;
@@ -227,14 +230,13 @@ static void setup_vulkan_window(ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surfa
 
 	// Select Present Mode
 #ifdef IMGUI_UNLIMITED_FRAME_RATE
-	VkPresentModeKHR present_modes[]
-		= { VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_FIFO_KHR };
+	VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_FIFO_KHR };
 #else
 	VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_FIFO_KHR };
 #endif
 	wd->PresentMode = ImGui_ImplVulkanH_SelectPresentMode(
 		global_physical_device, wd->Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
-	// printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
+	printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
 
 	// Create SwapChain, RenderPass, Framebuffer, etc.
 	IM_ASSERT(global_min_image_count >= 2);
@@ -539,6 +541,8 @@ void Application::construct_and_run()
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	ImGuiIO& io = ImGui::GetIO();
 
+	Timer timer;
+
 	// Main loop
 	while (!glfwWindowShouldClose(window_handle) && running) {
 		// Poll and handle events (inputs, window resize, etc.)
@@ -550,24 +554,7 @@ void Application::construct_and_run()
 		// those two flags.
 		glfwPollEvents();
 
-		// Resize swap chain?
-		if (global_swap_chain_rebuild) {
-			int width, height;
-			glfwGetFramebufferSize(window_handle, &width, &height);
-			if (width > 0 && height > 0) {
-				ImGui_ImplVulkan_SetMinImageCount(global_min_image_count);
-				ImGui_ImplVulkanH_CreateOrResizeWindow(global_instance, global_physical_device, global_device,
-					&global_main_window_data, global_queue_family, global_allocator, width, height,
-					global_min_image_count);
-				global_main_window_data.FrameIndex = 0;
-
-				// Clear allocated command buffers from here since entire pool is destroyed
-				allocated_framebuffers.clear();
-				allocated_framebuffers.resize(global_main_window_data.ImageCount);
-
-				global_swap_chain_rebuild = false;
-			}
-		}
+		resize_swap_chain(window_handle);
 
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
@@ -611,7 +598,6 @@ void Application::construct_and_run()
 			ImGui::PopStyleVar(2);
 
 			// Submit the DockSpace
-			ImGuiIO& io = ImGui::GetIO();
 			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
 				ImGuiID dockspace_id = ImGui::GetID("VulkanAppDockspace");
 				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
@@ -631,26 +617,55 @@ void Application::construct_and_run()
 		}
 
 		// Rendering
-		ImGui::Render();
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		const bool main_is_minimized
-			= (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-		wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-		wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-		wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-		wd->ClearValue.color.float32[3] = clear_color.w;
-		if (!main_is_minimized)
-			FrameRender(wd, main_draw_data);
+		render_and_present(io, wd, clear_color);
+		frames = timer.elapsed_millis();
+		timer.reset();
+	}
+}
 
-		// Update and Render additional Platform Windows
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
+void Application::render_and_present(ImGuiIO& io, ImGui_ImplVulkanH_Window* window_data, const ImVec4& cc)
+{
+	ImGui::Render();
+	ImDrawData* main_draw_data = ImGui::GetDrawData();
+	const bool main_is_minimized
+		= (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+	window_data->ClearValue.color.float32[0] = cc.x * cc.w;
+	window_data->ClearValue.color.float32[1] = cc.y * cc.w;
+	window_data->ClearValue.color.float32[2] = cc.z * cc.w;
+	window_data->ClearValue.color.float32[3] = cc.w;
+	if (!main_is_minimized)
+		FrameRender(window_data, main_draw_data);
+
+	// Update and Render additional Platform Windows
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
+
+	// Present Main Platform Window
+	if (!main_is_minimized)
+		FramePresent(window_data);
+}
+
+void Application::resize_swap_chain(GLFWwindow* wh)
+{
+	// Resize swap chain?
+	if (global_swap_chain_rebuild) {
+		int width, height;
+		glfwGetFramebufferSize(wh, &width, &height);
+		if (width > 0 && height > 0) {
+			ImGui_ImplVulkan_SetMinImageCount(global_min_image_count);
+			ImGui_ImplVulkanH_CreateOrResizeWindow(global_instance, global_physical_device, global_device,
+				&global_main_window_data, global_queue_family, global_allocator, width, height,
+				global_min_image_count);
+			global_main_window_data.FrameIndex = 0;
+
+			// Clear allocated command buffers from here since entire pool is destroyed
+			allocated_framebuffers.clear();
+			allocated_framebuffers.resize(global_main_window_data.ImageCount);
+
+			global_swap_chain_rebuild = false;
 		}
-
-		// Present Main Platform Window
-		if (!main_is_minimized)
-			FramePresent(wd);
 	}
 }
 
@@ -719,5 +734,7 @@ void Application::submit_resource_free(std::function<void()>&& func)
 {
 	resource_free_queue[s_CurrentFrameIndex].emplace_back(func);
 }
+
+float Application::get_frame_time() { return frames; }
 
 }
