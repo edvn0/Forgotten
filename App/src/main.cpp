@@ -3,6 +3,7 @@
 #include "Renderer.hpp"
 
 #include "Image.hpp"
+#include "VertexBuffer.hpp"
 
 class ExampleLayer : public Forgotten::Layer {
 private:
@@ -11,13 +12,14 @@ private:
 	Renderer renderer{};
 
 public:
-	void on_attach() override { }
+	void on_attach() override { ForgottenEngine::VertexBuffer::create(10); }
 
 	void on_ui_render() override
 	{
 		{
 			ImGui::Begin("App Info");
-			ImGui::TextColored({ 1, 1, 0, 1.0 }, "%f", Application::get_frame_time());
+			ImGui::TextColored({ 1, 1, 0, 1.0 }, "Frame time: \t\t%.3f\n4s Average FPS: \t%.3f",
+				Application::get_frame_time(), Application::get_average_fps());
 			ImGui::End();
 		}
 		{

@@ -17,5 +17,6 @@ target_include_directories(Forgotten PUBLIC
     vendor/glm
     vendor/imgui
     vendor/glfw/include
-    vendor/stb)
-target_link_libraries(Forgotten PUBLIC ${Vulkan_LIBRARIES} imgui glfw)
+    vendor/stb
+        ../ForgottenEngine)
+target_link_libraries(Forgotten PUBLIC ${Vulkan_LIBRARIES} imgui glfw ForgottenEngine)

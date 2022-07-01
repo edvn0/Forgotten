@@ -10,18 +10,18 @@ enum class ImageFormat { None = 0, RGBA, RGBA32F };
 
 class Image {
 public:
-	Image(std::string_view path);
+	explicit Image(std::string_view path);
 	Image(uint32_t width, uint32_t height, ImageFormat format, const void* data = nullptr);
 	~Image();
 
 	void set_data(const void* data);
 
-	VkDescriptorSet get_descriptor_set() const { return descriptor_set; }
+	[[nodiscard]] VkDescriptorSet get_descriptor_set() const { return descriptor_set; }
 
 	void resize(uint32_t width, uint32_t height);
 
-	uint32_t get_width() const { return width; }
-	uint32_t get_height() const { return height; }
+	[[nodiscard]] uint32_t get_width() const { return width; }
+	[[nodiscard]] uint32_t get_height() const { return height; }
 
 private:
 	void allocate_memory(uint64_t size);

@@ -25,12 +25,15 @@ void Renderer::render()
 
 uint32_t Renderer::per_pixel_draw(const glm::vec2& coord)
 {
-	static constexpr glm::vec3 ray_origin(0.0f, 0.0f, -3.0f);
 	glm::vec3 ray_direction(coord.x, coord.y, -1.0f);
+	static constexpr glm::vec3 ray_origin(0.0f, 0.0f, -3.0f);
 	static constexpr float radius = 0.5f;
-	float a = glm::dot(ray_direction, ray_direction);
-	float b = 2.0f * glm::dot(ray_origin, ray_direction);
-	float c = glm::dot(ray_origin, ray_origin) - radius * radius;
+	float a = ray_direction.x * ray_direction.x + ray_direction.y * ray_direction.y
+		+ ray_direction.z * ray_direction.z;
+	float b = 2.0f
+		* (ray_origin.x * ray_direction.x + ray_origin.y * ray_direction.y + ray_origin.z * ray_direction.z);
+	float c = ray_origin.x * ray_origin.x + ray_origin.y * ray_origin.y + ray_origin.z * ray_origin.z
+		- radius * radius;
 
 	float discriminant = b * b - 4.0f * a * c;
 	if (discriminant >= 0.0f) {

@@ -19,5 +19,5 @@ public:
 
 private:
 	std::shared_ptr<Image> image;
-	uint32_t* image_data;
+	uint32_t* image_data{ nullptr };
 };

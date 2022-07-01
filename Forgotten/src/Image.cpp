@@ -7,6 +7,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "vulkan/VulkanContext.hpp"
 
 namespace Forgotten {
 
@@ -15,7 +16,7 @@ namespace Utils {
 	static uint32_t get_vulkan_memory_type(VkMemoryPropertyFlags properties, uint32_t type_bits)
 	{
 		VkPhysicalDeviceMemoryProperties prop;
-		vkGetPhysicalDeviceMemoryProperties(Application::get_physical_device(), &prop);
+		vkGetPhysicalDeviceMemoryProperties(ForgottenEngine::VulkanContext::get_physical_device(), &prop);
 		for (uint32_t i = 0; i < prop.memoryTypeCount; i++) {
 			if ((prop.memoryTypes[i].propertyFlags & properties) == properties && type_bits & (1 << i))
 				return i;
@@ -47,7 +48,6 @@ namespace Utils {
 		case ImageFormat::None:
 			throw std::runtime_error("No type excepted.");
 		}
-		return (VkFormat)0;
 	}
 
 }
@@ -87,7 +87,7 @@ Image::~Image() { release(); }
 
 void Image::allocate_memory(uint64_t size)
 {
-	VkDevice device = Application::get_device();
+	VkDevice device = ForgottenEngine::VulkanContext::get_device();
 
 	VkResult err;
 
@@ -165,7 +165,7 @@ void Image::release()
 	Application::submit_resource_free(
 		[sampler = sampler, imageView = image_view, image = image, memory = memory, stagingBuffer = staging_buffer,
 			stagingBufferMemory = staging_buffer_memory]() {
-			VkDevice device = Application::get_device();
+			VkDevice device = ForgottenEngine::VulkanContext::get_device();
 
 			vkDestroySampler(device, sampler, nullptr);
 			vkDestroyImageView(device, imageView, nullptr);
@@ -185,7 +185,7 @@ void Image::release()
 
 void Image::set_data(const void* data)
 {
-	VkDevice device = Application::get_device();
+	VkDevice device = ForgottenEngine::VulkanContext::get_device();
 
 	size_t upload_size = width * height * Utils::bytes_per_pixel(format);
 
@@ -233,7 +233,7 @@ void Image::set_data(const void* data)
 
 	// Copy to Image
 	{
-		VkCommandBuffer command_buffer = Application::get_command_buffer(true);
+		VkCommandBuffer command_buffer = Application::get_command_buffer();
 
 		VkImageMemoryBarrier copy_barrier = {};
 		copy_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

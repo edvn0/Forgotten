@@ -10,3 +10,12 @@
 [submodule "App/Vendor/glm"]
 	path = Forgotten/vendor/glm
 	url = https://github.com/edvn0/glm
+[submodule "ForgottenEngine/vendor/VulkanMemoryAllocator"]
+	path = ForgottenEngine/vendor/VulkanMemoryAllocator
+	url = https://github.com/edvn0/VulkanMemoryAllocator.git
+[submodule "ForgottenEngine/vendor/glfw"]
+	path = ForgottenEngine/vendor/glfw
+	url = https://github.com/edvn0/glfw
+[submodule "ForgottenEngine/vendor/glm"]
+	path = ForgottenEngine/vendor/glm
+	url = https://github.com/edvn0/glm

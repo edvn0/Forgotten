@@ -1,6 +1,5 @@
 #pragma once
 
-extern Forgotten::Application* Forgotten::create_application(int argc, char** argv);
 bool is_application_running = true;
 
 namespace Forgotten {

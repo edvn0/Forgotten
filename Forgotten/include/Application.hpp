@@ -24,7 +24,7 @@ struct ApplicationProperties {
 
 class Application {
 public:
-	Application(const ApplicationProperties& props = { .name = "ForgottenApp", .width = 1600, .height = 900 });
+	Application(ApplicationProperties props = { .name = "ForgottenApp", .width = 1600, .height = 900 });
 	~Application();
 
 	void construct_and_run();
@@ -44,23 +44,20 @@ public:
 		layer->on_attach();
 	}
 
-	static VkInstance get_instance();
-	static VkPhysicalDevice get_physical_device();
-	static VkDevice get_device();
-
-	static VkCommandBuffer get_command_buffer(bool begin);
+	static VkCommandBuffer get_command_buffer();
 	static void flush_command_buffer(VkCommandBuffer command_buffer);
 
 	static void submit_resource_free(std::function<void()>&& free_func);
 
-	static void render_and_present(ImGuiIO& io, ImGui_ImplVulkanH_Window* window_data, const ImVec4& cc);
-	static void resize_swap_chain(GLFWwindow* wh);
-
 	static float get_frame_time();
+	static float get_average_fps();
 
 private:
 	void construct();
 	void destruct();
+
+	static void render_and_present(ImGuiIO& io, ImGui_ImplVulkanH_Window* window_data, const ImVec4& cc);
+	static void resize_swap_chain(GLFWwindow* wh);
 
 private:
 	ApplicationProperties spec;
