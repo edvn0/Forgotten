@@ -20,6 +20,7 @@ private:
 
 public:
 	VkShaderModule get_module() override;
+	void destroy() override;
 	explicit VulkanShader(std::string path);
 };
 

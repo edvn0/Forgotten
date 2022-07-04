@@ -62,6 +62,7 @@ add_subdirectory(vendor/VulkanMemoryAllocator)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/vk-bootstrap)
+add_subdirectory(vendor/tinyobjloader)
 
 add_executable(ForgottenEngine main.cpp ${sources})
 target_include_directories(ForgottenEngine PUBLIC
@@ -75,8 +76,9 @@ target_include_directories(ForgottenEngine PUBLIC
         vendor/vk_init
         vendor/glfw/include
         vendor/vk-bootstrap/src
+        vendor/tinyobjloader
         )
-target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap)
+target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 

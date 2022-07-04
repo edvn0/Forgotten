@@ -8,10 +8,13 @@
 
 #include "Common.hpp"
 
+#include "DeletionQueue.hpp"
 #include "Shader.hpp"
 #include "VulkanContext.hpp"
+#include "VulkanMesh.hpp"
 
 struct GLFWwindow;
+typedef struct VmaAllocator_T* VmaAllocator;
 
 namespace ForgottenEngine {
 
@@ -29,6 +32,8 @@ private:
 
 private:
 	WindowSpecification spec;
+
+	VmaAllocator allocator;
 
 	int frame_number{ 0 };
 
@@ -48,10 +53,25 @@ private:
 	VkSemaphore render_sema{ nullptr };
 	VkFence render_fence{ nullptr };
 
+	DeletionQueue cleanup_queue;
+
+	// Temporary objects
 	std::unique_ptr<Shader> triangle_vertex;
 	std::unique_ptr<Shader> triangle_fragment;
+	std::unique_ptr<Shader> triangle_coloured_vertex;
+	std::unique_ptr<Shader> triangle_coloured_fragment;
 	VkPipelineLayout triangle_layout;
 	VkPipeline triangle_pipeline;
+	VkPipeline coloured_triangle_pipeline;
+
+	VkPipeline mesh_pipeline;
+	VkPipelineLayout mesh_layout;
+	std::unique_ptr<Shader> mesh_vertex;
+	DynamicMesh triangle_mesh;
+
+	std::unique_ptr<Mesh> monkey_mesh;
+
+	int chosen_shader{ 0 };
 
 public:
 	explicit VulkanEngine(WindowSpecification spec)
@@ -75,6 +95,15 @@ private:
 	bool init_sync_structures();
 	bool init_shader();
 	bool init_pipelines();
+	bool init_vma();
+	bool init_meshes();
+	bool upload_mesh(DynamicMesh& mesh);
+
+	template <size_t T> bool upload_fixed_size_mesh(FixedSizeMesh<T>& mesh)
+	{
+		upload_mesh({ .vertices = mesh.vertices, .vertex_buffer = mesh.vertex_buffer });
+	};
+
 	void render_and_present();
 };
 

@@ -14,6 +14,10 @@ VkCommandPoolCreateInfo command_pool_create_info(uint32_t family_index, VkComman
 VkCommandBufferAllocateInfo command_buffer_allocate_info(
 	VkCommandPool pool, uint32_t count = 1, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
+VkFenceCreateInfo fence_create_info(VkFenceCreateFlags flags = 0);
+
+VkSemaphoreCreateInfo semaphore_create_info(VkSemaphoreCreateFlags flags = 0);
+
 namespace Pipeline {
 
 	VkPipelineShaderStageCreateInfo pipeline_shader_stage_create_info(

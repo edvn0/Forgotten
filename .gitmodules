@@ -28,3 +28,6 @@
 [submodule "ForgottenEngine/vendor/vk-bootstrap"]
 	path = ForgottenEngine/vendor/vk-bootstrap
 	url = https://github.com/charles-lunarg/vk-bootstrap
+[submodule "ForgottenEngine/vendor/tinyobjloader"]
+	path = ForgottenEngine/vendor/tinyobjloader
+	url = https://github.com/edvn0/tinyobjloader.git

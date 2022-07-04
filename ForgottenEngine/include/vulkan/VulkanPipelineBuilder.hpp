@@ -33,6 +33,8 @@ private:
 public:
 	VkPipeline build(VkRenderPass pass);
 
+	void clear_shader_stages() { pipeline.shader_stages.clear(); }
+
 	VulkanPipelineBuilder& with_stage(VkPipelineShaderStageCreateInfo info)
 	{
 		pipeline.shader_stages.push_back(info);

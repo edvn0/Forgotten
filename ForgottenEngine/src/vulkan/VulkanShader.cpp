@@ -23,6 +23,8 @@ VulkanShader::VulkanShader(std::string path)
 
 VkShaderModule VulkanShader::get_module() { return shader; }
 
+void VulkanShader::destroy() { vkDestroyShaderModule(VulkanContext::get_device(), shader, nullptr); }
+
 bool load_vulkan_shader_module(const std::string& path, VkShaderModule* out_module)
 {
 	// open the file. With cursor at the end
