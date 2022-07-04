@@ -1,0 +1,81 @@
+//
+// Created by Edwin Carlsson on 2022-07-02.
+//
+
+#pragma once
+
+#include <utility>
+
+#include "Common.hpp"
+
+#include "Shader.hpp"
+#include "VulkanContext.hpp"
+
+struct GLFWwindow;
+
+namespace ForgottenEngine {
+
+class VulkanEngine {
+private:
+	struct SwapchainImage {
+		VkImage image;
+		VkImageView view;
+	};
+
+	struct WindowSpecification {
+		uint32_t w, h;
+		std::string name;
+	};
+
+private:
+	WindowSpecification spec;
+
+	int frame_number{ 0 };
+
+	VkExtent2D window_extent{ 800, 900 };
+
+	std::vector<SwapchainImage> swapchain_images;
+	VkSwapchainKHR swapchain{ nullptr };
+	VkFormat swapchain_image_format{};
+
+	VkCommandPool command_pool{ nullptr };
+	VkCommandBuffer main_command_buffer{ nullptr };
+
+	VkRenderPass render_pass{ nullptr };
+	std::vector<VkFramebuffer> framebuffers{};
+
+	VkSemaphore present_sema{ nullptr };
+	VkSemaphore render_sema{ nullptr };
+	VkFence render_fence{ nullptr };
+
+	std::unique_ptr<Shader> triangle_vertex;
+	std::unique_ptr<Shader> triangle_fragment;
+	VkPipelineLayout triangle_layout;
+	VkPipeline triangle_pipeline;
+
+public:
+	explicit VulkanEngine(WindowSpecification spec)
+		: spec(std::move(spec))
+	{
+		Logger::init();
+		VulkanContext::construct_and_initialize();
+	}
+
+	bool initialize();
+
+	void run();
+
+	void cleanup();
+
+private:
+	bool init_swapchain();
+	bool init_commands();
+	bool init_default_renderpass();
+	bool init_framebuffers();
+	bool init_sync_structures();
+	bool init_shader();
+	bool init_pipelines();
+	void render_and_present();
+};
+
+} // ForgottenEngine

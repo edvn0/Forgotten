@@ -63,14 +63,11 @@ do
 done
 
 found_target=0
-for t in {"Forgotten","App"};
-do
-    if [ "$t" == "$TARGET" ];
-    then
-        found_target=1
-        break
-    fi;
-done
+if [ "$t" == "$TARGET" ];
+then
+    found_target=1
+    break
+fi;
 
 if [ "$found_build_type" -eq 1 ] && [ "$found_target" -eq 1 ];
 then
@@ -89,7 +86,7 @@ else
     if ! [ "$found_target" -eq 1 ];
     then
         echo "Target \"$TARGET\" not applicable."
-        echo "Accepted are: 'Forgotten' and 'App'"
+        echo "Accepted are: 'ForgottenEngine'"
         exit 1
     fi;
 fi;

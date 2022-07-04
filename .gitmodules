@@ -19,3 +19,12 @@
 [submodule "ForgottenEngine/vendor/glm"]
 	path = ForgottenEngine/vendor/glm
 	url = https://github.com/edvn0/glm
+[submodule "ForgottenEngine/vendor/spdlog"]
+	path = ForgottenEngine/vendor/spdlog
+	url = https://github.com/edvn0/spdlog
+[submodule "ForgottenEngine/vendor/vk_init"]
+	path = ForgottenEngine/vendor/vk_init
+	url = https://github.com/sagering/vk_init
+[submodule "ForgottenEngine/vendor/vk-bootstrap"]
+	path = ForgottenEngine/vendor/vk-bootstrap
+	url = https://github.com/charles-lunarg/vk-bootstrap

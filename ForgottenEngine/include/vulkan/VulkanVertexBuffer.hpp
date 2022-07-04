@@ -12,6 +12,7 @@ class VulkanVertexBuffer : public VertexBuffer {
 public:
 	explicit VulkanVertexBuffer(size_t size)
 		: size(size){};
+
 	~VulkanVertexBuffer() override = default;
 
 	std::string to_string() override;

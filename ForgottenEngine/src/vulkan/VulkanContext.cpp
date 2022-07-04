@@ -3,7 +3,9 @@
 //
 
 #include "vulkan/VulkanContext.hpp"
+#include "Common.hpp"
 #include "GLFW/glfw3.h"
+#include "VkBootstrap.h"
 #include "fg_pch.hpp"
 
 namespace ForgottenEngine {
@@ -15,25 +17,17 @@ static void glfw_error_callback(int error, const char* description)
 
 #define IMGUI_VULKAN_DEBUG_REPORT
 
-static VkAllocationCallbacks* global_allocator = NULL;
+static VkDebugUtilsMessengerEXT global_debug_messenger = nullptr;
+static VkAllocationCallbacks* global_allocator = nullptr;
 static VkInstance global_instance = VK_NULL_HANDLE;
+static VkSurfaceKHR global_surface = VK_NULL_HANDLE;
 static VkPhysicalDevice global_physical_device = VK_NULL_HANDLE;
 static VkDevice global_device = VK_NULL_HANDLE;
 static uint32_t global_queue_family = (uint32_t)-1;
 static VkQueue global_queue = VK_NULL_HANDLE;
 static VkDebugReportCallbackEXT global_debug_report = VK_NULL_HANDLE;
-static VkPipelineCache global_pipeline_cache = VK_NULL_HANDLE;
-static VkDescriptorPool global_descriptor_pool = VK_NULL_HANDLE;
 
-static int global_min_image_count = 2;
-
-// Per-frame-in-flight
-static std::vector<std::vector<VkCommandBuffer>> allocated_framebuffers;
-static std::vector<std::vector<std::function<void()>>> resource_free_queue;
-
-// Unlike global_main_window_data.FrameIndex, this is not the the swapchain image index
-// and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
-static uint32_t s_CurrentFrameIndex = 0;
+static GLFWwindow* global_window_handle{ nullptr };
 
 void check_vk_result(VkResult err)
 {
@@ -78,11 +72,12 @@ static void setup_vulkan(const char** extensions, uint32_t extensions_count)
 
 		// Enable debug report extension (we need additional storage, so we duplicate the user array to add our new
 		// extension to it)
-		const char** extensions_ext = (const char**)malloc(sizeof(const char*) * (extensions_count + 2));
+		const char** extensions_ext = (const char**)malloc(sizeof(const char*) * (extensions_count + 3));
 		memcpy(extensions_ext, extensions, extensions_count * sizeof(const char*));
 		extensions_ext[extensions_count] = "VK_EXT_debug_report";
 		extensions_ext[extensions_count + 1] = VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
-		create_info.enabledExtensionCount = extensions_count + 2;
+		extensions_ext[extensions_count + 2] = "VK_KHR_get_physical_device_properties2";
+		create_info.enabledExtensionCount = extensions_count + 3;
 		create_info.ppEnabledExtensionNames = extensions_ext;
 		create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
@@ -122,6 +117,10 @@ static void setup_vulkan(const char** extensions, uint32_t extensions_count)
 		assert(gpu_count > 0);
 
 		auto* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpu_count);
+		if (!gpus) {
+			abort();
+		}
+
 		err = vkEnumeratePhysicalDevices(global_instance, &gpu_count, gpus);
 		check_vk_result(err);
 
@@ -179,10 +178,15 @@ static void setup_vulkan(const char** extensions, uint32_t extensions_count)
 	}
 }
 
+std::pair<int, int> VulkanContext::get_framebuffer_size()
+{
+	int w, h;
+	glfwGetFramebufferSize(global_window_handle, &w, &h);
+	return { w, h };
+}
+
 static void cleanup_vulkan()
 {
-	vkDestroyDescriptorPool(global_device, global_descriptor_pool, global_allocator);
-
 #ifdef IMGUI_VULKAN_DEBUG_REPORT
 	// Remove the debug report callback
 	auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
@@ -190,11 +194,18 @@ static void cleanup_vulkan()
 	vkDestroyDebugReportCallbackEXT(global_instance, global_debug_report, global_allocator);
 #endif // IMGUI_VULKAN_DEBUG_REPORT
 
-	vkDestroyDevice(global_device, global_allocator);
-	vkDestroyInstance(global_instance, global_allocator);
+	vkDestroyDevice(global_device, nullptr);
+	vkDestroySurfaceKHR(global_instance, global_surface, nullptr);
+	vkb::destroy_debug_utils_messenger(global_instance, global_debug_messenger);
+	vkDestroyInstance(global_instance, nullptr);
+	glfwDestroyWindow(global_window_handle);
 }
 
 VkInstance VulkanContext::get_instance() { return global_instance; }
+
+VkSurfaceKHR VulkanContext::get_surface() { return global_surface; }
+
+GLFWwindow* VulkanContext::get_window_handle() { return global_window_handle; }
 
 VkAllocationCallbacks* VulkanContext::get_allocator() { return global_allocator; }
 
@@ -221,9 +232,59 @@ void VulkanContext::construct_and_initialize()
 		std::cerr << "GLFW: Vulkan not supported!\n";
 		return;
 	}
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+	global_window_handle = glfwCreateWindow(800, 450, "ForgottenEngine", nullptr, nullptr);
+
 	uint32_t extensions_count = 0;
-	const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
-	setup_vulkan(extensions, extensions_count);
+	auto extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
+
+	auto exts = std::vector<const char*>(extensions, extensions + extensions_count);
+	exts.push_back("VK_EXT_debug_report");
+	exts.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+	exts.push_back("VK_KHR_get_physical_device_properties2");
+
+	vkb::InstanceBuilder builder;
+
+	// make the Vulkan instance, with basic debug features
+	builder.set_app_name("ForgottenEngine")
+		.request_validation_layers(true)
+		.require_api_version(1, 1, 0)
+		.use_default_debug_messenger();
+
+	for (const auto& ext : exts) {
+		builder.enable_extension(ext);
+	}
+
+	auto inst_ret = builder.build();
+
+	vkb::Instance vkb_inst = inst_ret.value();
+
+	// store the instance
+	global_instance = vkb_inst.instance;
+	// store the debug messenger
+	global_debug_messenger = vkb_inst.debug_messenger;
+
+	// use vkbootstrap to select a GPU.
+	VK_CHECK(glfwCreateWindowSurface(global_instance, global_window_handle, nullptr, &global_surface));
+	auto surface = VulkanContext::get_surface();
+
+	vkb::PhysicalDeviceSelector selector{ vkb_inst };
+	vkb::PhysicalDevice physical_device = selector.set_minimum_version(1, 1).set_surface(surface).select().value();
+
+	// create the final Vulkan device
+	vkb::DeviceBuilder device_builder{ physical_device };
+
+	vkb::Device vkb_device = device_builder.build().value();
+
+	// Get the VkDevice handle used in the rest of a Vulkan application
+	global_device = vkb_device.device;
+	global_physical_device = physical_device.physical_device;
+
+	// use vk-bootstrap to get a Graphics queue
+	global_queue = vkb_device.get_queue(vkb::QueueType::graphics).value();
+	global_queue_family = vkb_device.get_queue_index(vkb::QueueType::graphics).value();
 }
 
 }
