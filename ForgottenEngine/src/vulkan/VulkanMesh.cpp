@@ -19,6 +19,7 @@ AllocatedBuffer& DynamicMesh::get_vertex_buffer() { return vertex_buffer; }
 
 VulkanMesh::VulkanMesh(std::string path)
 {
+	std::filesystem::path fp{ path };
 	// attrib will contain the vertex arrays of the file
 	tinyobj::attrib_t attrib;
 	// shapes contains the info for each separate object in the file
@@ -31,7 +32,7 @@ VulkanMesh::VulkanMesh(std::string path)
 	std::string err;
 
 	// load the OBJ file
-	tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), nullptr);
+	tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, fp.c_str(), fp.parent_path().c_str());
 	// make sure to output the warnings to the console, in case there are issues with the file
 	if (!warn.empty()) {
 		CORE_WARN("WARN: {}", warn);
