@@ -4,13 +4,19 @@
 
 #include "vulkan/VulkanEngine.hpp"
 #include "GLFW/glfw3.h"
+#include "Input.hpp"
 #include "Mesh.hpp"
+#include "Timer.hpp"
 #include "VkBootstrap.h"
-#include "glm/gtx/transform.hpp"
 #include "vk_mem_alloc.h"
 #include "vulkan/VulkanInitializers.hpp"
 #include "vulkan/VulkanPipelineBuilder.hpp"
 #include "vulkan/VulkanPushConstant.hpp"
+#include "vulkan/VulkanUBO.hpp"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
 
 static VkDevice device() { return ForgottenEngine::VulkanContext::get_device(); }
 
@@ -46,6 +52,10 @@ bool VulkanEngine::initialize()
 		return false;
 	}
 
+	if (!init_descriptors()) {
+		return false;
+	}
+
 	if (!init_shader()) {
 		return false;
 	}
@@ -58,19 +68,30 @@ bool VulkanEngine::initialize()
 		return false;
 	}
 
+	if (!init_scene()) {
+		return false;
+	}
+
 	return true;
 }
 
 void VulkanEngine::run()
 {
 	while (!glfwWindowShouldClose(VulkanContext::get_window_handle())) {
-		glfwWaitEvents(); // POLL EVENTS!
+		glfwPollEvents(); // POLL EVENTS!
 
-		if (glfwGetKey(VulkanContext::get_window_handle(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+		if (Input::key(Key::Escape)) {
 			glfwSetWindowShouldClose(VulkanContext::get_window_handle(), GLFW_TRUE);
 		}
-
+		auto t0 = Timer::get_time<double>();
 		render_and_present();
+		auto t1 = Timer::get_time<double>() - t0;
+
+		if (Input::key(Key::P)) {
+			auto fps = 1.0f / t1;
+			CORE_INFO("Frametime: {:03.8f}", t1);
+			CORE_INFO("FPS: {:03.8f}", fps);
+		}
 	}
 }
 
@@ -131,10 +152,10 @@ bool VulkanEngine::init_swapchain()
 	vmaCreateImage(allocator, &di, &dic, &depth_image.image, &depth_image.allocation, nullptr);
 
 	// build an image-view for the depth image to use for rendering
-	VkImageViewCreateInfo dview_info
+	VkImageViewCreateInfo depth_image_view_create_info
 		= VI::Image::imageview_create_info(depth_format, depth_image.image, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-	VK_CHECK(vkCreateImageView(device(), &dview_info, nullptr, &depth_view));
+	VK_CHECK(vkCreateImageView(device(), &depth_image_view_create_info, nullptr, &depth_view));
 
 	// add to deletion queues
 	cleanup_queue.push_function([=]() {
@@ -151,12 +172,17 @@ bool VulkanEngine::init_commands()
 {
 	auto cpi = VI::command_pool_create_info(
 		VulkanContext::get_queue_family(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	VK_CHECK(vkCreateCommandPool(device(), &cpi, nullptr, &command_pool));
 
-	auto cai = VI::command_buffer_allocate_info(command_pool, 1);
-	VK_CHECK(vkAllocateCommandBuffers(device(), &cai, &main_command_buffer));
+	for (int i = 0; i < FRAME_OVERLAP; i++) {
+		auto&& [present_sema, render_sema, render_fence, command_pool, main_command_buffer, a, b]
+			= frames_in_flight[i];
+		VK_CHECK(vkCreateCommandPool(device(), &cpi, nullptr, &command_pool));
 
-	cleanup_queue.push_function([&cp = command_pool]() { vkDestroyCommandPool(device(), cp, nullptr); });
+		auto cai = VI::command_buffer_allocate_info(command_pool, 1);
+		VK_CHECK(vkAllocateCommandBuffers(device(), &cai, &main_command_buffer));
+
+		cleanup_queue.push_function([cp = command_pool]() { vkDestroyCommandPool(device(), cp, nullptr); });
+	}
 
 	return true;
 }
@@ -292,37 +318,42 @@ bool VulkanEngine::init_framebuffers()
 bool VulkanEngine::init_sync_structures()
 {
 	auto fci = VI::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
-	VK_CHECK(vkCreateFence(device(), &fci, nullptr, &render_fence));
-
-	cleanup_queue.push_function([&f = render_fence]() { vkDestroyFence(device(), f, nullptr); });
-
-	// for the semaphores we don't need any flags
 	auto sci = VI::semaphore_create_info();
 
-	VK_CHECK(vkCreateSemaphore(device(), &sci, nullptr, &present_sema));
-	VK_CHECK(vkCreateSemaphore(device(), &sci, nullptr, &render_sema));
+	for (int i = 0; i < FRAME_OVERLAP; i++) {
 
-	cleanup_queue.push_function([&p = present_sema, &r = render_sema]() {
-		vkDestroySemaphore(device(), r, nullptr);
-		vkDestroySemaphore(device(), p, nullptr);
-	});
+		VK_CHECK(vkCreateFence(device(), &fci, nullptr, &frames_in_flight[i].render_fence));
+
+		// enqueue the destruction of the fence
+		cleanup_queue.push_function(
+			[=]() { vkDestroyFence(device(), frames_in_flight[i].render_fence, nullptr); });
+
+		VK_CHECK(vkCreateSemaphore(device(), &sci, nullptr, &frames_in_flight[i].present_sema));
+		VK_CHECK(vkCreateSemaphore(device(), &sci, nullptr, &frames_in_flight[i].render_sema));
+
+		// enqueue the destruction of semaphores
+		cleanup_queue.push_function([=]() {
+			vkDestroySemaphore(device(), frames_in_flight[i].present_sema, nullptr);
+			vkDestroySemaphore(device(), frames_in_flight[i].render_sema, nullptr);
+		});
+	}
 
 	return true;
 }
 
 void VulkanEngine::render_and_present()
 {
-	VK_CHECK(vkWaitForFences(device(), 1, &render_fence, true, 1000000000));
-	VK_CHECK(vkResetFences(device(), 1, &render_fence));
+	VK_CHECK(vkWaitForFences(device(), 1, &frame().render_fence, true, 1000000000));
+	VK_CHECK(vkResetFences(device(), 1, &frame().render_fence));
 
 	// request image from the swapchain, one second timeout
 	uint32_t image_index;
-	VK_CHECK(vkAcquireNextImageKHR(device(), swapchain, 1000000000, present_sema, nullptr, &image_index));
+	VK_CHECK(vkAcquireNextImageKHR(device(), swapchain, 1000000000, frame().present_sema, nullptr, &image_index));
 
-	VK_CHECK(vkResetCommandBuffer(main_command_buffer, 0));
+	VK_CHECK(vkResetCommandBuffer(frame().main_command_buffer, 0));
 
 	// naming it cmd for shorter writing
-	VkCommandBuffer cmd = main_command_buffer;
+	VkCommandBuffer cmd = frame().main_command_buffer;
 
 	// begin the command buffer recording. We will use this command buffer exactly once, so we want to let Vulkan
 	// know that
@@ -337,8 +368,7 @@ void VulkanEngine::render_and_present()
 
 	// make a clear-color from frame number. This will flash with a 120*pi frame period.
 	VkClearValue clear_value;
-	float flash = abs(sin(static_cast<float>(frame_number) / 120.f));
-	clear_value.color = { { 0.0f, 0.0f, flash, 1.0f } };
+	clear_value.color = { 0.1f, 0.1f, 0.1f, 1.0f };
 
 	VkClearValue depth_clear;
 	depth_clear.depthStencil.depth = 1.f;
@@ -363,34 +393,7 @@ void VulkanEngine::render_and_present()
 
 	vkCmdBeginRenderPass(cmd, &rpi, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mesh_pipeline);
-
-	// make a model view matrix for rendering the object
-	// camera position
-	glm::vec3 camPos = { 0.f, 0.5f, -2.f };
-
-	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
-	// camera projection
-	glm::mat4 projection = glm::perspective(glm::radians(70.f), 800.f / 450.f, 0.1f, 200.0f);
-	projection[1][1] *= -1;
-	// model rotation
-	glm::mat4 model = glm::rotate(
-		glm::mat4{ 1.0f }, glm::radians(static_cast<float>(frame_number) * 0.4f), glm::vec3(0, 1, 0));
-
-	// calculate final mesh matrix
-	glm::mat4 mesh_matrix = projection * view * model;
-
-	MeshPushConstants constants{ .data = { 0, 0, 0, 0 }, .render_matrix = mesh_matrix };
-
-	// upload the matrix to the GPU via push constants
-	vkCmdPushConstants(cmd, mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
-
-	// bind the mesh vertex buffer with offset 0
-	VkDeviceSize offset = 0;
-	vkCmdBindVertexBuffers(cmd, 0, 1, &monkey_mesh->get_vertex_buffer().buffer, &offset);
-
-	// we can now draw the mesh
-	vkCmdDraw(cmd, monkey_mesh->get_vertices().size(), 1, 0, 0);
+	draw_renderables(cmd);
 
 	vkCmdEndRenderPass(cmd);
 	// finalize the command buffer (we can no longer add commands, but it can now be executed)
@@ -405,17 +408,15 @@ void VulkanEngine::render_and_present()
 	submit.pWaitDstStageMask = &wait_stage;
 
 	submit.waitSemaphoreCount = 1;
-	submit.pWaitSemaphores = &present_sema;
+	submit.pWaitSemaphores = &frame().present_sema;
 
 	submit.signalSemaphoreCount = 1;
-	submit.pSignalSemaphores = &render_sema;
+	submit.pSignalSemaphores = &frame().render_sema;
 
 	submit.commandBufferCount = 1;
 	submit.pCommandBuffers = &cmd;
 
-	// submit command buffer to the queue and execute it.
-	//  _renderFence will now block until the graphic commands finish execution
-	VK_CHECK(vkQueueSubmit(VulkanContext::get_queue(), 1, &submit, render_fence));
+	VK_CHECK(vkQueueSubmit(VulkanContext::get_queue(), 1, &submit, frame().render_fence));
 
 	VkPresentInfoKHR pi = {};
 	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -424,7 +425,7 @@ void VulkanEngine::render_and_present()
 	pi.pSwapchains = &swapchain;
 	pi.swapchainCount = 1;
 
-	pi.pWaitSemaphores = &render_sema;
+	pi.pWaitSemaphores = &frame().render_sema;
 	pi.waitSemaphoreCount = 1;
 
 	pi.pImageIndices = &image_index;
@@ -437,7 +438,7 @@ void VulkanEngine::render_and_present()
 
 bool VulkanEngine::init_shader()
 {
-	mesh_vertex = Shader::create("shaders/tri_mesh.vert.spv");
+	mesh_vertex = Shader::create("shaders/ubo.vert.spv");
 	mesh_fragment = Shader::create("shaders/tri_mesh.frag.spv");
 
 	return true;
@@ -515,6 +516,8 @@ bool VulkanEngine::init_pipelines()
 		mesh_pipeline = pipeline_builder.build(render_pass);
 	}
 
+	library.add_material("default", { .pipeline = mesh_pipeline, .layout = mesh_layout });
+
 	mesh_vertex->destroy();
 	mesh_fragment->destroy();
 
@@ -523,7 +526,6 @@ bool VulkanEngine::init_pipelines()
 		vkDestroyPipeline(device(), mesh_pipeline, nullptr);
 
 		// destroy the pipeline layout that they use
-		vkDestroyPipelineLayout(device(), triangle_layout, nullptr);
 		vkDestroyPipelineLayout(device(), mesh_layout, nullptr);
 	});
 
@@ -532,11 +534,15 @@ bool VulkanEngine::init_pipelines()
 
 bool VulkanEngine::init_meshes()
 {
-	auto& vertices = triangle_mesh.get_vertices();
+	auto m = Mesh::create("models/monkey_smooth.obj");
+	m->upload(allocator, cleanup_queue);
+	library.add_mesh("monkey_smooth", std::move(m));
 
-	monkey_mesh = Mesh::create("models/monkey_smooth.obj");
-	monkey_mesh->upload(allocator, cleanup_queue);
+	auto sponza = Mesh::create("models/sponza.obj");
+	sponza->upload(allocator, cleanup_queue);
+	library.add_mesh("sponza", std::move(sponza));
 
+	std::vector<Vertex> vertices;
 	vertices.resize(3);
 	vertices[0].position = { 0.f, -1.f, 0.0f, 1.0f };
 	vertices[1].position = { -1.f, 1.f, 0.0f, 1.0f };
@@ -552,45 +558,185 @@ bool VulkanEngine::init_meshes()
 	vertices[1].color = { 0.f, 1.f, 0.0f, 1.0f }; // pure green
 	vertices[2].color = { 0.f, 1.f, 0.0f, 1.0f }; // pure green
 
-	upload_mesh(triangle_mesh);
+	auto triangle_mesh = Mesh::create(vertices);
+	triangle_mesh->upload(allocator, cleanup_queue);
+	library.add_mesh("triangle", std::move(triangle_mesh));
 
 	return true;
 }
 
-bool VulkanEngine::upload_mesh(DynamicMesh& mesh)
+bool VulkanEngine::init_descriptors()
 {
-	// allocate vertex buffer
-	VkBufferCreateInfo bi = {};
-	bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	// this is the total size, in bytes, of the buffer we are allocating
-	bi.size = mesh.size();
-	// this buffer is going to be used as a Vertex Buffer
-	bi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	// information about the binding.
+	VkDescriptorSetLayoutBinding cbbi = {};
+	cbbi.binding = 0;
+	cbbi.descriptorCount = 1;
+	// it's a uniform buffer binding
+	cbbi.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-	// let the VMA library know that this data should be writeable by CPU, but also readable by GPU
-	VmaAllocationCreateInfo ai = {};
-	ai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	// we use it from the vertex shader
+	cbbi.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-	// allocate the buffer
-	auto& vb = mesh.get_vertex_buffer();
-	VK_CHECK(vmaCreateBuffer(allocator, &bi, &ai, &vb.buffer, &vb.allocation, nullptr));
+	VkDescriptorSetLayoutCreateInfo dsi = {};
+	dsi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	dsi.pNext = nullptr;
 
-	// add the destruction of triangle mesh buffer to the deletion queue
-	cleanup_queue.push_function([=]() { vmaDestroyBuffer(allocator, vb.buffer, vb.allocation); });
+	// we are going to have 1 binding
+	dsi.bindingCount = 1;
+	// no flags
+	dsi.flags = 0;
+	// point to the camera buffer binding
+	dsi.pBindings = &cbbi;
 
-	void* data;
-	vmaMapMemory(allocator, vb.allocation, &data);
+	vkCreateDescriptorSetLayout(device(), &dsi, nullptr, &global_set_layout);
 
-	memcpy(data, mesh.get_vertices().data(), mesh.size());
+	// other code ....
 
-	vmaUnmapMemory(allocator, vb.allocation);
-	return false;
+	// add descriptor set layout to deletion queues
+	cleanup_queue.push_function([&]() { vkDestroyDescriptorSetLayout(device(), global_set_layout, nullptr); });
+
+	for (int i = 0; i < FRAME_OVERLAP; i++) {
+		VulkanBuffer buffer{ allocator };
+		buffer.upload(sizeof(CameraUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+		frames_in_flight[i].camera_buffer = buffer.get_buffer();
+	}
+
+	// add buffers to deletion queues
+	for (int i = 0; i < FRAME_OVERLAP; i++) {
+		cleanup_queue.push_function([=]() {
+			vmaDestroyBuffer(
+				allocator, frames_in_flight[i].camera_buffer.buffer, frames_in_flight[i].camera_buffer.allocation);
+		});
+	}
+
+	return true;
+};
+
+bool VulkanEngine::init_scene()
+{
+	VulkanRenderObject monkey;
+	monkey.mesh = library.mesh("monkey_smooth");
+	monkey.material = library.material("default");
+	monkey.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(3, 3, 3));
+
+	VulkanRenderObject sponza;
+	sponza.mesh = library.mesh("sponza");
+	sponza.material = library.material("default");
+	sponza.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.1, 0.1, 0.1));
+
+	renderables.push_back(sponza);
+	renderables.push_back(monkey);
+
+	for (int x = -15; x <= 15; x++) {
+		for (int y = -15; y <= 15; y++) {
+
+			VulkanRenderObject tri;
+			tri.mesh = library.mesh("triangle");
+			tri.material = library.material("default");
+			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 0, y));
+			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
+			tri.transform = translation * scale;
+
+			renderables.push_back(tri);
+		}
+	}
+
+	return true;
+}
+
+void VulkanEngine::draw_renderables(VkCommandBuffer cmd)
+{
+	static glm::vec3 cam_pos = { 0.f, -6.f, -10.f };
+	static glm::vec3 cam_rot = { 0, 0, 0 };
+	static bool renderables_are_sorted = false;
+	static size_t last_renderable_size = 0;
+	static constexpr auto move_speed = 0.03f;
+	static constexpr auto rotate_speed = 0.005f;
+
+	if (Input::key(Key::W)) {
+		cam_pos.z += move_speed;
+	}
+	if (Input::key(Key::S)) {
+		cam_pos.z -= move_speed;
+	}
+
+	if (Input::key(Key::Q)) {
+		cam_rot.x += rotate_speed;
+	}
+	if (Input::key(Key::E)) {
+		cam_rot.x -= rotate_speed;
+	}
+	if (Input::key(Key::A)) {
+		cam_rot.y += rotate_speed;
+	}
+	if (Input::key(Key::D)) {
+		cam_rot.y -= rotate_speed;
+	}
+
+	glm::mat4 view = glm::translate(glm::mat4(1.f), cam_pos) * glm::toMat4(glm::quat(cam_rot));
+	// camera projection
+	glm::mat4 projection = glm::perspective(glm::radians(70.f), 800.f / 450.f, 0.1f, 200.0f);
+	projection[1][1] *= -1;
+
+	std::shared_ptr<Mesh> last_bound_mesh = nullptr;
+	std::shared_ptr<RenderMaterial> last_bound_material = nullptr;
+
+	if (last_renderable_size != renderables.size()) {
+		renderables_are_sorted = false;
+	}
+
+	if (!renderables_are_sorted) {
+		std::sort(renderables.begin(), renderables.end(),
+			[](const VulkanRenderObject& a, const VulkanRenderObject& b) -> int {
+				if (a.material != b.material) {
+					return true;
+				}
+				return false;
+			});
+		renderables_are_sorted = true;
+	}
+
+	for (const auto& object : renderables) {
+		// only bind the pipeline if it doesn't match with the already bound one
+		if (object.material != last_bound_material) {
+
+			vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
+			last_bound_material = object.material;
+		}
+
+		glm::mat4 model = object.transform;
+		// final render matrix, that we are calculating on the cpu
+		glm::mat4 mesh_matrix = projection * view * model;
+
+		MeshPushConstants constants;
+		constants.render_matrix = mesh_matrix;
+
+		// upload the mesh to the GPU via push constants
+		vkCmdPushConstants(
+			cmd, object.material->layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
+
+		// only bind the mesh if it's a different one from last bind
+		if (object.mesh != last_bound_mesh) {
+			// bind the mesh vertex buffer with offset 0
+			VkDeviceSize offset = 0;
+			vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->get_vertex_buffer().buffer, &offset);
+			last_bound_mesh = object.mesh;
+		}
+		// we can now draw
+		vkCmdDraw(cmd, object.mesh->get_vertices().size(), 1, 0, 0);
+	}
+
+	last_renderable_size = renderables.size();
 }
 
 void VulkanEngine::cleanup()
 {
 	// make sure the GPU has stopped doing its things
-	vkWaitForFences(device(), 1, &render_fence, true, 1000000000);
+	VkFence all_fences[FRAME_OVERLAP];
+	for (int i = 0; i < FRAME_OVERLAP; ++i) {
+		all_fences[i] = frames_in_flight[i].render_fence;
+	}
+	vkWaitForFences(device(), FRAME_OVERLAP, all_fences, true, 1000000000);
 
 	cleanup_queue.flush();
 

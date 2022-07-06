@@ -5,14 +5,13 @@
 #pragma once
 
 #include "Logger.hpp"
+#include <array>
+#include <glm/glm.hpp>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace ForgottenEngine {
-
-template <typename T, typename Arg> std::shared_ptr<T> shared(Arg&& arg)
-{
-	return std::shared_ptr<T>(new T(std::forward<Arg>(arg)));
-};
 
 #define VK_CHECK(x)                                                                                               \
 	do {                                                                                                          \

@@ -12,17 +12,34 @@
 #include "Shader.hpp"
 #include "VulkanContext.hpp"
 #include "VulkanMesh.hpp"
+#include "VulkanMeshLibrary.hpp"
 
-struct GLFWwindow;
-typedef struct VmaAllocator_T* VmaAllocator;
+#include "VulkanBuffer.hpp"
+#include "vk_mem_alloc.h"
+#include <GLFW/glfw3.h>
 
 namespace ForgottenEngine {
+
+static constexpr uint FRAME_OVERLAP = 3;
 
 class VulkanEngine {
 private:
 	struct SwapchainImage {
 		VkImage image;
 		VkImageView view;
+	};
+
+	struct FrameInFlight {
+		VkSemaphore present_sema;
+		VkSemaphore render_sema;
+		VkFence render_fence;
+
+		VkCommandPool command_pool;
+		VkCommandBuffer main_command_buffer;
+
+		// UBO info
+		AllocatedBuffer camera_buffer;
+		VkDescriptorSet global_descriptor;
 	};
 
 	struct WindowSpecification {
@@ -37,6 +54,10 @@ private:
 
 	int frame_number{ 0 };
 
+	std::array<FrameInFlight, FRAME_OVERLAP> frames_in_flight;
+
+	inline auto& frame() { return frames_in_flight[frame_number % FRAME_OVERLAP]; }
+
 	VkExtent2D window_extent{ 800, 900 };
 
 	std::vector<SwapchainImage> swapchain_images;
@@ -47,33 +68,21 @@ private:
 	AllocatedImage depth_image;
 	VkFormat depth_format;
 
-	VkCommandPool command_pool{ nullptr };
-	VkCommandBuffer main_command_buffer{ nullptr };
-
 	VkRenderPass render_pass{ nullptr };
 	std::vector<VkFramebuffer> framebuffers{};
 
-	VkSemaphore present_sema{ nullptr };
-	VkSemaphore render_sema{ nullptr };
-	VkFence render_fence{ nullptr };
-
+	VulkanMeshLibrary library;
 	DeletionQueue cleanup_queue;
 
-	// Temporary objects
-	std::unique_ptr<Shader> triangle_vertex;
-	std::unique_ptr<Shader> triangle_fragment;
-	std::unique_ptr<Shader> triangle_coloured_vertex;
-	std::unique_ptr<Shader> triangle_coloured_fragment;
-	VkPipelineLayout triangle_layout;
-	VkPipeline triangle_pipeline;
-	VkPipeline coloured_triangle_pipeline;
+	VkDescriptorSetLayout global_set_layout;
 
+	std::vector<VulkanRenderObject> renderables;
+
+	// Temporary objects
 	std::unique_ptr<Shader> mesh_vertex;
 	std::unique_ptr<Shader> mesh_fragment;
 	VkPipeline mesh_pipeline;
 	VkPipelineLayout mesh_layout;
-	DynamicMesh triangle_mesh;
-
 	std::unique_ptr<Mesh> monkey_mesh;
 
 	int chosen_shader{ 0 };
@@ -102,14 +111,11 @@ private:
 	bool init_pipelines();
 	bool init_vma();
 	bool init_meshes();
-	bool upload_mesh(DynamicMesh& mesh);
-
-	template <size_t T> bool upload_fixed_size_mesh(FixedSizeMesh<T>& mesh)
-	{
-		upload_mesh({ .vertices = mesh.vertices, .vertex_buffer = mesh.vertex_buffer });
-	};
+	bool init_scene();
+	bool init_descriptors();
 
 	void render_and_present();
+	void draw_renderables(VkCommandBuffer cmd);
 };
 
 } // ForgottenEngine

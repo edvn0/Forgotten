@@ -8,6 +8,11 @@ popd () {
     command popd > /dev/null
 }
 
+copy_resources() {
+    mkdir -p ./ForgottenEngine/resources
+    cp -r ../../ForgottenEngine/resources ./ForgottenEngine/
+}
+
 set -e
 
 build_target() {
@@ -25,6 +30,8 @@ build_target() {
     then
         cmake ../.. -G Ninja -DCMAKE_BUILD_TYPE="$build_type"
     fi;
+
+    copy_resources
 
     ninja "$target" -j 10
     popd

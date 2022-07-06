@@ -45,16 +45,16 @@ VulkanMesh::VulkanMesh(std::string path)
 
 	auto& vertices = impl.get_vertices();
 	// Loop over shapes
-	for (size_t s = 0; s < shapes.size(); s++) {
+	for (auto& shape : shapes) {
 		// Loop over faces(polygon)
 		size_t index_offset = 0;
-		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+		for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
 			// hardcode loading to triangles
 			int fv = 3;
 			// Loop over vertices in the face.
 			for (size_t v = 0; v < fv; v++) {
 				// access to vertex
-				tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+				tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
 				// vertex position
 				tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
@@ -86,6 +86,8 @@ VulkanMesh::VulkanMesh(std::string path)
 		}
 	}
 }
+
+VulkanMesh::VulkanMesh(const std::vector<Vertex>& vertices) { impl.set_vertices(vertices); }
 
 AllocatedBuffer& VulkanMesh::get_vertex_buffer() { return impl.get_vertex_buffer(); }
 

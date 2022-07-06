@@ -24,7 +24,12 @@ private:
 
 }
 
-#define CORE_ERROR(...) ::ForgottenEngine::Logger::get_core_logger()->error(__VA_ARGS__)
+#define CORE_ERROR(...)                                                                                       \
+    do {                                                                                                      \
+        ::ForgottenEngine::Logger::get_core_logger()->error(__VA_ARGS__);                                     \
+        abort();                                                                                              \
+	} while (0)
+
 #define CORE_WARN(...) ::ForgottenEngine::Logger::get_core_logger()->warn(__VA_ARGS__)
 #define CORE_INFO(...) ::ForgottenEngine::Logger::get_core_logger()->info(__VA_ARGS__)
 #define CORE_TRACE(...) ::ForgottenEngine::Logger::get_core_logger()->trace(__VA_ARGS__)

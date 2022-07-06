@@ -140,7 +140,15 @@
         },
         "cSpell.words": [
             "Carlsson",
+            "framebuffer",
+            "imageview",
+            "renderable",
+            "renderables",
+            "renderpass",
+            "Subpass",
             "subresource",
+            "swapchain",
+            "Swapchains",
             "Vulkan"
         ],
     }

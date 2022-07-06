@@ -12,4 +12,9 @@ namespace ForgottenEngine {
 
 std::unique_ptr<Mesh> Mesh::create(std::string path) { return std::make_unique<VulkanMesh>(std::move(path)); }
 
+std::unique_ptr<Mesh> Mesh::create(const std::vector<Vertex>& vertices)
+{
+	return std::make_unique<VulkanMesh>(vertices);
+}
+
 }

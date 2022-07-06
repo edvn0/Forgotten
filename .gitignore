@@ -257,4 +257,8 @@ build
 # Support for Project snippet scope
 .vscode/*.code-snippets
 
+ForgottenEngine/resources/models/sponza.mtl
+ForgottenEngine/resources/models/sponza.obj
+ForgottenEngine/resources/textures/*
+
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake,macos,visualstudiocode,clion+all,clion+iml

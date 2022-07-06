@@ -24,6 +24,7 @@ public:
 
 public:
 	static std::unique_ptr<Mesh> create(std::string path);
+	static std::unique_ptr<Mesh> create(const std::vector<Vertex>& vertices);
 };
 
 }

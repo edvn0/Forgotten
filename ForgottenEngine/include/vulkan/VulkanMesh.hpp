@@ -6,14 +6,12 @@
 
 #include "Mesh.hpp"
 
+#include "Common.hpp"
+
 #include "DeletionQueue.hpp"
 
 #include "VulkanAllocatedBuffer.hpp"
 #include "VulkanVertex.hpp"
-
-#include <array>
-#include <glm/glm.hpp>
-#include <vector>
 
 namespace ForgottenEngine {
 
@@ -31,6 +29,8 @@ public:
 	[[nodiscard]] const std::vector<Vertex>& get_vertices() const;
 	AllocatedBuffer& get_vertex_buffer();
 
+	void set_vertices(const std::vector<Vertex>& verts) { vertices = verts; }
+
 	[[nodiscard]] size_t size() const override { return vertices.size() * sizeof(Vertex); }
 };
 
@@ -46,6 +46,7 @@ public:
 class VulkanMesh : public Mesh {
 public:
 	explicit VulkanMesh(std::string path);
+	explicit VulkanMesh(const std::vector<Vertex>& vertices);
 	~VulkanMesh() override = default;
 
 	void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue) override;
