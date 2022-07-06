@@ -1,15 +1,3 @@
-[submodule "App/Vendor/imgui"]
-	path = Forgotten/vendor/imgui
-	url = https://github.com/edvn0/imgui
-[submodule "App/Vendor/glfw"]
-	path = Forgotten/vendor/glfw
-	url = https://github.com/edvn0/glfw
-[submodule "App/Vendor/stb"]
-	path = Forgotten/vendor/stb
-	url = https://github.com/edvn0/stb
-[submodule "App/Vendor/glm"]
-	path = Forgotten/vendor/glm
-	url = https://github.com/edvn0/glm
 [submodule "ForgottenEngine/vendor/VulkanMemoryAllocator"]
 	path = ForgottenEngine/vendor/VulkanMemoryAllocator
 	url = https://github.com/edvn0/VulkanMemoryAllocator.git

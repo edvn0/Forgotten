@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "VulkanAllocatedBuffer.hpp"
-
-#include "VulkanVertex.hpp"
-
 #include "Mesh.hpp"
+
+#include "DeletionQueue.hpp"
+
+#include "VulkanAllocatedBuffer.hpp"
+#include "VulkanVertex.hpp"
 
 #include <array>
 #include <glm/glm.hpp>
@@ -45,8 +46,16 @@ public:
 class VulkanMesh : public Mesh {
 public:
 	explicit VulkanMesh(std::string path);
+	~VulkanMesh() override = default;
 
-	void upload() override;
+	void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue) override;
+
+	AllocatedBuffer& get_vertex_buffer() override;
+	std::vector<Vertex>& get_vertices() override;
+	const std::vector<Vertex>& get_vertices() const override;
+
+private:
+	DynamicMesh impl;
 };
 
 } // ForgottenEngine

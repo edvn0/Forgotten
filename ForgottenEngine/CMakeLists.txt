@@ -82,7 +82,7 @@ target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAll
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
-add_custom_command(TARGET CompileShaders PRE_BUILD
+add_custom_command(TARGET CompileShaders POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders $<TARGET_FILE_DIR:ForgottenEngine>/resources/shaders)
 

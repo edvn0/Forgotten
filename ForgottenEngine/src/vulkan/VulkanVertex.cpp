@@ -10,7 +10,7 @@ namespace ForgottenEngine {
 
 VertexInputDescription Vertex::get_vertex_description()
 {
-	VertexInputDescription description;
+	VertexInputDescription description = {};
 
 	// we will have just 1 vertex buffer binding, with a per-vertex rate
 	VkVertexInputBindingDescription main_binding = {};
@@ -31,7 +31,7 @@ VertexInputDescription Vertex::get_vertex_description()
 	VkVertexInputAttributeDescription normal_attribute = {};
 	normal_attribute.binding = 0;
 	normal_attribute.location = 1;
-	normal_attribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+	normal_attribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	normal_attribute.offset = offsetof(Vertex, normal);
 
 	// Color will be stored at Location 2
@@ -41,9 +41,7 @@ VertexInputDescription Vertex::get_vertex_description()
 	color_attribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	color_attribute.offset = offsetof(Vertex, color);
 
-	description.attributes.push_back(position_attribute);
-	description.attributes.push_back(normal_attribute);
-	description.attributes.push_back(color_attribute);
+	description.attributes = { position_attribute, normal_attribute, color_attribute };
 	return description;
 }
 

@@ -21,6 +21,7 @@ struct VulkanPipeline {
 	VkPipelineColorBlendAttachmentState color_blend_attachment;
 	VkPipelineMultisampleStateCreateInfo multisampling;
 	VkPipelineLayout pipeline_layout;
+	VkPipelineDepthStencilStateCreateInfo depth_stencil;
 
 	friend class VulkanPipelineBuilder;
 	static VulkanPipelineBuilder create();
@@ -86,6 +87,12 @@ public:
 	VulkanPipelineBuilder& with_pipeline_layout(VkPipelineLayout info)
 	{
 		pipeline.pipeline_layout = info;
+		return *this;
+	}
+
+	VulkanPipelineBuilder& with_depth_stencil(VkPipelineDepthStencilStateCreateInfo info)
+	{
+		pipeline.depth_stencil = info;
 		return *this;
 	}
 };

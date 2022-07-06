@@ -22,6 +22,10 @@ namespace ForgottenEngine {
 
 bool VulkanEngine::initialize()
 {
+	if (!init_vma()) {
+		return false;
+	}
+
 	if (!init_swapchain()) {
 		return false;
 	}
@@ -47,10 +51,6 @@ bool VulkanEngine::initialize()
 	}
 
 	if (!init_pipelines()) {
-		return false;
-	}
-
-	if (!init_vma()) {
 		return false;
 	}
 
@@ -113,6 +113,35 @@ bool VulkanEngine::init_swapchain()
 		swapchain_images.push_back({ images->at(i), views->at(i) });
 	}
 
+	VkExtent3D depth_extent = { spec.w, spec.h, 1 };
+
+	// hardcoding the depth format to 32 bit float
+	depth_format = VK_FORMAT_D32_SFLOAT;
+
+	// the depth image will be an image with the format we selected and Depth Attachment usage flag
+	auto di
+		= VI::Image::image_create_info(depth_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_extent);
+
+	// for the depth image, we want to allocate it from GPU local memory
+	VmaAllocationCreateInfo dic = {};
+	dic.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	dic.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	// allocate and create the image
+	vmaCreateImage(allocator, &di, &dic, &depth_image.image, &depth_image.allocation, nullptr);
+
+	// build an image-view for the depth image to use for rendering
+	VkImageViewCreateInfo dview_info
+		= VI::Image::imageview_create_info(depth_format, depth_image.image, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+	VK_CHECK(vkCreateImageView(device(), &dview_info, nullptr, &depth_view));
+
+	// add to deletion queues
+	cleanup_queue.push_function([=]() {
+		vkDestroyImageView(device(), depth_view, nullptr);
+		vmaDestroyImage(allocator, depth_image.image, depth_image.allocation);
+	});
+
 	cleanup_queue.push_function([&swap = swapchain]() { vkDestroySwapchainKHR(device(), swap, nullptr); });
 
 	return true;
@@ -159,21 +188,61 @@ bool VulkanEngine::init_default_renderpass()
 	color_attachment_ref.attachment = 0;
 	color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+	VkAttachmentDescription depth_attachment = {};
+	// Depth attachment
+	depth_attachment.flags = 0;
+	depth_attachment.format = depth_format;
+	depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference depth_attachment_ref = {};
+	depth_attachment_ref.attachment = 1;
+	depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 	// we are going to create 1 subpass, which is the minimum you can do
 	VkSubpassDescription subpass = {};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &color_attachment_ref;
+	subpass.pDepthStencilAttachment = &depth_attachment_ref;
+
+	const std::array<VkAttachmentDescription, 2> attachments = { color_attachment, depth_attachment };
 
 	VkRenderPassCreateInfo render_pass_info = {};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-
 	// connect the color attachment to the info
-	render_pass_info.attachmentCount = 1;
-	render_pass_info.pAttachments = &color_attachment;
+	render_pass_info.attachmentCount = attachments.size();
+	render_pass_info.pAttachments = attachments.data();
 	// connect the subpass to the info
 	render_pass_info.subpassCount = 1;
 	render_pass_info.pSubpasses = &subpass;
+
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkSubpassDependency depth_dependency = {};
+	depth_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	depth_dependency.dstSubpass = 0;
+	depth_dependency.srcStageMask
+		= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	depth_dependency.srcAccessMask = 0;
+	depth_dependency.dstStageMask
+		= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	depth_dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+	const std::array<VkSubpassDependency, 2> dependencies = { dependency, depth_dependency };
+	render_pass_info.dependencyCount = dependencies.size();
+	render_pass_info.pDependencies = dependencies.data();
 
 	VK_CHECK(vkCreateRenderPass(device(), &render_pass_info, nullptr, &render_pass));
 
@@ -202,7 +271,13 @@ bool VulkanEngine::init_framebuffers()
 
 	// create framebuffers for each of the swapchain image views
 	for (int i = 0; i < sc_image_count; i++) {
-		fb_info.pAttachments = &swapchain_images[i].view;
+		VkImageView attachments[2];
+		attachments[0] = swapchain_images[i].view;
+		attachments[1] = depth_view;
+
+		fb_info.attachmentCount = 2;
+		fb_info.pAttachments = attachments;
+
 		VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &framebuffers[i]));
 
 		cleanup_queue.push_function([&fb = framebuffers[i], &view = swapchain_images[i].view]() {
@@ -265,6 +340,9 @@ void VulkanEngine::render_and_present()
 	float flash = abs(sin(static_cast<float>(frame_number) / 120.f));
 	clear_value.color = { { 0.0f, 0.0f, flash, 1.0f } };
 
+	VkClearValue depth_clear;
+	depth_clear.depthStencil.depth = 1.f;
+
 	// start the main renderpass.
 	// We will use the clear color from above, and the framebuffer of the index the swapchain gave us
 	VkRenderPassBeginInfo rpi = {};
@@ -278,8 +356,10 @@ void VulkanEngine::render_and_present()
 	rpi.framebuffer = framebuffers[image_index];
 
 	// connect clear values
-	rpi.clearValueCount = 1;
-	rpi.pClearValues = &clear_value;
+
+	const std::array<VkClearValue, 2> clear_values = { clear_value, depth_clear };
+	rpi.clearValueCount = clear_values.size();
+	rpi.pClearValues = clear_values.data();
 
 	vkCmdBeginRenderPass(cmd, &rpi, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -287,7 +367,7 @@ void VulkanEngine::render_and_present()
 
 	// make a model view matrix for rendering the object
 	// camera position
-	glm::vec3 camPos = { 0.f, 0.f, -2.f };
+	glm::vec3 camPos = { 0.f, 0.5f, -2.f };
 
 	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
 	// camera projection
@@ -307,10 +387,10 @@ void VulkanEngine::render_and_present()
 
 	// bind the mesh vertex buffer with offset 0
 	VkDeviceSize offset = 0;
-	vkCmdBindVertexBuffers(cmd, 0, 1, &triangle_mesh.get_vertex_buffer().buffer, &offset);
+	vkCmdBindVertexBuffers(cmd, 0, 1, &monkey_mesh->get_vertex_buffer().buffer, &offset);
 
 	// we can now draw the mesh
-	vkCmdDraw(cmd, triangle_mesh.get_vertices().size(), 1, 0, 0);
+	vkCmdDraw(cmd, monkey_mesh->get_vertices().size(), 1, 0, 0);
 
 	vkCmdEndRenderPass(cmd);
 	// finalize the command buffer (we can no longer add commands, but it can now be executed)
@@ -357,11 +437,8 @@ void VulkanEngine::render_and_present()
 
 bool VulkanEngine::init_shader()
 {
-	triangle_vertex = Shader::create("shaders/triangle_shader.vert.spv");
-	triangle_fragment = Shader::create("shaders/triangle_shader.frag.spv");
-	triangle_coloured_vertex = Shader::create("shaders/triangle_shader_coloured.vert.spv");
-	triangle_coloured_fragment = Shader::create("shaders/triangle_shader_coloured.frag.spv");
 	mesh_vertex = Shader::create("shaders/tri_mesh.vert.spv");
+	mesh_fragment = Shader::create("shaders/tri_mesh.frag.spv");
 
 	return true;
 }
@@ -369,15 +446,7 @@ bool VulkanEngine::init_shader()
 bool VulkanEngine::init_pipelines()
 {
 	{
-		// Default Pipeline
-		auto pipeline_layout_info = VI::Pipeline::pipeline_layout_create_info();
-		VK_CHECK(vkCreatePipelineLayout(device(), &pipeline_layout_info, nullptr, &triangle_layout));
-	}
-
-	{
 		// Push Constants in Pipeline Layout
-
-		// we start from just the default empty pipeline layout info
 		auto mesh_pipeline_layout_info = VI::Pipeline::pipeline_layout_create_info();
 
 		// setup push constants
@@ -396,16 +465,9 @@ bool VulkanEngine::init_pipelines()
 
 	VulkanPipelineBuilder pipeline_builder;
 
-	pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
-		VK_SHADER_STAGE_VERTEX_BIT, triangle_vertex->get_module()));
-
-	pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
-		VK_SHADER_STAGE_FRAGMENT_BIT, triangle_fragment->get_module()));
-
-	// vertex input controls how to read vertices from vertex buffers. We aren't using it yet
 	auto vertex_description = Vertex::get_vertex_description();
 	auto vii = VI::Pipeline::vertex_input_state_create_info();
-	// connect the pipeline builder vertex input info to the one we get from Vertex
+
 	vii.pVertexAttributeDescriptions = vertex_description.attributes.data();
 	vii.vertexAttributeDescriptionCount = vertex_description.attributes.size();
 
@@ -414,88 +476,55 @@ bool VulkanEngine::init_pipelines()
 
 	pipeline_builder.with_vertex_input(vii);
 
-	// input assembly is the configuration for drawing triangle lists, strips, or individual points.
-	// we are just going to draw triangle list
 	pipeline_builder.with_input_assembly(
 		VI::Pipeline::input_assembly_create_info(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST));
 
 	// build viewport and scissor from the swapchain extents
-	VkViewport vp{};
-	vp.x = 0.0f;
-	vp.y = 0.0f;
-	vp.width = (float)spec.w;
-	vp.height = (float)spec.h;
-	vp.minDepth = 0.0f;
-	vp.maxDepth = 1.0f;
-	pipeline_builder.with_viewport(vp);
+	pipeline_builder.with_viewport({
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = static_cast<float>(spec.w),
+		.height = static_cast<float>(spec.h),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
+	});
 
-	VkRect2D scissors{};
-	scissors.offset = { 0, 0 };
-	scissors.extent = { spec.w, spec.h };
-	pipeline_builder.with_scissors(scissors);
+	pipeline_builder.with_scissors({ .offset = { 0, 0 }, .extent = { spec.w, spec.h } });
 
-	// configure the rasterizer to draw filled triangles
 	pipeline_builder.with_rasterizer(VI::Pipeline::rasterization_state_create_info(VK_POLYGON_MODE_FILL));
 
-	// we don't use multisampling, so just run the default one
 	pipeline_builder.with_multisampling(VI::Pipeline::multisampling_state_create_info());
 
-	// a single blend attachment with no blending and writing to RGBA
 	pipeline_builder.with_color_blend(VI::Pipeline::color_blend_attachment_state());
 
+	pipeline_builder.with_depth_stencil(
+		VI::Pipeline::depth_stencil_create_info(true, true, VK_COMPARE_OP_LESS_OR_EQUAL));
+
 	// use the triangle layout we created
-	pipeline_builder.with_pipeline_layout(triangle_layout);
-
-	// finally build the pipeline
-
-	{
-		// Normal Triangle Pipeline
-		triangle_pipeline = pipeline_builder.build(render_pass);
-	}
-	{
-		// Coloured Triangle Pipeline
-		pipeline_builder.clear_shader_stages();
-
-		pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
-			VK_SHADER_STAGE_VERTEX_BIT, triangle_coloured_vertex->get_module()));
-
-		pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
-			VK_SHADER_STAGE_FRAGMENT_BIT, triangle_coloured_fragment->get_module()));
-
-		coloured_triangle_pipeline = pipeline_builder.build(render_pass);
-	}
-
+	pipeline_builder.with_pipeline_layout(mesh_layout);
 	{
 		// Mesh Pipeline
 		pipeline_builder.clear_shader_stages();
-
-		pipeline_builder.with_pipeline_layout(mesh_layout);
 
 		pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
 			VK_SHADER_STAGE_VERTEX_BIT, mesh_vertex->get_module()));
 
 		pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
-			VK_SHADER_STAGE_FRAGMENT_BIT, triangle_coloured_fragment->get_module()));
+			VK_SHADER_STAGE_FRAGMENT_BIT, mesh_fragment->get_module()));
 
 		mesh_pipeline = pipeline_builder.build(render_pass);
 	}
 
-	triangle_coloured_vertex->destroy();
-	triangle_vertex->destroy();
-
-	triangle_coloured_fragment->destroy();
-	triangle_fragment->destroy();
-
 	mesh_vertex->destroy();
+	mesh_fragment->destroy();
 
 	cleanup_queue.push_function([=]() {
 		// destroy the 2 pipelines we have created
-		vkDestroyPipeline(device(), coloured_triangle_pipeline, nullptr);
-		vkDestroyPipeline(device(), triangle_pipeline, nullptr);
 		vkDestroyPipeline(device(), mesh_pipeline, nullptr);
 
 		// destroy the pipeline layout that they use
 		vkDestroyPipelineLayout(device(), triangle_layout, nullptr);
+		vkDestroyPipelineLayout(device(), mesh_layout, nullptr);
 	});
 
 	return true;
@@ -506,12 +535,17 @@ bool VulkanEngine::init_meshes()
 	auto& vertices = triangle_mesh.get_vertices();
 
 	monkey_mesh = Mesh::create("models/monkey_smooth.obj");
-	monkey_mesh->upload();
+	monkey_mesh->upload(allocator, cleanup_queue);
 
 	vertices.resize(3);
-	vertices[0].position = { 1.f, 1.f, 0.0f, 0.0f };
-	vertices[1].position = { -1.f, 1.f, 0.0f, 0.0f };
-	vertices[2].position = { 0.f, -1.f, 0.0f, 0.0f };
+	vertices[0].position = { 0.f, -1.f, 0.0f, 1.0f };
+	vertices[1].position = { -1.f, 1.f, 0.0f, 1.0f };
+	vertices[2].position = { 1.f, 1.f, 0.0f, 1.0f };
+
+	// Dunno
+	vertices[0].normal = { 0.f, 1.f, 0.0f, 1.0f };
+	vertices[1].normal = { 0.f, 1.f, 0.0f, 1.0f };
+	vertices[2].normal = { 0.f, 1.f, 0.0f, 1.0f };
 
 	// vertex colors, all green
 	vertices[0].color = { 0.f, 1.f, 0.0f, 1.0f }; // pure green

@@ -41,7 +41,7 @@ start_target() {
     popd
 }
 
-TARGET="${1:-Forgotten}"
+TARGET="${1:-ForgottenEngine}"
 BUILD_TYPE="${2:-Debug}"
 CLEAN_BUILD="${3:-NoClean}"
 
@@ -63,11 +63,11 @@ do
 done
 
 found_target=0
-if [ "$t" == "$TARGET" ];
+if [ "$TARGET" == "ForgottenEngine" ];
 then
     found_target=1
-    break
 fi;
+
 
 if [ "$found_build_type" -eq 1 ] && [ "$found_target" -eq 1 ];
 then

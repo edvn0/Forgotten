@@ -13,7 +13,6 @@ protected:
 
 public:
 	virtual ~Shader() = default;
-
 	virtual void destroy() = 0;
 	virtual VkShaderModule get_module() = 0;
 	static std::unique_ptr<Shader> create(std::string path);

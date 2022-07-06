@@ -45,6 +45,7 @@ VkPipeline VulkanPipelineBuilder::build(VkRenderPass pass)
 	pi.pRasterizationState = &pipeline.rasterizer;
 	pi.pMultisampleState = &pipeline.multisampling;
 	pi.pColorBlendState = &color_blending;
+	pi.pDepthStencilState = &pipeline.depth_stencil;
 	pi.layout = pipeline.pipeline_layout;
 	pi.renderPass = pass;
 	pi.subpass = 0;

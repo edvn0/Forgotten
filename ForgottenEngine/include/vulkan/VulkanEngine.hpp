@@ -43,6 +43,10 @@ private:
 	VkSwapchainKHR swapchain{ nullptr };
 	VkFormat swapchain_image_format{};
 
+	VkImageView depth_view;
+	AllocatedImage depth_image;
+	VkFormat depth_format;
+
 	VkCommandPool command_pool{ nullptr };
 	VkCommandBuffer main_command_buffer{ nullptr };
 
@@ -64,9 +68,10 @@ private:
 	VkPipeline triangle_pipeline;
 	VkPipeline coloured_triangle_pipeline;
 
+	std::unique_ptr<Shader> mesh_vertex;
+	std::unique_ptr<Shader> mesh_fragment;
 	VkPipeline mesh_pipeline;
 	VkPipelineLayout mesh_layout;
-	std::unique_ptr<Shader> mesh_vertex;
 	DynamicMesh triangle_mesh;
 
 	std::unique_ptr<Mesh> monkey_mesh;

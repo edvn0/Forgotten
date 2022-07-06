@@ -34,6 +34,18 @@ namespace Pipeline {
 	VkPipelineColorBlendAttachmentState color_blend_attachment_state();
 
 	VkPipelineLayoutCreateInfo pipeline_layout_create_info();
+
+	VkPipelineDepthStencilStateCreateInfo depth_stencil_create_info(
+		bool depth_test, bool depth_write, VkCompareOp compare_op);
+
+}
+
+namespace Image {
+
+	VkImageCreateInfo image_create_info(VkFormat format, VkImageUsageFlags usage_flags, VkExtent3D extent);
+
+	VkImageViewCreateInfo imageview_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags);
+
 }
 
 }
