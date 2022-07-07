@@ -8,15 +8,19 @@ namespace ForgottenEngine {
 
 class VulkanImage : public Image {
 private:
-	AllocatedImage image;
+	AllocatedImage image{ nullptr, nullptr };
 	stbi_uc* pixels;
 
 	int w, h, c;
 
 public:
-	explicit VulkanImage(std::string path);
+	VkImageView image_view{ nullptr };
+
+public:
+	explicit VulkanImage(const std::string& path);
 	~VulkanImage() override;
 
+	VkImageView view() override { return image_view; }
 	void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue, UploadContext& upload_context) override;
 };
 }

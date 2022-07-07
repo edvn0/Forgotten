@@ -8,7 +8,7 @@
 
 namespace ForgottenEngine {
 
-VulkanImage::VulkanImage(std::string path)
+VulkanImage::VulkanImage(const std::string& path)
 {
 	stbi_uc* ps = stbi_load(path.c_str(), &w, &h, &c, STBI_rgb_alpha);
 
@@ -109,7 +109,12 @@ void VulkanImage::upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue, 
 			nullptr, 0, nullptr, 1, &readable_barrier);
 	});
 
+	VkImageViewCreateInfo ii
+		= VI::Image::image_view_create_info(VK_FORMAT_R8G8B8A8_SRGB, new_image.image, VK_IMAGE_ASPECT_COLOR_BIT);
+	vkCreateImageView(VulkanContext::get_device(), &ii, nullptr, &image_view);
+
 	cleanup_queue.push_function([=]() { vmaDestroyImage(allocator, new_image.image, new_image.allocation); });
+
 	staging.destroy();
 };
 

@@ -159,7 +159,7 @@ bool VulkanEngine::init_swapchain()
 
 	// build an image-view for the depth image to use for rendering
 	VkImageViewCreateInfo depth_image_view_create_info
-		= VI::Image::imageview_create_info(depth_format, depth_image.image, VK_IMAGE_ASPECT_DEPTH_BIT);
+		= VI::Image::image_view_create_info(depth_format, depth_image.image, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 	VK_CHECK(vkCreateImageView(device(), &depth_image_view_create_info, nullptr, &depth_view));
 
@@ -596,6 +596,10 @@ bool VulkanEngine::init_meshes()
 	empire->upload(allocator, cleanup_queue, upload_context);
 	library.add_mesh("empire", std::move(empire));
 
+	auto empire_tex = Image::create("textures/lost_empire.png");
+	empire_tex->upload(allocator, cleanup_queue, upload_context);
+	library.add_texture("lost_empire", std::move(empire_tex));
+
 	auto w = Image::create("textures/lion.png");
 	w->upload(allocator, cleanup_queue, upload_context);
 
@@ -763,9 +767,35 @@ bool VulkanEngine::init_scene()
 	// sponza.material = library.material("default");
 	// sponza.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.1, 0.1, 0.1));
 
+	auto textured_mat = library.material("textured");
+
+	auto sampler_create_info = VI::Image::sampler_create_info(VK_FILTER_LINEAR);
+	VkSampler block_sampler;
+	vkCreateSampler(device(), &sampler_create_info, nullptr, &block_sampler);
+
+	VkDescriptorSetAllocateInfo alloc_info = {};
+	alloc_info.pNext = nullptr;
+	alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	alloc_info.descriptorPool = descriptor_pool;
+	alloc_info.descriptorSetCount = 1;
+	alloc_info.pSetLayouts = &texture_set_layout;
+
+	vkAllocateDescriptorSets(device(), &alloc_info, &textured_mat->texture_set);
+
+	// write to the descriptor set so that it points to our empire_diffuse texture
+	VkDescriptorImageInfo imageBufferInfo;
+	imageBufferInfo.sampler = block_sampler;
+	imageBufferInfo.imageView = library.texture("lost_empire")->view();
+	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet texture1 = VI::Image::write_descriptor_image(
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, textured_mat->texture_set, &imageBufferInfo, 0);
+
+	vkUpdateDescriptorSets(device(), 1, &texture1, 0, nullptr);
+
 	VulkanRenderObject map;
 	map.mesh = library.mesh("empire");
-	map.material = library.material("textured");
+	map.material = textured_mat;
 	map.transform = glm::translate(glm::vec3{ 5, -10, 0 });
 
 	// renderables.push_back(sponza);
@@ -889,9 +919,15 @@ void VulkanEngine::draw_renderables(VkCommandBuffer cmd)
 			// SSBO descriptor
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->layout, 1, 1,
 				&frame().object_descriptor, 0, nullptr);
+
+			if (object.material->texture_set) {
+				// texture descriptor
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->layout, 2, 1,
+					&object.material->texture_set, 0, nullptr);
+			}
 		}
 
-		MeshPushConstants constants;
+		MeshPushConstants constants{};
 		constants.render_matrix = object.transform;
 
 		// upload the mesh to the GPU via push constants

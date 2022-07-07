@@ -32,9 +32,7 @@ VulkanMesh::VulkanMesh(std::string path)
 	std::string warn;
 	std::string err;
 
-	// load the OBJ file
 	tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, fp.c_str(), fp.parent_path().c_str());
-	// make sure to output the warnings to the console, in case there are issues with the file
 	if (!warn.empty()) {
 		CORE_WARN("WARN: {}", warn);
 	}
@@ -67,7 +65,7 @@ VulkanMesh::VulkanMesh(std::string path)
 				tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
 
 				// copy it into our vertex
-				Vertex new_vert;
+				Vertex new_vert{};
 				new_vert.position.x = vx;
 				new_vert.position.y = vy;
 				new_vert.position.z = vz;

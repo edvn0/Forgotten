@@ -35,7 +35,7 @@ const std::shared_ptr<Mesh>& VulkanAssetLibrary::mesh(const std::string& name)
 	}
 }
 
-const std::shared_ptr<Texture>& VulkanAssetLibrary::texture(const std::string& name)
+const std::shared_ptr<Image>& VulkanAssetLibrary::texture(const std::string& name)
 {
 	auto it = textures.find(name);
 	if (it == textures.end()) {

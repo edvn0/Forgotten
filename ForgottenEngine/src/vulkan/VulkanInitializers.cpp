@@ -173,7 +173,8 @@ VkImageCreateInfo Image::image_create_info(VkFormat format, VkImageUsageFlags us
 	return info;
 }
 
-VkImageViewCreateInfo Image::imageview_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
+VkImageViewCreateInfo Image::image_view_create_info(
+	VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
 {
 	// build a image-view for the depth image to use for rendering
 	VkImageViewCreateInfo info = {};
@@ -191,6 +192,39 @@ VkImageViewCreateInfo Image::imageview_create_info(VkFormat format, VkImage imag
 
 	return info;
 }
+
+// implementation
+VkSamplerCreateInfo Image::sampler_create_info(
+	VkFilter filters, VkSamplerAddressMode sampler_address_mode /*= VK_SAMPLER_ADDRESS_MODE_REPEAT*/)
+{
+	VkSamplerCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	info.pNext = nullptr;
+
+	info.magFilter = filters;
+	info.minFilter = filters;
+	info.addressModeU = sampler_address_mode;
+	info.addressModeV = sampler_address_mode;
+	info.addressModeW = sampler_address_mode;
+
+	return info;
+}
+VkWriteDescriptorSet Image::write_descriptor_image(
+	VkDescriptorType type, VkDescriptorSet dst_set, VkDescriptorImageInfo* image_info, uint32_t binding)
+{
+	VkWriteDescriptorSet write = {};
+	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	write.pNext = nullptr;
+
+	write.dstBinding = binding;
+	write.dstSet = dst_set;
+	write.descriptorCount = 1;
+	write.descriptorType = type;
+	write.pImageInfo = image_info;
+
+	return write;
+}
+
 VkPipelineDepthStencilStateCreateInfo Pipeline::depth_stencil_create_info(
 	bool depth_test, bool depth_write, VkCompareOp compare_op)
 {
