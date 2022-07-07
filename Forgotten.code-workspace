@@ -109,6 +109,10 @@
             "format": "cpp",
             "shared_mutex": "cpp"
         },
+        "C_Cpp.files.exclude": {
+            "**/*.tmp": true,
+            "**/.vscode": true
+        },
         "search.exclude": {
             "**/node_modules": true,
             "**/bower_components": true,

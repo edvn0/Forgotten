@@ -19,3 +19,6 @@
 [submodule "ForgottenEngine/vendor/tinyobjloader"]
 	path = ForgottenEngine/vendor/tinyobjloader
 	url = https://github.com/edvn0/tinyobjloader.git
+[submodule "ForgottenEngine/vendor/stb"]
+	path = ForgottenEngine/vendor/stb
+	url = https://github.com/edvn0/stb

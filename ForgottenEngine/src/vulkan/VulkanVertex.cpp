@@ -12,7 +12,6 @@ VertexInputDescription Vertex::get_vertex_description()
 {
 	VertexInputDescription description = {};
 
-	// we will have just 1 vertex buffer binding, with a per-vertex rate
 	VkVertexInputBindingDescription main_binding = {};
 	main_binding.binding = 0;
 	main_binding.stride = sizeof(Vertex);
@@ -20,7 +19,6 @@ VertexInputDescription Vertex::get_vertex_description()
 
 	description.bindings.push_back(main_binding);
 
-	// Position will be stored at Location 0
 	VkVertexInputAttributeDescription position_attribute = {};
 	position_attribute.binding = 0;
 	position_attribute.location = 0;
@@ -41,7 +39,13 @@ VertexInputDescription Vertex::get_vertex_description()
 	color_attribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	color_attribute.offset = offsetof(Vertex, color);
 
-	description.attributes = { position_attribute, normal_attribute, color_attribute };
+	VkVertexInputAttributeDescription uv_attribute = {};
+	uv_attribute.binding = 0;
+	uv_attribute.location = 3;
+	uv_attribute.format = VK_FORMAT_R32G32_SFLOAT;
+	uv_attribute.offset = offsetof(Vertex, uv);
+
+	description.attributes = { position_attribute, normal_attribute, color_attribute, uv_attribute };
 	return description;
 }
 

@@ -10,10 +10,10 @@
 
 #include "DeletionQueue.hpp"
 #include "Shader.hpp"
+#include "VulkanAssetLibrary.hpp"
 #include "VulkanBuffer.hpp"
 #include "VulkanContext.hpp"
 #include "VulkanMesh.hpp"
-#include "VulkanMeshLibrary.hpp"
 #include "VulkanUBO.hpp"
 #include "VulkanUploadContext.hpp"
 
@@ -71,12 +71,13 @@ private:
 
 	VkDescriptorSetLayout global_set_layout;
 	VkDescriptorSetLayout object_set_layout;
+	VkDescriptorSetLayout texture_set_layout;
 	VkDescriptorPool descriptor_pool;
 
 	std::array<FrameInFlight, FRAME_OVERLAP> frames_in_flight;
 	inline auto& frame() { return frames_in_flight[frame_number % FRAME_OVERLAP]; }
 
-	VkExtent2D window_extent{ 800, 450 };
+	VkExtent2D window_extent{ 1500, 850 };
 
 	std::vector<SwapchainImage> swapchain_images;
 	VkSwapchainKHR swapchain{ nullptr };
@@ -89,7 +90,7 @@ private:
 	VkRenderPass render_pass{ nullptr };
 	std::vector<VkFramebuffer> framebuffers{};
 
-	VulkanMeshLibrary library;
+	VulkanAssetLibrary library;
 	DeletionQueue cleanup_queue;
 
 	std::vector<VulkanRenderObject> renderables;
@@ -100,13 +101,7 @@ private:
 	UploadContext upload_context;
 
 	// Temporary objects
-	std::unique_ptr<Shader> mesh_vertex;
-	std::unique_ptr<Shader> mesh_fragment;
-	VkPipeline mesh_pipeline;
-	VkPipelineLayout mesh_layout;
 	std::unique_ptr<Mesh> monkey_mesh;
-
-	int chosen_shader{ 0 };
 
 public:
 	explicit VulkanEngine(WindowSpecification spec)

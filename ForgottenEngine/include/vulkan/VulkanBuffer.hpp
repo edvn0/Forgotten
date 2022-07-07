@@ -21,6 +21,7 @@ public:
 
 	void upload(size_t allocation_size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage);
 	void destroy();
+
 	AllocatedBuffer& get_buffer();
 };
 

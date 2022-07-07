@@ -239,7 +239,7 @@ void VulkanContext::construct_and_initialize()
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
-	global_window_handle = glfwCreateWindow(800, 450, "ForgottenEngine", nullptr, nullptr);
+	global_window_handle = glfwCreateWindow(1500, 850, "ForgottenEngine", nullptr, nullptr);
 
 	uint32_t extensions_count = 0;
 	auto extensions = glfwGetRequiredInstanceExtensions(&extensions_count);

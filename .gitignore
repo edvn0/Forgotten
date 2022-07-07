@@ -259,6 +259,8 @@ build
 
 ForgottenEngine/resources/models/sponza.mtl
 ForgottenEngine/resources/models/sponza.obj
+ForgottenEngine/resources/models/lost_empire.obj
+ForgottenEngine/resources/models/lost_empire.mtl
 ForgottenEngine/resources/textures/*
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake,macos,visualstudiocode,clion+all,clion+iml

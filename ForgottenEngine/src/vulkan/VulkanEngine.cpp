@@ -3,16 +3,20 @@
 //
 
 #include "vulkan/VulkanEngine.hpp"
-#include "GLFW/glfw3.h"
+
+#include "Image.hpp"
 #include "Input.hpp"
 #include "Mesh.hpp"
 #include "Timer.hpp"
-#include "VkBootstrap.h"
-#include "vk_mem_alloc.h"
+
 #include "vulkan/VulkanInitializers.hpp"
 #include "vulkan/VulkanPipelineBuilder.hpp"
 #include "vulkan/VulkanPushConstant.hpp"
 #include "vulkan/VulkanUBO.hpp"
+
+#include "GLFW/glfw3.h"
+#include "VkBootstrap.h"
+#include "vk_mem_alloc.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -453,33 +457,43 @@ void VulkanEngine::render_and_present()
 	frame_number++;
 }
 
-bool VulkanEngine::init_shader()
-{
-	mesh_vertex = Shader::create("shaders/ubo.vert.spv");
-	mesh_fragment = Shader::create("shaders/default_lighting.frag.spv");
-
-	return true;
-}
+bool VulkanEngine::init_shader() { return true; }
 
 bool VulkanEngine::init_pipelines()
 {
-	{
-		// Push Constants in Pipeline Layout
-		auto mesh_pipeline_layout_info = VI::Pipeline::pipeline_layout_create_info();
-		VkPushConstantRange push_constant;
-		push_constant.offset = 0;
-		push_constant.size = sizeof(MeshPushConstants);
-		push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		mesh_pipeline_layout_info.pPushConstantRanges = &push_constant;
-		mesh_pipeline_layout_info.pushConstantRangeCount = 1;
-		std::array<VkDescriptorSetLayout, 2> sets = { global_set_layout, object_set_layout };
+	auto mesh_vertex = Shader::create("shaders/tri_mesh.vert.spv");
+	auto mesh_fragment = Shader::create("shaders/default_lighting.frag.spv");
+	auto mesh_textured = Shader::create("shaders/textured_lighting.frag.spv");
 
-		// hook the global set layout
-		mesh_pipeline_layout_info.setLayoutCount = sets.size();
-		mesh_pipeline_layout_info.pSetLayouts = sets.data();
+	VkPipeline mesh_pipeline{ nullptr };
+	VkPipeline textured_pipeline{ nullptr };
 
-		VK_CHECK(vkCreatePipelineLayout(device(), &mesh_pipeline_layout_info, nullptr, &mesh_layout));
-	}
+	// we start from just the default empty pipeline layout info
+	VkPipelineLayoutCreateInfo mesh_pipeline_layout_info = VI::Pipeline::pipeline_layout_create_info();
+	VkPushConstantRange push_constant;
+	push_constant.offset = 0;
+	push_constant.size = sizeof(MeshPushConstants);
+	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	mesh_pipeline_layout_info.pPushConstantRanges = &push_constant;
+	mesh_pipeline_layout_info.pushConstantRangeCount = 1;
+	VkDescriptorSetLayout setLayouts[] = { global_set_layout, object_set_layout };
+
+	mesh_pipeline_layout_info.setLayoutCount = 2;
+	mesh_pipeline_layout_info.pSetLayouts = setLayouts;
+
+	VkPipelineLayout mesh_layout;
+	VK_CHECK(vkCreatePipelineLayout(device(), &mesh_pipeline_layout_info, nullptr, &mesh_layout));
+
+	// we start from  the normal mesh layout
+	VkPipelineLayoutCreateInfo textured_pipeline_layout_info = mesh_pipeline_layout_info;
+
+	VkDescriptorSetLayout texturedSetLayouts[] = { global_set_layout, object_set_layout, texture_set_layout };
+
+	textured_pipeline_layout_info.setLayoutCount = 3;
+	textured_pipeline_layout_info.pSetLayouts = texturedSetLayouts;
+
+	VkPipelineLayout textured_layout;
+	VK_CHECK(vkCreatePipelineLayout(device(), &textured_pipeline_layout_info, nullptr, &textured_layout));
 
 	VulkanPipelineBuilder pipeline_builder;
 
@@ -531,19 +545,38 @@ bool VulkanEngine::init_pipelines()
 			VK_SHADER_STAGE_FRAGMENT_BIT, mesh_fragment->get_module()));
 
 		mesh_pipeline = pipeline_builder.build(render_pass);
+		library.add_material("default", { .pipeline = mesh_pipeline, .layout = mesh_layout });
 	}
 
-	library.add_material("default", { .pipeline = mesh_pipeline, .layout = mesh_layout });
+	{
+		// Textured Pipeline
+		pipeline_builder.clear_shader_stages();
+
+		pipeline_builder.with_pipeline_layout(textured_layout);
+
+		pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
+			VK_SHADER_STAGE_VERTEX_BIT, mesh_vertex->get_module()));
+
+		pipeline_builder.with_stage(VI::Pipeline::pipeline_shader_stage_create_info(
+			VK_SHADER_STAGE_FRAGMENT_BIT, mesh_textured->get_module()));
+
+		textured_pipeline = pipeline_builder.build(render_pass);
+	}
+
+	library.add_material("textured", { .pipeline = textured_pipeline, .layout = textured_layout });
 
 	mesh_vertex->destroy();
 	mesh_fragment->destroy();
+	mesh_textured->destroy();
 
 	cleanup_queue.push_function([=]() {
 		// destroy the 2 pipelines we have created
 		vkDestroyPipeline(device(), mesh_pipeline, nullptr);
+		vkDestroyPipeline(device(), textured_pipeline, nullptr);
 
 		// destroy the pipeline layout that they use
 		vkDestroyPipelineLayout(device(), mesh_layout, nullptr);
+		vkDestroyPipelineLayout(device(), textured_layout, nullptr);
 	});
 
 	return true;
@@ -558,6 +591,13 @@ bool VulkanEngine::init_meshes()
 	auto sponza = Mesh::create("models/sponza.obj");
 	sponza->upload(allocator, cleanup_queue, upload_context);
 	library.add_mesh("sponza", std::move(sponza));
+
+	auto empire = Mesh::create("models/lost_empire.obj");
+	empire->upload(allocator, cleanup_queue, upload_context);
+	library.add_mesh("empire", std::move(empire));
+
+	auto w = Image::create("textures/lion.png");
+	w->upload(allocator, cleanup_queue, upload_context);
 
 	std::vector<Vertex> vertices;
 	vertices.resize(3);
@@ -585,9 +625,9 @@ bool VulkanEngine::init_meshes()
 bool VulkanEngine::init_descriptors()
 {
 	// Create Descriptor Pool
-	std::vector<VkDescriptorPoolSize> sizes
-		= { { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 }, { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10 },
-			  { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 } };
+	std::vector<VkDescriptorPoolSize> sizes = { { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10 } };
 	VkDescriptorPoolCreateInfo pool_info = {};
 	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	pool_info.flags = 0;
@@ -620,12 +660,16 @@ bool VulkanEngine::init_descriptors()
 	set_object_info.pBindings = &object_bind;
 	vkCreateDescriptorSetLayout(device(), &set_object_info, nullptr, &object_set_layout);
 
-	// add descriptor set layout to deletion queues
-	cleanup_queue.push_function([&]() {
-		vkDestroyDescriptorSetLayout(device(), global_set_layout, nullptr);
-		vkDestroyDescriptorSetLayout(device(), object_set_layout, nullptr);
-		vkDestroyDescriptorPool(device(), descriptor_pool, nullptr);
-	});
+	VkDescriptorSetLayoutBinding texture_bind = VI::Descriptor::descriptor_set_layout_binding(
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+	VkDescriptorSetLayoutCreateInfo set_texture_info = {};
+	set_texture_info.bindingCount = 1;
+	set_texture_info.flags = 0;
+	set_texture_info.pNext = nullptr;
+	set_texture_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	set_texture_info.pBindings = &texture_bind;
+
+	vkCreateDescriptorSetLayout(device(), &set_texture_info, nullptr, &texture_set_layout);
 
 	const size_t buffer_size = FRAME_OVERLAP * pad_uniform_buffer_size(sizeof(SceneUBO));
 	VulkanBuffer scene_buffer{ allocator };
@@ -687,19 +731,23 @@ bool VulkanEngine::init_descriptors()
 		vkUpdateDescriptorSets(device(), set_writes.size(), set_writes.data(), 0, nullptr);
 	}
 
-	// add buffers to deletion queues
-	for (int i = 0; i < FRAME_OVERLAP; i++) {
-		cleanup_queue.push_function([=]() {
+	cleanup_queue.push_function([&]() {
+		vmaDestroyBuffer(allocator, scene_parameter_buffer.buffer, scene_parameter_buffer.allocation);
+
+		vkDestroyDescriptorSetLayout(device(), object_set_layout, nullptr);
+		vkDestroyDescriptorSetLayout(device(), global_set_layout, nullptr);
+		vkDestroyDescriptorSetLayout(device(), texture_set_layout, nullptr);
+
+		vkDestroyDescriptorPool(device(), descriptor_pool, nullptr);
+
+		for (int i = 0; i < FRAME_OVERLAP; i++) {
 			vmaDestroyBuffer(
 				allocator, frames_in_flight[i].camera_buffer.buffer, frames_in_flight[i].camera_buffer.allocation);
+
 			vmaDestroyBuffer(
 				allocator, frames_in_flight[i].object_buffer.buffer, frames_in_flight[i].object_buffer.allocation);
-		});
-	}
-
-	cleanup_queue.push_function(
-		[=]() { vmaDestroyBuffer(allocator, scene_parameter_buffer.buffer, scene_parameter_buffer.allocation); });
-
+		}
+	});
 	return true;
 };
 
@@ -710,13 +758,19 @@ bool VulkanEngine::init_scene()
 	monkey.material = library.material("default");
 	monkey.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(3, 3, 3));
 
-	VulkanRenderObject sponza;
-	sponza.mesh = library.mesh("sponza");
-	sponza.material = library.material("default");
-	sponza.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.1, 0.1, 0.1));
+	// VulkanRenderObject sponza;
+	// sponza.mesh = library.mesh("sponza");
+	// sponza.material = library.material("default");
+	// sponza.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.1, 0.1, 0.1));
 
-	renderables.push_back(sponza);
+	VulkanRenderObject map;
+	map.mesh = library.mesh("empire");
+	map.material = library.material("textured");
+	map.transform = glm::translate(glm::vec3{ 5, -10, 0 });
+
+	// renderables.push_back(sponza);
 	renderables.push_back(monkey);
+	renderables.push_back(map);
 
 	for (int x = -15; x <= 15; x++) {
 		for (int y = -15; y <= 15; y++) {

@@ -6,7 +6,7 @@
 
 int main(int argc, char** argv)
 {
-	ForgottenEngine::VulkanEngine engine({ .w = 800, .h = 450, .name = "Forgotten" });
+	ForgottenEngine::VulkanEngine engine({ .w = 1500, .h = 850, .name = "Forgotten" });
 	if (engine.initialize()) {
 		engine.run();
 	}

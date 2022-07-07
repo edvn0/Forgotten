@@ -81,6 +81,12 @@ VulkanMesh::VulkanMesh(std::string path)
 				// we are setting the vertex color as the vertex normal. This is just for display purposes
 				new_vert.color = new_vert.normal;
 
+				tinyobj::real_t ux = attrib.texcoords[2 * idx.texcoord_index + 0];
+				tinyobj::real_t uy = attrib.texcoords[2 * idx.texcoord_index + 1];
+
+				new_vert.uv.x = ux;
+				new_vert.uv.y = 1 - uy;
+
 				vertices.push_back(new_vert);
 			}
 			index_offset += fv;

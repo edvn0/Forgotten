@@ -32,7 +32,6 @@ bool load_vulkan_shader_module(const std::string& path, VkShaderModule* out_modu
 
 	if (!file.is_open()) {
 		CORE_ERROR("Could not find file: {}", path);
-		return false;
 	}
 
 	// find what the size of the file is by looking up the location of the cursor

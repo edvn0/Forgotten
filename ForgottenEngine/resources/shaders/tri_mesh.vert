@@ -1,10 +1,13 @@
 #version 460
+
 layout(location = 0) in vec4 vPosition;
 layout(location = 1) in vec4 vNormal;
 layout(location = 2) in vec4 vColor;
+layout(location = 3) in vec2 vTexCoord;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outNormal;
+layout(location = 2) out vec2 outTexCoord;
 
 layout(set = 0, binding = 0) uniform CameraBuffer
 {
@@ -37,4 +40,5 @@ void main()
 	gl_Position = transformMatrix * vPosition;
 	outColor = vColor;
 	outNormal = vNormal;
+	outTexCoord = vTexCoord;
 }
