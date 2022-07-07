@@ -153,7 +153,7 @@ VkPipelineLayoutCreateInfo Pipeline::pipeline_layout_create_info()
 	return info;
 }
 
-VkImageCreateInfo VI::Image::image_create_info(VkFormat format, VkImageUsageFlags usage_flags, VkExtent3D extent)
+VkImageCreateInfo Image::image_create_info(VkFormat format, VkImageUsageFlags usage_flags, VkExtent3D extent)
 {
 	VkImageCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -173,8 +173,7 @@ VkImageCreateInfo VI::Image::image_create_info(VkFormat format, VkImageUsageFlag
 	return info;
 }
 
-VkImageViewCreateInfo VI::Image::imageview_create_info(
-	VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
+VkImageViewCreateInfo Image::imageview_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
 {
 	// build a image-view for the depth image to use for rendering
 	VkImageViewCreateInfo info = {};
@@ -210,4 +209,32 @@ VkPipelineDepthStencilStateCreateInfo Pipeline::depth_stencil_create_info(
 	return info;
 }
 
+VkDescriptorSetLayoutBinding Descriptor::descriptor_set_layout_binding(
+	VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding)
+{
+	VkDescriptorSetLayoutBinding info = {};
+	info.binding = binding;
+	info.descriptorCount = 1;
+	info.descriptorType = type;
+	info.pImmutableSamplers = nullptr;
+	info.stageFlags = stage_flags;
+
+	return info;
+}
+
+VkWriteDescriptorSet Descriptor::write_descriptor_buffer(
+	VkDescriptorType type, VkDescriptorSet dst_set, VkDescriptorBufferInfo* buffer_info, uint32_t binding)
+{
+	VkWriteDescriptorSet info = {};
+	info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	info.pNext = nullptr;
+
+	info.dstBinding = binding;
+	info.dstSet = dst_set;
+	info.descriptorCount = 1;
+	info.descriptorType = type;
+	info.pBufferInfo = buffer_info;
+
+	return info;
+}
 }

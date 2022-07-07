@@ -41,6 +41,7 @@ public:
 	static VkQueue get_queue();
 	static VkPhysicalDevice get_physical_device();
 	static VkDevice get_device();
+	static uint32_t get_alignment();
 	static std::pair<int, int> get_framebuffer_size();
 	static void cleanup();
 };

@@ -140,11 +140,13 @@
         },
         "cSpell.words": [
             "Carlsson",
+            "cbbi",
             "framebuffer",
             "imageview",
             "renderable",
             "renderables",
             "renderpass",
+            "SSBO",
             "Subpass",
             "subresource",
             "swapchain",

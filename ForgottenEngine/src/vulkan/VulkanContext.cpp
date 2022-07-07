@@ -27,6 +27,8 @@ static uint32_t global_queue_family = (uint32_t)-1;
 static VkQueue global_queue = VK_NULL_HANDLE;
 static VkDebugReportCallbackEXT global_debug_report = VK_NULL_HANDLE;
 
+static uint32_t minimum_alignment = 0;
+
 static GLFWwindow* global_window_handle{ nullptr };
 
 void check_vk_result(VkResult err)
@@ -217,6 +219,8 @@ VkPhysicalDevice VulkanContext::get_physical_device() { return global_physical_d
 
 VkDevice VulkanContext::get_device() { return global_device; }
 
+uint32_t VulkanContext::get_alignment() { return minimum_alignment; }
+
 void VulkanContext::cleanup() { cleanup_vulkan(); }
 
 void VulkanContext::construct_and_initialize()
@@ -274,9 +278,19 @@ void VulkanContext::construct_and_initialize()
 	vkb::PhysicalDevice physical_device = selector.set_minimum_version(1, 1).set_surface(surface).select().value();
 
 	// create the final Vulkan device
+	VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {};
+	shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+	shader_draw_parameters_features.pNext = nullptr;
+	shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
 	vkb::DeviceBuilder device_builder{ physical_device };
+	device_builder.add_pNext(&shader_draw_parameters_features);
 
 	vkb::Device vkb_device = device_builder.build().value();
+
+	minimum_alignment = vkb_device.physical_device.properties.limits.minUniformBufferOffsetAlignment;
+
+	CORE_DEBUG("GPU Minimum Buffer Alignment: {}",
+		vkb_device.physical_device.properties.limits.minUniformBufferOffsetAlignment);
 
 	// Get the VkDevice handle used in the rest of a Vulkan application
 	global_device = vkb_device.device;

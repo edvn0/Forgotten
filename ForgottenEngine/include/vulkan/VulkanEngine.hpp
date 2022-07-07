@@ -10,11 +10,12 @@
 
 #include "DeletionQueue.hpp"
 #include "Shader.hpp"
+#include "VulkanBuffer.hpp"
 #include "VulkanContext.hpp"
 #include "VulkanMesh.hpp"
 #include "VulkanMeshLibrary.hpp"
+#include "VulkanUBO.hpp"
 
-#include "VulkanBuffer.hpp"
 #include "vk_mem_alloc.h"
 #include <GLFW/glfw3.h>
 
@@ -29,6 +30,15 @@ private:
 		VkImageView view;
 	};
 
+	struct SceneParameters {
+		SceneUBO parameters;
+		AllocatedBuffer parameter_buffer;
+	};
+
+	struct ObjectData {
+		glm::mat4 model_matrix;
+	};
+
 	struct FrameInFlight {
 		VkSemaphore present_sema;
 		VkSemaphore render_sema;
@@ -40,6 +50,10 @@ private:
 		// UBO info
 		AllocatedBuffer camera_buffer;
 		VkDescriptorSet global_descriptor;
+
+		// Storage buffers
+		AllocatedBuffer object_buffer;
+		VkDescriptorSet object_descriptor;
 	};
 
 	struct WindowSpecification {
@@ -54,11 +68,14 @@ private:
 
 	int frame_number{ 0 };
 
-	std::array<FrameInFlight, FRAME_OVERLAP> frames_in_flight;
+	VkDescriptorSetLayout global_set_layout;
+	VkDescriptorSetLayout object_set_layout;
+	VkDescriptorPool descriptor_pool;
 
+	std::array<FrameInFlight, FRAME_OVERLAP> frames_in_flight;
 	inline auto& frame() { return frames_in_flight[frame_number % FRAME_OVERLAP]; }
 
-	VkExtent2D window_extent{ 800, 900 };
+	VkExtent2D window_extent{ 800, 450 };
 
 	std::vector<SwapchainImage> swapchain_images;
 	VkSwapchainKHR swapchain{ nullptr };
@@ -74,9 +91,10 @@ private:
 	VulkanMeshLibrary library;
 	DeletionQueue cleanup_queue;
 
-	VkDescriptorSetLayout global_set_layout;
-
 	std::vector<VulkanRenderObject> renderables;
+
+	SceneUBO scene_parameters;
+	AllocatedBuffer scene_parameter_buffer;
 
 	// Temporary objects
 	std::unique_ptr<Shader> mesh_vertex;
