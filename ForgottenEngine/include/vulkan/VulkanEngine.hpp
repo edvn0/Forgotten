@@ -15,6 +15,7 @@
 #include "VulkanMesh.hpp"
 #include "VulkanMeshLibrary.hpp"
 #include "VulkanUBO.hpp"
+#include "VulkanUploadContext.hpp"
 
 #include "vk_mem_alloc.h"
 #include <GLFW/glfw3.h>
@@ -95,6 +96,8 @@ private:
 
 	SceneUBO scene_parameters;
 	AllocatedBuffer scene_parameter_buffer;
+
+	UploadContext upload_context;
 
 	// Temporary objects
 	std::unique_ptr<Shader> mesh_vertex;

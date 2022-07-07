@@ -7,6 +7,7 @@
 #include "Common.hpp"
 
 #include "vulkan/VulkanAllocatedBuffer.hpp"
+#include "vulkan/VulkanUploadContext.hpp"
 #include "vulkan/VulkanVertex.hpp"
 
 #include "DeletionQueue.hpp"
@@ -16,7 +17,7 @@ namespace ForgottenEngine {
 class Mesh {
 public:
 	virtual ~Mesh() = default;
-	virtual void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue) = 0;
+	virtual void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue, UploadContext& upload_context) = 0;
 
 	virtual std::vector<Vertex>& get_vertices() = 0;
 	[[nodiscard]] virtual const std::vector<Vertex>& get_vertices() const = 0;

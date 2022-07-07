@@ -57,4 +57,13 @@ namespace Descriptor {
 		VkDescriptorType type, VkDescriptorSet dst_set, VkDescriptorBufferInfo* buffer_info, uint32_t binding);
 
 }
+
+namespace Upload {
+
+	VkCommandBufferBeginInfo command_buffer_begin_info(VkCommandBufferUsageFlags flags = 0);
+
+	VkSubmitInfo submit_info(VkCommandBuffer* cmd);
+
+}
+
 }

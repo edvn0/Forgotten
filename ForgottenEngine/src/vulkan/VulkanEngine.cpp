@@ -172,6 +172,17 @@ bool VulkanEngine::init_swapchain()
 
 bool VulkanEngine::init_commands()
 {
+	// Immediate-submit context
+	auto ucpi = VI::command_pool_create_info(VulkanContext::get_queue_family());
+	// create pool for upload context
+	VK_CHECK(vkCreateCommandPool(device(), &ucpi, nullptr, &upload_context.upload_pool));
+	cleanup_queue.push_function([=]() { vkDestroyCommandPool(device(), upload_context.upload_pool, nullptr); });
+	// allocate the default command buffer that we will use for the instant commands
+	VkCommandBufferAllocateInfo cai_immediate = VI::command_buffer_allocate_info(upload_context.upload_pool, 1);
+	VK_CHECK(vkAllocateCommandBuffers(device(), &cai_immediate, &upload_context.upload_command_buffer));
+
+	// End immediate-submit context
+
 	auto cpi = VI::command_pool_create_info(
 		VulkanContext::get_queue_family(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
@@ -179,8 +190,8 @@ bool VulkanEngine::init_commands()
 		auto& f = frames_in_flight[i];
 		VK_CHECK(vkCreateCommandPool(device(), &cpi, nullptr, &f.command_pool));
 
-		auto cai = VI::command_buffer_allocate_info(f.command_pool, 1);
-		VK_CHECK(vkAllocateCommandBuffers(device(), &cai, &f.main_command_buffer));
+		auto cai_engine = VI::command_buffer_allocate_info(f.command_pool, 1);
+		VK_CHECK(vkAllocateCommandBuffers(device(), &cai_engine, &f.main_command_buffer));
 
 		cleanup_queue.push_function([cp = f.command_pool]() { vkDestroyCommandPool(device(), cp, nullptr); });
 	}
@@ -318,6 +329,12 @@ bool VulkanEngine::init_framebuffers()
 
 bool VulkanEngine::init_sync_structures()
 {
+	// Create immediate-submit context
+	auto ufi = VI::fence_create_info();
+	VK_CHECK(vkCreateFence(device(), &ufi, nullptr, &upload_context.upload_fence));
+
+	cleanup_queue.push_function([=]() { vkDestroyFence(device(), upload_context.upload_fence, nullptr); });
+
 	auto fci = VI::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
 	auto sci = VI::semaphore_create_info();
 
@@ -535,11 +552,11 @@ bool VulkanEngine::init_pipelines()
 bool VulkanEngine::init_meshes()
 {
 	auto m = Mesh::create("models/monkey_smooth.obj");
-	m->upload(allocator, cleanup_queue);
+	m->upload(allocator, cleanup_queue, upload_context);
 	library.add_mesh("monkey_smooth", std::move(m));
 
 	auto sponza = Mesh::create("models/sponza.obj");
-	sponza->upload(allocator, cleanup_queue);
+	sponza->upload(allocator, cleanup_queue, upload_context);
 	library.add_mesh("sponza", std::move(sponza));
 
 	std::vector<Vertex> vertices;
@@ -559,7 +576,7 @@ bool VulkanEngine::init_meshes()
 	vertices[2].color = { 0.f, 1.f, 0.0f, 1.0f }; // pure green
 
 	auto triangle_mesh = Mesh::create(vertices);
-	triangle_mesh->upload(allocator, cleanup_queue);
+	triangle_mesh->upload(allocator, cleanup_queue, upload_context);
 	library.add_mesh("triangle", std::move(triangle_mesh));
 
 	return true;

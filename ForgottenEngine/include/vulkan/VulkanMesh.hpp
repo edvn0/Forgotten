@@ -49,14 +49,14 @@ public:
 	explicit VulkanMesh(const std::vector<Vertex>& vertices);
 	~VulkanMesh() override = default;
 
-	void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue) override;
+	void upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue, UploadContext& upload_context) override;
 
 	AllocatedBuffer& get_vertex_buffer() override;
 	std::vector<Vertex>& get_vertices() override;
 	const std::vector<Vertex>& get_vertices() const override;
 
 private:
-	DynamicMesh impl;
+	DynamicMesh mesh;
 };
 
 } // ForgottenEngine
