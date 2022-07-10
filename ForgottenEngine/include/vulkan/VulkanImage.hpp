@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Image.hpp"
-
-typedef unsigned char stbi_uc;
+#include "stb_image.h"
 
 namespace ForgottenEngine {
 

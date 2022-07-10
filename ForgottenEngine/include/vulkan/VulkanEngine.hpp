@@ -9,6 +9,7 @@
 #include "Common.hpp"
 
 #include "DeletionQueue.hpp"
+#include "Layer.hpp"
 #include "Shader.hpp"
 #include "VulkanAssetLibrary.hpp"
 #include "VulkanBuffer.hpp"
@@ -17,6 +18,7 @@
 #include "VulkanUBO.hpp"
 #include "VulkanUploadContext.hpp"
 
+#include "imgui/ImGuiLayer.hpp"
 #include "vk_mem_alloc.h"
 #include <GLFW/glfw3.h>
 
@@ -64,6 +66,8 @@ private:
 
 private:
 	WindowSpecification spec;
+	std::vector<std::unique_ptr<Layer>> layers;
+	ImGuiLayer imgui_layer;
 
 	VmaAllocator allocator;
 
@@ -101,7 +105,12 @@ private:
 	UploadContext upload_context;
 
 	// Temporary objects
+	float frame_time;
 	std::unique_ptr<Mesh> monkey_mesh;
+
+	double last_time;
+	double last_frame_time;
+	int nr_frames;
 
 public:
 	explicit VulkanEngine(WindowSpecification spec)
@@ -118,17 +127,17 @@ public:
 	void cleanup();
 
 private:
-	bool init_swapchain();
-	bool init_commands();
-	bool init_default_renderpass();
-	bool init_framebuffers();
-	bool init_sync_structures();
-	bool init_shader();
-	bool init_pipelines();
-	bool init_vma();
-	bool init_meshes();
-	bool init_scene();
-	bool init_descriptors();
+	void init_swapchain();
+	void init_commands();
+	void init_default_renderpass();
+	void init_framebuffers();
+	void init_sync_structures();
+	void init_shader();
+	void init_pipelines();
+	void init_vma();
+	void init_meshes();
+	void init_scene();
+	void init_descriptors();
 
 	void render_and_present();
 	void draw_renderables(VkCommandBuffer cmd);

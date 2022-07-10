@@ -21,11 +21,16 @@ public:
 
 	virtual std::vector<Vertex>& get_vertices() = 0;
 	[[nodiscard]] virtual const std::vector<Vertex>& get_vertices() const = 0;
+	virtual std::vector<uint32_t>& get_indices() = 0;
+	[[nodiscard]] virtual const std::vector<uint32_t>& get_indices() const = 0;
 	virtual AllocatedBuffer& get_vertex_buffer() = 0;
+	virtual const AllocatedBuffer& get_vertex_buffer() const = 0;
+	virtual AllocatedBuffer& get_index_buffer() = 0;
+	virtual const AllocatedBuffer& get_index_buffer() const = 0;
 
 public:
 	static std::unique_ptr<Mesh> create(std::string path);
-	static std::unique_ptr<Mesh> create(const std::vector<Vertex>& vertices);
+	static std::unique_ptr<Mesh> create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 };
 
 }

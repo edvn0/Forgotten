@@ -4,7 +4,10 @@
 
 #pragma once
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -24,6 +27,22 @@ struct Vertex {
 	glm::vec2 uv;
 
 	static VertexInputDescription get_vertex_description();
+
+	bool operator==(const Vertex& other) const
+	{
+		return position == other.position && color == other.color && uv == other.uv && normal == other.normal;
+	}
 };
 
+}
+
+namespace std {
+template <> struct hash<ForgottenEngine::Vertex> {
+	size_t operator()(ForgottenEngine::Vertex const& vertex) const
+	{
+		return ((hash<glm::vec4>()(vertex.position)
+					^ (hash<glm::vec4>()(vertex.normal) ^ (hash<glm::vec4>()(vertex.color) << 1)) >> 1)
+			^ (hash<glm::vec2>()(vertex.uv) << 1));
+	}
+};
 }

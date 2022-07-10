@@ -4,4 +4,7 @@
 
 #pragma once
 
-#include "VertexBuffer.hpp"
+#include "vulkan/VulkanAssetLibrary.hpp"
+#include "vulkan/VulkanBuffer.hpp"
+
+#include <imgui/imgui.h>

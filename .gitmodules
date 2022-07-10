@@ -22,3 +22,6 @@
 [submodule "ForgottenEngine/vendor/stb"]
 	path = ForgottenEngine/vendor/stb
 	url = https://github.com/edvn0/stb
+[submodule "ForgottenEngine/vendor/imgui"]
+	path = ForgottenEngine/vendor/imgui
+	url = https://github.com/edvn0/imgui

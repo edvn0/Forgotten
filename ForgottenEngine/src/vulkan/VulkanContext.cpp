@@ -187,6 +187,19 @@ std::pair<int, int> VulkanContext::get_framebuffer_size()
 	return { w, h };
 }
 
+float VulkanContext::get_dpi()
+{
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	float xscale, yscale;
+	glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+	CORE_INFO("Monitor scale: [{} x {}]", xscale, yscale);
+	if (xscale > 1 || yscale > 1) {
+		glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+		return xscale;
+	}
+	return 1;
+}
+
 static void cleanup_vulkan()
 {
 #ifdef IMGUI_VULKAN_DEBUG_REPORT

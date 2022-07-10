@@ -18,6 +18,16 @@ const std::vector<Vertex>& DynamicMesh::get_vertices() const { return vertices; 
 
 AllocatedBuffer& DynamicMesh::get_vertex_buffer() { return vertex_buffer; }
 
+const AllocatedBuffer& DynamicMesh::get_vertex_buffer() const { return vertex_buffer; }
+
+AllocatedBuffer& DynamicMesh::get_index_buffer() { return index_buffer; }
+
+const AllocatedBuffer& DynamicMesh::get_index_buffer() const { return index_buffer; }
+
+std::vector<uint32_t>& DynamicMesh::get_indices() { return indices; }
+
+const std::vector<uint32_t>& DynamicMesh::get_indices() const { return indices; }
+
 VulkanMesh::VulkanMesh(std::string path)
 {
 	std::filesystem::path fp{ path };
@@ -42,7 +52,10 @@ VulkanMesh::VulkanMesh(std::string path)
 		CORE_ERROR("Error in loading Mesh - {}: {}", path, err);
 	}
 
+	std::unordered_map<Vertex, size_t> uniques{};
+
 	auto& vertices = mesh.get_vertices();
+	auto& indices = mesh.get_indices();
 	// Loop over shapes
 	for (auto& shape : shapes) {
 		// Loop over faces(polygon)
@@ -85,70 +98,107 @@ VulkanMesh::VulkanMesh(std::string path)
 				new_vert.uv.x = ux;
 				new_vert.uv.y = 1 - uy;
 
-				vertices.push_back(new_vert);
+				if (uniques.count(new_vert) == 0) {
+					uniques[new_vert] = vertices.size();
+					vertices.push_back(new_vert);
+				}
+
+				indices.push_back(uniques[new_vert]);
 			}
 			index_offset += fv;
 		}
 	}
 }
 
-VulkanMesh::VulkanMesh(const std::vector<Vertex>& vertices) { mesh.set_vertices(vertices); }
+VulkanMesh::VulkanMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+{
+	mesh.set_vertices(vertices);
+	mesh.set_indices(indices);
+}
 
 AllocatedBuffer& VulkanMesh::get_vertex_buffer() { return mesh.get_vertex_buffer(); }
+
+const AllocatedBuffer& VulkanMesh::get_vertex_buffer() const { return mesh.get_vertex_buffer(); }
+
+AllocatedBuffer& VulkanMesh::get_index_buffer() { return mesh.get_index_buffer(); }
+
+const AllocatedBuffer& VulkanMesh::get_index_buffer() const { return mesh.get_index_buffer(); }
 
 std::vector<Vertex>& VulkanMesh::get_vertices() { return mesh.get_vertices(); }
 
 const std::vector<Vertex>& VulkanMesh::get_vertices() const { return mesh.get_vertices(); }
 
+std::vector<uint32_t>& VulkanMesh::get_indices() { return mesh.get_indices(); }
+
+const std::vector<uint32_t>& VulkanMesh::get_indices() const { return mesh.get_indices(); }
+
 void VulkanMesh::upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue, UploadContext& upload_context)
 {
-	// allocate vertex buffer
-	VkBufferCreateInfo staging_buffer_info = {};
-	staging_buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	staging_buffer_info.pNext = nullptr;
-	staging_buffer_info.size = mesh.size();
-	staging_buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	{
+		VulkanStagingBuffer staging_buffer{ allocator, mesh.vertices_size() };
+		staging_buffer.set_data(mesh.get_vertices().data(), mesh.vertices_size());
 
-	// let the VMA library know that this data should be writeable by CPU, but also readable by GPU
-	VmaAllocationCreateInfo ai{ .usage = VMA_MEMORY_USAGE_CPU_ONLY };
+		VkBufferCreateInfo vbi = {};
+		vbi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		vbi.pNext = nullptr;
+		// this is the total size, in bytes, of the buffer we are allocating
+		vbi.size = mesh.vertices_size();
+		// this buffer is going to be used as a Vertex Buffer
+		vbi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-	VulkanBuffer staging_buffer{ allocator };
-	auto& b = staging_buffer.get_buffer();
-	VK_CHECK(vmaCreateBuffer(allocator, &staging_buffer_info, &ai, &b.buffer, &b.allocation, nullptr));
+		// let the VMA library know that this data should be GPU native
+		VmaAllocationCreateInfo ai{};
+		ai.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	void* data;
-	vmaMapMemory(allocator, b.allocation, &data);
-	memcpy(data, mesh.get_vertices().data(), mesh.size());
-	vmaUnmapMemory(allocator, b.allocation);
+		// allocate the buffer
+		VK_CHECK(vmaCreateBuffer(allocator, &vbi, &ai, &mesh.get_vertex_buffer().buffer,
+			&mesh.get_vertex_buffer().allocation, nullptr));
+		auto& buffer = staging_buffer.get_buffer();
+		upload_context.immediate_submit([=](VkCommandBuffer cmd) {
+			VkBufferCopy copy;
+			copy.dstOffset = 0;
+			copy.srcOffset = 0;
+			copy.size = mesh.vertices_size();
+			vkCmdCopyBuffer(cmd, buffer.buffer, mesh.get_vertex_buffer().buffer, 1, &copy);
+		});
+		staging_buffer.destroy();
+	}
 
-	VkBufferCreateInfo vbi = {};
-	vbi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	vbi.pNext = nullptr;
-	// this is the total size, in bytes, of the buffer we are allocating
-	vbi.size = mesh.size();
-	// this buffer is going to be used as a Vertex Buffer
-	vbi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	{
+		VulkanStagingBuffer staging_buffer_index{ allocator, mesh.indices_size() };
+		staging_buffer_index.set_data(mesh.get_indices().data(), mesh.indices_size());
 
-	// let the VMA library know that this data should be GPU native
-	ai.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		VkBufferCreateInfo vbi_index = {};
+		vbi_index.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		vbi_index.pNext = nullptr;
+		// this is the total size, in bytes, of the buffer we are allocating
+		vbi_index.size = mesh.indices_size();
+		// this buffer is going to be used as a Vertex Buffer
+		vbi_index.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-	// allocate the buffer
-	VK_CHECK(vmaCreateBuffer(
-		allocator, &vbi, &ai, &mesh.get_vertex_buffer().buffer, &mesh.get_vertex_buffer().allocation, nullptr));
+		// let the VMA library know that this data should be GPU native
+		VmaAllocationCreateInfo ai_index{};
+		ai_index.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	upload_context.immediate_submit([=](VkCommandBuffer cmd) {
-		VkBufferCopy copy;
-		copy.dstOffset = 0;
-		copy.srcOffset = 0;
-		copy.size = mesh.size();
-		vkCmdCopyBuffer(cmd, b.buffer, mesh.get_vertex_buffer().buffer, 1, &copy);
-	});
+		// allocate the buffer
+		VK_CHECK(vmaCreateBuffer(allocator, &vbi_index, &ai_index, &mesh.get_index_buffer().buffer,
+			&mesh.get_index_buffer().allocation, nullptr));
+		auto& index_buffer = staging_buffer_index.get_buffer();
+		upload_context.immediate_submit([=](VkCommandBuffer cmd) {
+			VkBufferCopy copy;
+			copy.dstOffset = 0;
+			copy.srcOffset = 0;
+			copy.size = mesh.indices_size();
+			vkCmdCopyBuffer(cmd, index_buffer.buffer, mesh.get_index_buffer().buffer, 1, &copy);
+		});
+		staging_buffer_index.destroy();
+	}
 
 	cleanup_queue.push_function([=]() {
 		vmaDestroyBuffer(allocator, mesh.get_vertex_buffer().buffer, mesh.get_vertex_buffer().allocation);
+		vmaDestroyBuffer(allocator, mesh.get_index_buffer().buffer, mesh.get_index_buffer().allocation);
 	});
-
-	staging_buffer.destroy();
-} // ForgottenEngine
+}
+// ForgottenEngine
 
 }

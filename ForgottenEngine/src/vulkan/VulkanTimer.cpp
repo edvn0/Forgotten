@@ -1,15 +1,16 @@
 #include "fg_pch.hpp"
 
-#include "Timer.hpp"
+#include "Clock.hpp"
+#include "TimeStep.hpp"
 
 #include <GLFW/glfw3.h>
 
 namespace ForgottenEngine {
 
-template <typename T> T Timer::get_time() { return static_cast<T>(glfwGetTime()); }
+template <typename T> T Clock::get_time() { return static_cast<T>(glfwGetTime()); }
 
-template <> double Timer::get_time() { return static_cast<double>(glfwGetTime()); }
-template <> float Timer::get_time() { return static_cast<float>(glfwGetTime()); }
-template <> long double Timer::get_time() { return static_cast<long double>(glfwGetTime()); }
+template <> double Clock::get_time() { return static_cast<double>(glfwGetTime()); }
+template <> float Clock::get_time() { return static_cast<float>(glfwGetTime()); }
+template <> long double Clock::get_time() { return static_cast<long double>(glfwGetTime()); }
 
 }

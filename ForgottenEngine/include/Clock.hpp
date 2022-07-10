@@ -2,7 +2,7 @@
 
 namespace ForgottenEngine {
 
-class Timer {
+class Clock {
 public:
 	template <typename T = double> static T get_time();
 };

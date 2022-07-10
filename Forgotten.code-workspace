@@ -118,10 +118,6 @@
             "**/bower_components": true,
             "**/target": true
         },
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true,
-            "source.fixAll": true
-        },
         "editor.formatOnSave": true,
         "editor.detectIndentation": false,
         "editor.tabSize": 4,

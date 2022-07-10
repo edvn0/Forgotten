@@ -51,12 +51,9 @@ add_custom_target(CompileShaders ALL DEPENDS ${SPV_SHADERS})
 # ----------------------------------------------
 # End
 # ----------------------------------------------
-file(GLOB sources fg_pch.hpp
-    include/**/*.hpp
-    include/*.hpp
-    src/**/*.cpp
-    src/*.cpp
-    src/implementations/*.cpp
+file(GLOB_RECURSE sources fg_pch.hpp
+    include/**.hpp
+    src/**.cpp
     test/*.hpp test/*.cpp)
 
 add_subdirectory(vendor/VulkanMemoryAllocator)
@@ -64,6 +61,7 @@ add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/vk-bootstrap)
 add_subdirectory(vendor/tinyobjloader)
+add_subdirectory(vendor/imgui)
 
 add_executable(ForgottenEngine main.cpp ${sources})
 target_include_directories(ForgottenEngine PUBLIC
@@ -79,8 +77,9 @@ target_include_directories(ForgottenEngine PUBLIC
     vendor/vk-bootstrap/src
     vendor/tinyobjloader
     vendor/stb
+    vendor/imgui
 )
-target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader)
+target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 

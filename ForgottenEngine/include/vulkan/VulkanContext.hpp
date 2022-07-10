@@ -44,6 +44,7 @@ public:
 	static uint32_t get_alignment();
 	static std::pair<int, int> get_framebuffer_size();
 	static void cleanup();
+	static float get_dpi();
 };
 
 }
