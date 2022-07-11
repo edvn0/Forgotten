@@ -29,11 +29,7 @@ public:
 		ImGui::NewFrame();
 	}
 
-	static void end(VkCommandBuffer cmd)
-	{
-		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-	}
+	static void end() { }
 
 	void on_update(const TimeStep& step) override;
 	void on_event(Event& e) override;

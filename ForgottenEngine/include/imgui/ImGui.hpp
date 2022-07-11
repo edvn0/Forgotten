@@ -127,8 +127,6 @@ static void load_imgui(DeletionQueue& cleanup_queue, UploadContext& upload_conte
 
 	ImGui_ImplVulkan_Init(&init_info, render_pass);
 
-	ImGui_ImplGlfw_InstallCallbacks(VulkanContext::get_window_handle());
-
 	// execute a gpu command to upload imgui font textures
 	upload_context.immediate_submit([&](VkCommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
 

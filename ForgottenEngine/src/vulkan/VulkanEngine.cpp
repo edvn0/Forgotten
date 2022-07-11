@@ -15,7 +15,7 @@
 #include "vulkan/VulkanUBO.hpp"
 
 #include "GLFW/glfw3.h"
-#include "MemoryMapper.cpp"
+#include "MemoryMapper.hpp"
 #include "TimeStep.hpp"
 #include "VkBootstrap.h"
 #include "imgui/ImGui.hpp"
@@ -38,28 +38,6 @@ namespace ForgottenEngine {
 
 bool VulkanEngine::initialize()
 {
-	struct DefaultLayer : public Layer {
-	private:
-		float& frame_time;
-
-	public:
-		explicit DefaultLayer(std::string name, float& frame_time)
-			: Layer(std::move(name))
-			, frame_time(frame_time){};
-
-		~DefaultLayer() override = default;
-
-		void on_ui_render(const TimeStep& ts) override
-		{
-			ImGui::Begin("Frametime");
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-				ImGui::GetIO().Framerate);
-			ImGui::End();
-		}
-	};
-
-	layers.push_back(std::make_unique<DefaultLayer>("Default", frame_time));
-
 	init_vma();
 
 	init_swapchain();
@@ -84,46 +62,10 @@ bool VulkanEngine::initialize()
 
 	load_imgui(cleanup_queue, upload_context, render_pass);
 
-	for (auto& layer : layers) {
-		layer->on_attach();
-	}
-
 	return true;
 }
 
-void VulkanEngine::run()
-{
-	last_time = Clock::get_time();
-	while (!glfwWindowShouldClose(VulkanContext::get_window_handle())) {
-		glfwPollEvents(); // POLL EVENTS!
-
-		auto current_time = Clock::get_time();
-		nr_frames++;
-
-		TimeStep time_step(current_time - last_frame_time);
-		last_frame_time = current_time;
-
-		auto step = current_time - last_time;
-
-		if (step >= 1.0) {
-			frame_time = 1000.0 / static_cast<double>(nr_frames);
-			nr_frames = 0;
-			last_time = Clock::get_time();
-		}
-
-		for (auto& layer : layers) {
-			layer->on_update(time_step);
-		}
-		imgui_layer.on_update(time_step);
-
-		// imgui commands
-		imgui_layer.begin();
-		for (auto& layer : layers) {
-			layer->on_ui_render(time_step);
-		}
-		render_and_present();
-	}
-}
+void VulkanEngine::update(const TimeStep& step) { render_and_present(step); }
 
 void VulkanEngine::init_vma()
 {
@@ -146,11 +88,11 @@ void VulkanEngine::init_swapchain()
 								.use_default_format_selection()
 								// use vsync present mode
 								.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-								.set_desired_extent(spec.w, spec.h)
+								.set_desired_extent(spec.width, spec.height)
 								.build()
 								.value();
 
-	window_extent = { spec.w, spec.h };
+	window_extent = { spec.width, spec.height };
 
 	// store swapchain and its related images
 	swapchain = vkb_sc.swapchain;
@@ -162,7 +104,7 @@ void VulkanEngine::init_swapchain()
 		swapchain_images.push_back({ images->at(i), views->at(i) });
 	}
 
-	VkExtent3D depth_extent = { spec.w, spec.h, 1 };
+	VkExtent3D depth_extent = { spec.width, spec.height, 1 };
 
 	// hardcoding the depth format to 32 bit float
 	depth_format = VK_FORMAT_D32_SFLOAT;
@@ -319,8 +261,8 @@ void VulkanEngine::init_framebuffers()
 
 	fb_info.renderPass = render_pass;
 	fb_info.attachmentCount = 1;
-	fb_info.width = spec.w;
-	fb_info.height = spec.h;
+	fb_info.width = spec.width;
+	fb_info.height = spec.height;
 	fb_info.layers = 1;
 
 	// grab how many images we have in the swapchain
@@ -375,8 +317,9 @@ void VulkanEngine::init_sync_structures()
 	}
 }
 
-void VulkanEngine::render_and_present()
+void VulkanEngine::render_and_present(const TimeStep& step)
 {
+	ImGui::Render();
 	VK_CHECK(vkWaitForFences(device(), 1, &frame().render_fence, true, 1000000000));
 	VK_CHECK(vkResetFences(device(), 1, &frame().render_fence));
 
@@ -427,7 +370,7 @@ void VulkanEngine::render_and_present()
 
 	draw_renderables(cmd);
 
-	imgui_layer.end(cmd);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
 	vkCmdEndRenderPass(cmd);
 	// finalize the command buffer (we can no longer add commands, but it can now be executed)
@@ -529,13 +472,13 @@ void VulkanEngine::init_pipelines()
 	pipeline_builder.with_viewport({
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = static_cast<float>(spec.w),
-		.height = static_cast<float>(spec.h),
+		.width = static_cast<float>(spec.width),
+		.height = static_cast<float>(spec.height),
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f,
 	});
 
-	pipeline_builder.with_scissors({ .offset = { 0, 0 }, .extent = { spec.w, spec.h } });
+	pipeline_builder.with_scissors({ .offset = { 0, 0 }, .extent = { spec.width, spec.height } });
 
 	pipeline_builder.with_rasterizer(VI::Pipeline::rasterization_state_create_info(VK_POLYGON_MODE_FILL));
 
@@ -771,7 +714,7 @@ void VulkanEngine::init_scene()
 	VulkanRenderObject monkey;
 	monkey.mesh = library.mesh("monkey_smooth");
 	monkey.material = library.material("default");
-	monkey.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(3, 3, 3));
+	monkey.transform = glm::scale(glm::mat4{ 1.0 }, glm::vec3(3, 3, 3)) * glm::translate(glm::vec3(0, 2, 0));
 
 	VulkanRenderObject sponza;
 	sponza.mesh = library.mesh("sponza");
@@ -805,7 +748,7 @@ void VulkanEngine::init_scene()
 	map.material = textured_mat;
 	map.transform = glm::translate(glm::vec3{ 5, -10, 0 });
 
-	renderables.push_back(sponza);
+	// renderables.push_back(sponza);
 	renderables.push_back(monkey);
 	renderables.push_back(map);
 }
@@ -940,10 +883,6 @@ void VulkanEngine::draw_renderables(VkCommandBuffer cmd)
 
 void VulkanEngine::cleanup()
 {
-	for (auto& layer : layers) {
-		layer->on_detach();
-	}
-
 	// make sure the GPU has stopped doing its things
 	VkFence all_fences[FRAME_OVERLAP];
 	for (int i = 0; i < FRAME_OVERLAP; ++i) {
@@ -959,8 +898,6 @@ void VulkanEngine::cleanup()
 
 	vkDestroyDevice(device(), nullptr);
 	vkDestroyInstance(instance(), nullptr);
-
-	glfwDestroyWindow(VulkanContext::get_window_handle());
 }
 
 } // ForgottenEngine

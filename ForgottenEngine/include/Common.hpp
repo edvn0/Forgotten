@@ -8,6 +8,7 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 

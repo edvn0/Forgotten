@@ -17,6 +17,7 @@
 #include "VulkanMesh.hpp"
 #include "VulkanUBO.hpp"
 #include "VulkanUploadContext.hpp"
+#include "WindowProps.hpp"
 
 #include "imgui/ImGuiLayer.hpp"
 #include "vk_mem_alloc.h"
@@ -59,15 +60,8 @@ private:
 		VkDescriptorSet object_descriptor;
 	};
 
-	struct WindowSpecification {
-		uint32_t w, h;
-		std::string name;
-	};
-
 private:
-	WindowSpecification spec;
-	std::vector<std::unique_ptr<Layer>> layers;
-	ImGuiLayer imgui_layer;
+	WindowProps spec;
 
 	VmaAllocator allocator;
 
@@ -113,16 +107,12 @@ private:
 	int nr_frames;
 
 public:
-	explicit VulkanEngine(WindowSpecification spec)
-		: spec(std::move(spec))
-	{
-		Logger::init();
-		VulkanContext::construct_and_initialize();
-	}
+	explicit VulkanEngine(WindowProps spec)
+		: spec(std::move(spec)){};
 
 	bool initialize();
 
-	void run();
+	void update(const TimeStep& step);
 
 	void cleanup();
 
@@ -139,7 +129,7 @@ private:
 	void init_scene();
 	void init_descriptors();
 
-	void render_and_present();
+	void render_and_present(const TimeStep& step);
 	void draw_renderables(VkCommandBuffer cmd);
 };
 

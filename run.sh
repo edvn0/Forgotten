@@ -40,7 +40,7 @@ build_target() {
 start_target() {
     pushd "$1"
 
-    if ! [ "$TARGET" == "Forgotten" ]
+    if ! [ "$TARGET" == "ForgottenEngine" ]
     then
         exec "../$build_folder/$1/$1" "$@"
     fi;
@@ -70,7 +70,7 @@ do
 done
 
 found_target=0
-if [ "$TARGET" == "ForgottenEngine" ];
+if [ "$TARGET" == "ForgottenApp" ];
 then
     found_target=1
 fi;

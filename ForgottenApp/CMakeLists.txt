@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(ForgottenEngine)
-
-find_package(Vulkan REQUIRED)
+project(ForgottenApp)
 
 # ---------------------------------------
 # SPIRV Shader Compilation
@@ -46,45 +44,37 @@ foreach(shader_file IN LISTS SHADERS)
     list(APPEND SPV_SHADERS ${SHADER_BINARY_DIR}/${FILENAME}.spv)
 endforeach()
 
-add_custom_target(CompileEngineShaders ALL DEPENDS ${SPV_SHADERS})
+add_custom_target(CompileClientShaders ALL DEPENDS ${SPV_SHADERS})
 
 # ----------------------------------------------
 # End
 # ----------------------------------------------
-file(GLOB_RECURSE sources fg_pch.hpp
+file(GLOB_RECURSE sources
     include/**.hpp
     src/**.cpp
     test/*.hpp test/*.cpp)
 
-add_subdirectory(vendor/VulkanMemoryAllocator)
-add_subdirectory(vendor/spdlog)
-add_subdirectory(vendor/glfw)
-add_subdirectory(vendor/vk-bootstrap)
-add_subdirectory(vendor/tinyobjloader)
-add_subdirectory(vendor/imgui)
-
-add_library(ForgottenEngine STATIC ${sources})
-target_include_directories(ForgottenEngine PUBLIC
+add_executable(ForgottenApp ${sources})
+target_include_directories(ForgottenApp PUBLIC
     include src
     /usr/local/include
     /opt/homebrew/include
     ${Vulkan_INCLUDE_DIRS}
-    vendor/VulkanMemoryAllocator/include .
-    vendor/glm
-    vendor/spdlog/include
-    vendor/vk_init
-    vendor/glfw/include
-    vendor/vk-bootstrap/src
-    vendor/tinyobjloader
-    vendor/stb
-    vendor/imgui
+    ../ForgottenEngine/vendor/VulkanMemoryAllocator/include .
+    ../ForgottenEngine/vendor/glm
+    ../ForgottenEngine/vendor/spdlog/include
+    ../ForgottenEngine/vendor/vk_init
+    ../ForgottenEngine/vendor/glfw/include
+    ../ForgottenEngine/vendor/vk-bootstrap/src
+    ../ForgottenEngine/vendor/tinyobjloader
+    ../ForgottenEngine/vendor/stb
+    ../ForgottenEngine/vendor/imgui
 )
-target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui)
-target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
-target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
+target_link_libraries(ForgottenApp PUBLIC ForgottenEngine)
+target_compile_options(ForgottenApp PUBLIC -Wno-nullability-completeness)
 
-add_custom_command(TARGET CompileEngineShaders POST_BUILD
+add_custom_command(TARGET CompileClientShaders POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders $<TARGET_FILE_DIR:ForgottenEngine>/resources/shaders)
+    ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders $<TARGET_FILE_DIR:ForgottenApp>/resources/shaders)
 
-add_dependencies(ForgottenEngine CompileEngineShaders)
+add_dependencies(ForgottenApp CompileClientShaders)

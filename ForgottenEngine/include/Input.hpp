@@ -1,7 +1,7 @@
 #pragma once
 
-#include "keys/KeyCode.hpp"
-#include "keys/MouseCode.hpp"
+#include "codes/KeyCode.hpp"
+#include "codes/MouseCode.hpp"
 
 namespace ForgottenEngine {
 

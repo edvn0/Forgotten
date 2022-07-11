@@ -1,7 +1,7 @@
 #pragma once
 
+#include "codes/KeyCode.hpp"
 #include "events/Event.hpp"
-#include "keys/KeyCode.hpp"
 
 namespace ForgottenEngine {
 

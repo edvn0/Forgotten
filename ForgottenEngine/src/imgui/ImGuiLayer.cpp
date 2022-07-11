@@ -6,8 +6,10 @@
 
 #include "imgui/ImGuiLayer.hpp"
 
-#include "GLFW/glfw3.h"
+#include "Application.hpp"
 #include "Input.hpp"
+
+#include "GLFW/glfw3.h"
 #include "vulkan/VulkanContext.hpp"
 
 namespace ForgottenEngine {
@@ -21,7 +23,7 @@ void ImGuiLayer::on_detach()
 void ImGuiLayer::on_update(const TimeStep& step)
 {
 	if (Input::key(Key::Escape)) {
-		glfwSetWindowShouldClose(VulkanContext::get_window_handle(), GLFW_TRUE);
+		Application::the().exit();
 	}
 }
 

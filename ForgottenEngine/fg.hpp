@@ -6,5 +6,16 @@
 
 #include "vulkan/VulkanAssetLibrary.hpp"
 #include "vulkan/VulkanBuffer.hpp"
+#include "vulkan/VulkanEngine.hpp"
 
-#include <imgui/imgui.h>
+#include "Application.hpp"
+#include "Input.hpp"
+#include "Layer.hpp"
+#include "TimeStep.hpp"
+
+#include "events/ApplicationEvent.hpp"
+#include "events/Event.hpp"
+#include "events/KeyEvent.hpp"
+#include "events/MouseEvent.hpp"
+
+#include <imgui.h>
