@@ -84,6 +84,9 @@ void VulkanEngine::init_swapchain()
 	vkb::SwapchainBuilder sc_builder{ physical_device, dev, surface };
 
 	const auto&& [w, h] = VulkanContext::get_framebuffer_size();
+
+	CORE_INFO("Framebuffer size: {} by {}", w, h);
+
 	vkb::Swapchain vkb_sc = sc_builder
 								.use_default_format_selection()
 								// use vsync present mode

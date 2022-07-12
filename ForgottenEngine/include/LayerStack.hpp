@@ -24,6 +24,16 @@ public:
 	stack_it_rev rbegin() { return layer_stack.rbegin(); };
 	stack_it_rev rend() { return layer_stack.rend(); };
 
+	const std::unique_ptr<Layer>& get_imgui_layer()
+	{
+		for (const auto& l : layer_stack) {
+			if (l->get_name() == "ImGui") {
+				return l;
+			}
+		}
+		CORE_ERROR("Could not find an ImGui layer.");
+	}
+
 private:
 	stack layer_stack = {};
 	unsigned int layer_insert;

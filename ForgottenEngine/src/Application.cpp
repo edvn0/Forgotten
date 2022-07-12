@@ -27,9 +27,9 @@ Application::~Application() = default;
 void Application::run()
 {
 	auto nr_frames = 0;
-	last_time = Clock::get_time();
+	last_time = Clock::get_time<float>();
 	while (is_running) {
-		auto current_time = Clock::get_time();
+		auto current_time = Clock::get_time<float>();
 		nr_frames++;
 
 		TimeStep time_step(current_time - last_frame_time);
@@ -38,12 +38,10 @@ void Application::run()
 		auto step = current_time - last_time;
 
 		if (step >= 1.0) {
-			frame_time = 1000.0 / (double)nr_frames;
+			frame_time = 1000.0f / static_cast<float>(nr_frames);
 			nr_frames = 0;
-			last_time = Clock::get_time();
+			last_time = Clock::get_time<float>();
 		}
-
-		engine->update(time_step);
 
 		{
 			for (auto& l : stack) {
@@ -61,6 +59,7 @@ void Application::run()
 		{
 			window->on_update();
 		}
+		engine->update(time_step);
 	}
 }
 

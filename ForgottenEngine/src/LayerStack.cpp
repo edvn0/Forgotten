@@ -1,6 +1,7 @@
 #include "fg_pch.hpp"
 
 #include "LayerStack.hpp"
+#include "imgui/ImGuiLayer.hpp"
 
 namespace ForgottenEngine {
 

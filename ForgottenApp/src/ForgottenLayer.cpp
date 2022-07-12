@@ -103,15 +103,15 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				viewport_focused = ImGui::IsWindowFocused();
 				viewport_hovered = ImGui::IsWindowHovered();
-				const auto& imgui_layer = Application::the().get_imgui_layer();
+				const auto& imgui_layer = dynamic_cast<ImGuiLayer*>(Application::the().get_imgui_layer().get());
 				imgui_layer->should_block(!viewport_focused && !viewport_hovered);
 
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
-				ImTextureID texture_id = 0;
-				ImGui::Image(
-					texture_id, ImVec2{ viewport_size.x, viewport_size.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+				// ImTextureID texture_id = 0;
+				// ImGui::Image(
+				//	texture_id, ImVec2{ viewport_size.x, viewport_size.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {

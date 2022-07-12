@@ -92,7 +92,7 @@ void VulkanContext::construct_and_initialize(GLFWwindow* handle)
 
 	auto exts = std::vector<const char*>(extensions, extensions + extensions_count);
 	exts.push_back("VK_EXT_debug_report");
-	exts.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+	exts.push_back("VK_KHR_portability_enumeration");
 	exts.push_back("VK_KHR_get_physical_device_properties2");
 
 	vkb::InstanceBuilder builder;

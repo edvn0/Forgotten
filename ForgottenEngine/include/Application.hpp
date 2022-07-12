@@ -24,7 +24,7 @@ public:
 	virtual ~Application();
 
 	void run();
-	void cleanup() { engine->cleanup(); }
+	virtual void cleanup() { engine->cleanup(); }
 
 	void on_event(Event& event);
 	void add_layer(std::unique_ptr<Layer> layer);
@@ -32,7 +32,7 @@ public:
 
 	static inline Application& the() { return *instance; }
 	inline Window& get_window() { return *window; }
-	inline const std::unique_ptr<ImGuiLayer>& get_imgui_layer() { return imgui_layer; }
+	inline const std::unique_ptr<Layer>& get_imgui_layer() { return stack.get_imgui_layer(); }
 	[[nodiscard]] inline float get_frametime() const { return frame_time; };
 	inline void set_engine(std::unique_ptr<VulkanEngine>&& created) { engine = std::move(created); }
 

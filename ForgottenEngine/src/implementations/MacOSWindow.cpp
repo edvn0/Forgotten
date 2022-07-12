@@ -44,10 +44,10 @@ void MacOSWindow::init(const WindowProps& props)
 	if (!is_glfw_initialized) {
 		int success = glfwInit();
 
-		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GL_TRUE);
+		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		if (!success) {
-			CORE_ERROR("Initialization works: {0}", success);
+			CORE_ERROR("Initialization does not work: {0}", success);
 		}
 
 		is_glfw_initialized = true;

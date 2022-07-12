@@ -18,7 +18,7 @@ private:
 
 public:
 	ImGuiLayer()
-		: Layer("ImGuiLayer"){};
+		: Layer("ImGui"){};
 
 	~ImGuiLayer() override = default;
 

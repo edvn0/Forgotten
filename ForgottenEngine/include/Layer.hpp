@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include "events/Event.hpp"
 
@@ -23,6 +24,8 @@ public:
 	virtual void on_update(const TimeStep& ts){};
 	virtual void on_ui_render(const TimeStep& ts){};
 	virtual void on_detach(){};
+
+	virtual std::string_view get_name() { return name; }
 };
 
 } // namespace ForgottenEngine
