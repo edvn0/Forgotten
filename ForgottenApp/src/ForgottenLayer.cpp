@@ -74,7 +74,9 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
 
-				if (ImGui::MenuItem("Exit")) { }
+				if (ImGui::MenuItem("Exit")) {
+					Application::the().exit();
+				}
 				ImGui::EndMenu();
 			}
 

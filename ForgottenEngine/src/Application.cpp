@@ -8,7 +8,7 @@ namespace ForgottenEngine {
 
 Application* Application::instance = nullptr;
 
-Application::Application(const WindowProps& props)
+Application::Application(const ApplicationProperties& props)
 {
 	if (instance) {
 		CORE_ERROR("Application already exists.");
@@ -16,16 +16,17 @@ Application::Application(const WindowProps& props)
 	instance = this;
 
 	window = std::unique_ptr<Window>(Window::create(props));
+	window->init();
 	window->set_event_callback([&](Event& event) { this->on_event(event); });
 
-	imgui_layer = std::make_unique<ImGuiLayer>();
-	add_overlay(std::move(imgui_layer));
+	add_overlay(std::make_unique<ImGuiLayer>());
 };
 
 Application::~Application() = default;
 
 void Application::run()
 {
+	on_init();
 	auto nr_frames = 0;
 	last_time = Clock::get_time<float>();
 	while (is_running) {
@@ -49,11 +50,10 @@ void Application::run()
 			}
 		}
 		{
-			imgui_layer->begin();
+			ImGuiLayer::begin();
 			for (auto& l : stack) {
 				l->on_ui_render(time_step);
 			}
-			imgui_layer->end();
 		}
 
 		{

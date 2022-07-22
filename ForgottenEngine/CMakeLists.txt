@@ -80,7 +80,7 @@ target_include_directories(ForgottenEngine PUBLIC
     vendor/vk-bootstrap/src
     vendor/tinyobjloader
     vendor/stb
-    vendor/argparse
+    vendor/argparse/include
 )
 target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)

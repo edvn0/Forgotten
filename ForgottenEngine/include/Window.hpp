@@ -3,7 +3,7 @@
 #include "Common.hpp"
 #include "events/Event.hpp"
 
-#include "WindowProps.hpp"
+#include "ApplicationProperties.hpp"
 
 #include "vulkan/VulkanContext.hpp"
 
@@ -20,6 +20,8 @@ public:
 
 	virtual void on_update() = 0;
 
+	virtual void init() = 0;
+
 	virtual void set_event_callback(const EventCallback& callback) = 0;
 	virtual void set_vsync(bool enabled) = 0;
 	virtual bool is_vsync() = 0;
@@ -28,6 +30,6 @@ public:
 
 	[[nodiscard]] virtual void* get_natively() const = 0;
 
-	static Window* create(const WindowProps& props = WindowProps());
+	static Window* create(const ApplicationProperties& props = ApplicationProperties());
 };
 }

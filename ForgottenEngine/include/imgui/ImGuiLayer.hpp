@@ -10,6 +10,8 @@
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
 
+typedef VkCommandPool_T* VkCommandPool;
+
 namespace ForgottenEngine {
 
 class ImGuiLayer : public Layer {
@@ -29,8 +31,17 @@ public:
 		ImGui::NewFrame();
 	}
 
-	static void end() { }
+	static void end()
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		// Update and Render additional Platform Windows
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
+	}
 
+	void on_attach() override;
 	void on_update(const TimeStep& step) override;
 	void on_event(Event& e) override;
 	void on_detach() override;

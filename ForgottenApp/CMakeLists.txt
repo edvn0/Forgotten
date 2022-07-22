@@ -56,11 +56,15 @@ file(GLOB_RECURSE sources
 
 add_executable(ForgottenApp ${sources})
 target_include_directories(ForgottenApp PUBLIC
+    .
     include src
     /usr/local/include
     /opt/homebrew/include
     ${Vulkan_INCLUDE_DIRS}
-    ../ForgottenEngine/vendor/VulkanMemoryAllocator/include .
+    ../ForgottenEngine/include
+    ../ForgottenEngine/src
+    ../ForgottenEngine/
+    ../ForgottenEngine/vendor/VulkanMemoryAllocator/include
     ../ForgottenEngine/vendor/glm
     ../ForgottenEngine/vendor/spdlog/include
     ../ForgottenEngine/vendor/vk_init
@@ -69,6 +73,7 @@ target_include_directories(ForgottenApp PUBLIC
     ../ForgottenEngine/vendor/tinyobjloader
     ../ForgottenEngine/vendor/stb
     ../ForgottenEngine/vendor/imgui
+    ../ForgottenEngine/vendor/argparse/include
 )
 target_link_libraries(ForgottenApp PUBLIC ForgottenEngine)
 target_compile_options(ForgottenApp PUBLIC -Wno-nullability-completeness)

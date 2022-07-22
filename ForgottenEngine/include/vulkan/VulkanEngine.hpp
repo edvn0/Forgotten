@@ -8,6 +8,7 @@
 
 #include "Common.hpp"
 
+#include "ApplicationProperties.hpp"
 #include "DeletionQueue.hpp"
 #include "Layer.hpp"
 #include "Shader.hpp"
@@ -17,7 +18,6 @@
 #include "VulkanMesh.hpp"
 #include "VulkanUBO.hpp"
 #include "VulkanUploadContext.hpp"
-#include "WindowProps.hpp"
 
 #include "imgui/ImGuiLayer.hpp"
 #include "vk_mem_alloc.h"
@@ -61,7 +61,7 @@ private:
 	};
 
 private:
-	WindowProps spec;
+	ApplicationProperties spec;
 
 	VmaAllocator allocator;
 
@@ -107,7 +107,7 @@ private:
 	int nr_frames;
 
 public:
-	explicit VulkanEngine(WindowProps spec)
+	explicit VulkanEngine(ApplicationProperties spec)
 		: spec(std::move(spec)){};
 
 	bool initialize();

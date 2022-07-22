@@ -17,7 +17,7 @@ public:
 
 private:
 	void find_entity();
-	void ui_toolbar();
+	static void ui_toolbar();
 
 	void load_model(const std::filesystem::path& path);
 

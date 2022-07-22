@@ -6,6 +6,8 @@
 #include "TimeStep.hpp"
 #include "Window.hpp"
 
+#include "render/Renderer.hpp"
+
 #include "events/ApplicationEvent.hpp"
 #include "events/KeyEvent.hpp"
 #include "events/MouseEvent.hpp"
@@ -20,12 +22,17 @@ public:
 	static constexpr double FRAME_UPDATE_INTERVAL_S = 1.0;
 
 public:
-	explicit Application(const WindowProps& props);
+	explicit Application(const ApplicationProperties& props);
 	virtual ~Application();
 
 	void run();
-	virtual void cleanup() { engine->cleanup(); }
+	virtual void cleanup()
+	{
+		engine->cleanup();
+		Renderer::shut_down();
+	}
 
+	virtual void on_init(){};
 	void on_event(Event& event);
 	void add_layer(std::unique_ptr<Layer> layer);
 	void add_overlay(std::unique_ptr<Layer> overlay);
@@ -44,7 +51,6 @@ public:
 
 protected:
 	std::unique_ptr<Window> window;
-	std::unique_ptr<ImGuiLayer> imgui_layer;
 	std::unique_ptr<VulkanEngine> engine;
 
 	bool is_running = true;
@@ -58,5 +64,5 @@ private:
 	static Application* instance;
 };
 
-Application* create_application();
+Application* create_application(const ApplicationProperties& props);
 }

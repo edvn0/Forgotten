@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "Logger.hpp"
+
 #include <cstddef>
 #include <fstream>
 #include <functional>

@@ -21,17 +21,17 @@ struct ApplicationProperties {
 	std::string title;
 	uint32_t width;
 	uint32_t height;
-	bool fullscreen = false;
-	bool vsync = false;
+	bool full_screen = false;
+	bool v_sync = false;
 	RendererConfig renderer_config;
 
 	explicit ApplicationProperties(std::string title = "Engine", uint32_t w = 1280, uint32_t h = 720,
-		bool fullscreen = false, bool vsync = false, RendererConfig renderer_config = {})
+		bool full_screen = false, bool v_sync = false, RendererConfig renderer_config = {})
 		: title(std::move(title))
 		, width(w)
 		, height(h)
-		, fullscreen(fullscreen)
-		, vsync(vsync)
+		, full_screen(full_screen)
+		, v_sync(v_sync)
 		, renderer_config(std::move(renderer_config))
 	{
 	}

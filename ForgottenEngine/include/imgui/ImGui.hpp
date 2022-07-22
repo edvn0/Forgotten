@@ -112,7 +112,7 @@ static void load_imgui(DeletionQueue& cleanup_queue, UploadContext& upload_conte
 	ImGui::CreateContext();
 
 	// this initializes imgui for glfw
-	ImGui_ImplGlfw_InitForVulkan(VulkanContext::get_window_handle(), false);
+	ImGui_ImplGlfw_InitForVulkan(VulkanContext::get_window_handle(), true);
 
 	// this initializes imgui for Vulkan
 	ImGui_ImplVulkan_InitInfo init_info = {};
@@ -133,7 +133,7 @@ static void load_imgui(DeletionQueue& cleanup_queue, UploadContext& upload_conte
 	// clear font textures from cpu data
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-	style_imgui(VulkanContext::get_dpi());
+	// style_imgui(VulkanContext::get_dpi());
 
 	// add the destroy the imgui created structures
 	cleanup_queue.push_function([=]() {

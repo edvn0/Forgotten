@@ -107,7 +107,11 @@
             "charconv": "cpp",
             "condition_variable": "cpp",
             "format": "cpp",
-            "shared_mutex": "cpp"
+            "shared_mutex": "cpp",
+            "any": "cpp",
+            "future": "cpp",
+            "span": "cpp",
+            "unordered_set": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,

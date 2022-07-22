@@ -323,6 +323,7 @@ void VulkanEngine::init_sync_structures()
 void VulkanEngine::render_and_present(const TimeStep& step)
 {
 	ImGui::Render();
+
 	VK_CHECK(vkWaitForFences(device(), 1, &frame().render_fence, true, 1000000000));
 	VK_CHECK(vkResetFences(device(), 1, &frame().render_fence));
 
@@ -411,7 +412,7 @@ void VulkanEngine::render_and_present(const TimeStep& step)
 	pi.pImageIndices = &image_index;
 
 	VK_CHECK(vkQueuePresentKHR(VulkanContext::get_queue(), &pi));
-
+	ImGuiLayer::end();
 	// increase the number of frames drawn
 	frame_number++;
 }
