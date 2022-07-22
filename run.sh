@@ -11,6 +11,7 @@ popd () {
 copy_resources() {
     mkdir -p ./ForgottenEngine/resources
     cp -r ../../ForgottenEngine/resources ./ForgottenEngine/
+    cp -r ../../ForgottenApp/resources ./ForgottenApp/
 }
 
 set -e
@@ -40,9 +41,12 @@ build_target() {
 start_target() {
     pushd "$1"
 
+    local name="$1"
+
     if ! [ "$TARGET" == "ForgottenEngine" ]
     then
-        exec "../$build_folder/$1/$1" "$@"
+        shift
+        exec "../$build_folder/$name/$name" "$@"
     fi;
  
     popd

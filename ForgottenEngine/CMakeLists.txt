@@ -61,11 +61,14 @@ add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/vk-bootstrap)
 add_subdirectory(vendor/tinyobjloader)
+add_subdirectory(vendor/argparse)
 add_subdirectory(vendor/imgui)
 
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(ForgottenEngine PUBLIC
     include src
+    vendor/imgui
+    PRIVATE
     /usr/local/include
     /opt/homebrew/include
     ${Vulkan_INCLUDE_DIRS}
@@ -77,9 +80,9 @@ target_include_directories(ForgottenEngine PUBLIC
     vendor/vk-bootstrap/src
     vendor/tinyobjloader
     vendor/stb
-    vendor/imgui
+    vendor/argparse
 )
-target_link_libraries(ForgottenEngine PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui)
+target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
