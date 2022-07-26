@@ -13,7 +13,7 @@ namespace ForgottenEngine {
 static size_t pad_uniform_buffer_size(size_t original_size)
 {
 	// Calculate required alignment based on minimum device offset alignment
-	size_t ubo_alignment = VulkanContext::get_alignment();
+	size_t ubo_alignment = 16; // FIXME: Dont do this, call some get_min_alignment
 	size_t aligned_size = original_size;
 	if (ubo_alignment > 0) {
 		aligned_size = (aligned_size + ubo_alignment - 1) & ~(ubo_alignment - 1);

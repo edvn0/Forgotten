@@ -19,8 +19,8 @@ RenderCommandQueue::~RenderCommandQueue() { delete[] command_buffer; }
 
 void* RenderCommandQueue::allocate(RenderCommandFunction fn, uint32_t size)
 {
-	// TODO: alignment
-	*(RenderCommandFunction*)command_buffer_ptr = fn;
+	*reinterpret_cast<RenderCommandFunction*>(command_buffer_ptr) = fn;
+	// *(RenderCommandFunction*)command_buffer_ptr = fn;
 	command_buffer_ptr += sizeof(RenderCommandFunction);
 
 	*(uint32_t*)command_buffer_ptr = size;
@@ -35,9 +35,6 @@ void* RenderCommandQueue::allocate(RenderCommandFunction fn, uint32_t size)
 
 void RenderCommandQueue::execute()
 {
-	// HZ_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", command_count,
-	// (command_buffer_ptr - command_buffer));
-
 	auto* buffer = command_buffer;
 
 	for (uint32_t i = 0; i < command_count; i++) {

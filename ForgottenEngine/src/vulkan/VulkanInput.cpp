@@ -1,20 +1,16 @@
 #include "fg_pch.hpp"
 
+#include "Application.hpp"
 #include "Input.hpp"
-#include "vulkan/VulkanContext.hpp"
 
 #include <GLFW/glfw3.h>
 
 namespace ForgottenEngine {
 
-bool Input::key(KeyCode key)
-{
-	return glfwGetKey(VulkanContext::get_window_handle(), static_cast<int>(key)) == GLFW_PRESS;
-};
+static auto* get_window() { return static_cast<GLFWwindow*>(Application::the().get_window().get_natively()); }
 
-bool Input::mouse(MouseCode key)
-{
-	return glfwGetMouseButton(VulkanContext::get_window_handle(), static_cast<int>(key)) == GLFW_PRESS;
-};
+bool Input::key(KeyCode key) { return glfwGetKey(get_window(), static_cast<int>(key)) == GLFW_PRESS; };
+
+bool Input::mouse(MouseCode key) { return glfwGetMouseButton(get_window(), static_cast<int>(key)) == GLFW_PRESS; };
 
 }

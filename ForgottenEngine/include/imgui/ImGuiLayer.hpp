@@ -24,22 +24,14 @@ public:
 
 	~ImGuiLayer() override = default;
 
-	static void begin()
+	void begin()
 	{
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 	}
 
-	static void end()
-	{
-		ImGuiIO& io = ImGui::GetIO();
-		// Update and Render additional Platform Windows
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-		}
-	}
+	void end();
 
 	void on_attach() override;
 	void on_update(const TimeStep& step) override;

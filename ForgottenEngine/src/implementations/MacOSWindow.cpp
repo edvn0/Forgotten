@@ -7,7 +7,13 @@
 #include "events/MouseEvent.hpp"
 #include "imgui/ImGuiLayer.hpp"
 
+#include "Application.hpp"
+#include "vulkan/VulkanContext.hpp"
+#include "vulkan/VulkanSwapchain.hpp"
+
 #include <GLFW/glfw3.h>
+
+#include <utility>
 
 namespace ForgottenEngine {
 
@@ -15,14 +21,22 @@ static bool is_glfw_initialized = false;
 
 Window* Window::create(const ApplicationProperties& props) { return new MacOSWindow(props); };
 
-MacOSWindow::MacOSWindow(const ApplicationProperties& props)
-	: props(props){};
+MacOSWindow::MacOSWindow(ApplicationProperties props)
+	: props(std::move(props)){};
 
-MacOSWindow::~MacOSWindow() { glfwDestroyWindow(glfw_window); }
+MacOSWindow::~MacOSWindow() { shutdown(); }
 
-void MacOSWindow::on_update() { glfwPollEvents(); };
+void MacOSWindow::on_update(){};
 
-void MacOSWindow::set_vsync(bool enabled) { window_data.vsync = enabled; }
+void MacOSWindow::set_vsync(bool enabled)
+{
+	window_data.vsync = enabled;
+	props.v_sync = enabled;
+	Application::the().queue_event([&]() {
+		swapchain.set_vsync(props.v_sync);
+		swapchain.on_resize(props.width, props.height);
+	});
+}
 
 bool MacOSWindow::is_vsync() { return window_data.vsync; }
 
@@ -74,6 +88,16 @@ void MacOSWindow::init()
 
 	glfwSetWindowUserPointer(glfw_window, &window_data);
 
+	render_context = RendererContext::create();
+	render_context->init();
+
+	Reference<VulkanContext> ctxt = render_context.as<VulkanContext>();
+
+	swapchain.init(VulkanContext::get_instance());
+	swapchain.init_surface(glfw_window);
+
+	swapchain.create(&window_data.width, &window_data.height, props.v_sync);
+
 	int width, height;
 	glfwGetWindowSize(glfw_window, &width, &height);
 	window_data.width = width;
@@ -83,7 +107,13 @@ void MacOSWindow::init()
 	setup_events();
 };
 
-void MacOSWindow::shutdown() { glfwDestroyWindow(glfw_window); };
+void MacOSWindow::shutdown()
+{
+	swapchain.destroy();
+
+	glfwTerminate();
+	glfwDestroyWindow(glfw_window);
+};
 
 void MacOSWindow::setup_events()
 {
@@ -177,5 +207,7 @@ void MacOSWindow::setup_events()
 		user_ptr.callback(event);
 	});
 }
+
+void MacOSWindow::process_events() { glfwPollEvents(); }
 
 }

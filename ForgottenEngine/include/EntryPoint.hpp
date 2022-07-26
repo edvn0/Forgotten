@@ -8,10 +8,15 @@ extern ForgottenEngine::Application* ForgottenEngine::create_application(const A
 #include <memory>
 #include <system_error>
 
+#include <filesystem>
+
 int main(int argc, char** argv)
 {
 	ForgottenEngine::Application* app{ nullptr };
 	ForgottenEngine::Logger::init();
+
+	auto cwd = std::filesystem::current_path();
+	CORE_INFO("{}", cwd);
 
 	argparse::ArgumentParser program("main");
 

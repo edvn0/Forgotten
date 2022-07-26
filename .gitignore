@@ -269,4 +269,10 @@ ForgottenApp/resources/models/lost_empire.obj
 ForgottenApp/resources/models/lost_empire.mtl
 ForgottenApp/resources/textures/*
 
+# Created by https://www.toptal.com/developers/gitignore/api/xcode
+# Edit at https://www.toptal.com/developers/gitignore?templates=xcode
+
+### Xcode ###
+Xcode
+
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake,macos,visualstudiocode,clion+all,clion+iml

@@ -14,7 +14,7 @@ void ForgottenLayer::on_attach() { }
 
 void ForgottenLayer::on_detach() { }
 
-void ForgottenLayer::on_update(const TimeStep& ts) { }
+void ForgottenLayer::on_update(const TimeStep& ts) { Renderer::wait_and_render(); }
 
 void ForgottenLayer::on_ui_render(const TimeStep& ts)
 {

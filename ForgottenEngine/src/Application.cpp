@@ -4,6 +4,8 @@
 #include "Clock.hpp"
 #include "Input.hpp"
 
+#include "render/Renderer.hpp"
+
 namespace ForgottenEngine {
 
 Application* Application::instance = nullptr;
@@ -19,47 +21,53 @@ Application::Application(const ApplicationProperties& props)
 	window->init();
 	window->set_event_callback([&](Event& event) { this->on_event(event); });
 
+	Renderer::init();
+	Renderer::wait_and_render();
 	add_overlay(std::make_unique<ImGuiLayer>());
 };
 
-Application::~Application() = default;
+Application::~Application(){};
+
+void Application::cleanup()
+{
+	Renderer::wait_and_render();
+	Renderer::shut_down();
+}
 
 void Application::run()
 {
 	on_init();
-	auto nr_frames = 0;
-	last_time = Clock::get_time<float>();
 	while (is_running) {
-		auto current_time = Clock::get_time<float>();
-		nr_frames++;
+		static uint64_t frame_counter = 0;
+		process_events();
 
-		TimeStep time_step(current_time - last_frame_time);
-		last_frame_time = current_time;
-
-		auto step = current_time - last_time;
-
-		if (step >= 1.0) {
-			frame_time = 1000.0f / static_cast<float>(nr_frames);
-			nr_frames = 0;
-			last_time = Clock::get_time<float>();
-		}
-
-		{
-			for (auto& l : stack) {
-				l->on_update(time_step);
+		if (!is_minimized) {
+			Renderer::begin_frame();
+			{
+				for (const auto& layer : stack)
+					layer->on_update(time_step);
 			}
-		}
-		{
-			ImGuiLayer::begin();
-			for (auto& l : stack) {
-				l->on_ui_render(time_step);
+
+			// Render ImGui on render thread
+			Application* app = this;
+			{
+				Renderer::submit([app, ts = time_step]() { app->render_imgui(ts); });
+				Renderer::submit([app]() { app->imgui_layer()->end(); });
 			}
+			Renderer::end_frame();
+
+			window->get_swapchain().begin_frame();
+			Renderer::wait_and_render();
+			window->swap_buffers();
 		}
 
-		{
-			window->on_update();
-		}
-		engine->update(time_step);
+		auto time = Clock::get_time<float>();
+		frame_time = TimeStep(time - last_frame_time);
+		time_step = TimeStep(glm::min<float>(frame_time, 0.0333f));
+		last_frame_time = time;
+
+		// HZ_CORE_INFO("-- END FRAME {0}", frame_counter);
+		frame_counter++;
 	}
 }
 
@@ -68,17 +76,29 @@ void Application::on_event(Event& event)
 	EventDispatcher dispatcher(event);
 
 	dispatcher.dispatch_event<WindowCloseEvent>([&](WindowCloseEvent& e) {
-		(void)e;
-
 		is_running = false;
 		return true;
 	});
 
 	dispatcher.dispatch_event<WindowResizeEvent>([&](WindowResizeEvent& e) {
-		window->resize_window(e.get_width(), e.get_height());
-		window->resize_framebuffer(e.get_width(), e.get_height());
+		if (e.get_width() == 0 || e.get_height() == 0) {
+			return false;
+		}
+
+		window->get_swapchain().on_resize(
+			static_cast<uint32_t>(e.get_width()), static_cast<uint32_t>(e.get_height()));
 		return false;
 	});
+
+	if (event.handled)
+		return;
+
+	for (auto& event_cb : event_callbacks) {
+		event_cb(event);
+
+		if (event.handled)
+			break;
+	}
 
 	for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
 		if (event) {
@@ -92,5 +112,17 @@ void Application::on_event(Event& event)
 void Application::add_layer(std::unique_ptr<Layer> layer) { stack.push(std::move(layer)); }
 
 void Application::add_overlay(std::unique_ptr<Layer> overlay) { stack.push_overlay(std::move(overlay)); }
+
+Window& Application::get_window() { return *window; }
+
+void Application::render_imgui(TimeStep step)
+{
+	imgui_layer()->begin();
+
+	for (auto& l : stack)
+		l->on_ui_render(step);
+}
+
+void Application::process_events() { window->process_events(); }
 
 }

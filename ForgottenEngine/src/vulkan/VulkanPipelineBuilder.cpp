@@ -52,7 +52,8 @@ VkPipeline VulkanPipelineBuilder::build(VkRenderPass pass)
 	pi.basePipelineHandle = nullptr;
 
 	VkPipeline created_pipeline;
-	auto res = vkCreateGraphicsPipelines(VulkanContext::get_device(), nullptr, 1, &pi, nullptr, &created_pipeline);
+	auto res = vkCreateGraphicsPipelines(
+		VulkanContext::get_current_device()->get_vulkan_device(), nullptr, 1, &pi, nullptr, &created_pipeline);
 	if (res != VK_SUCCESS) {
 		CORE_ERROR("Failed to create pipeline. Potential reason: {}", res);
 	} else {

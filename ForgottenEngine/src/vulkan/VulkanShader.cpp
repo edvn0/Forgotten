@@ -9,7 +9,11 @@
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanShader.hpp"
 
+#include "Assets.hpp"
+
 namespace ForgottenEngine {
+
+static const std::filesystem::path RESOURCE_PATH = "resources";
 
 VulkanShader::VulkanShader(std::string path)
 {
@@ -23,16 +27,21 @@ VulkanShader::VulkanShader(std::string path)
 
 VkShaderModule VulkanShader::get_module() { return shader; }
 
-void VulkanShader::destroy() { vkDestroyShaderModule(VulkanContext::get_device(), shader, nullptr); }
+void VulkanShader::destroy()
+{
+	vkDestroyShaderModule(VulkanContext::get_current_device()->get_vulkan_device(), shader, nullptr);
+}
 
 bool load_vulkan_shader_module(const std::string& path, VkShaderModule* out_module)
 {
 	// open the file. With cursor at the end
-	std::ifstream file(path, std::ios::ate | std::ios::binary);
+	auto p = Assets::load(path);
 
-	if (!file.is_open()) {
-		CORE_ERROR("Could not find file: {}", path);
+	if (!p) {
+		CORE_ASSERT(false, "Could not find file.");
 	}
+
+	auto& file = *p;
 
 	// find what the size of the file is by looking up the location of the cursor
 	// because the cursor is at the end, it gives the size directly in bytes
@@ -57,7 +66,8 @@ bool load_vulkan_shader_module(const std::string& path, VkShaderModule* out_modu
 
 	// check that the creation goes well.
 	VkShaderModule shader_module;
-	VK_CHECK(vkCreateShaderModule(VulkanContext::get_device(), &create_info, nullptr, &shader_module));
+	VK_CHECK(vkCreateShaderModule(
+		VulkanContext::get_current_device()->get_vulkan_device(), &create_info, nullptr, &shader_module));
 
 	*out_module = shader_module;
 

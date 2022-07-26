@@ -42,4 +42,4 @@ private:
 #define CLIENT_DEBUG(...) ::ForgottenEngine::Logger::get_client_logger()->debug(__VA_ARGS__)
 #define CLIENT_TRACE(...) ::ForgottenEngine::Logger::get_client_logger()->trace(__VA_ARGS__)
 
-#define CORE_ASSERT(condition, ...) { if(!(condition)) { CORE_ERR(__VA_ARGS__); abort(); } }
+#define CORE_ASSERT(condition, ...) { if(!(condition)) { CORE_ERROR(__VA_ARGS__); } }

@@ -4,21 +4,21 @@
 #include "vulkan/VulkanImage.hpp"
 #include "vulkan/VulkanInitializers.hpp"
 
+#include "vulkan/VulkanContext.hpp"
+
 #include "stb_image.h"
 
 namespace ForgottenEngine {
 
 VulkanImage::VulkanImage(const std::string& path)
 {
-	stbi_uc* ps = stbi_load(path.c_str(), &w, &h, &c, STBI_rgb_alpha);
+	auto correct_path = Assets::find_resources_by_path(path);
 
-	if (!ps) {
-		CORE_ERROR("Could not load file at: {}.", path);
-	} else {
-		CORE_INFO("Image read at: {}.", path);
-	}
+	CORE_ASSERT(correct_path, "Could not find asset at {}.", path);
 
-	pixels = ps;
+	auto path_str = (*correct_path).c_str();
+	pixels = stbi_load(path_str, &w, &h, &c, STBI_rgb_alpha);
+	;
 }
 
 VulkanImage::~VulkanImage() = default;
@@ -111,7 +111,7 @@ void VulkanImage::upload(VmaAllocator& allocator, DeletionQueue& cleanup_queue, 
 
 	VkImageViewCreateInfo ii
 		= VI::Image::image_view_create_info(VK_FORMAT_R8G8B8A8_SRGB, new_image.image, VK_IMAGE_ASPECT_COLOR_BIT);
-	vkCreateImageView(VulkanContext::get_device(), &ii, nullptr, &image_view);
+	vkCreateImageView(VulkanContext::get_current_device()->get_vulkan_device(), &ii, nullptr, &image_view);
 
 	cleanup_queue.push_function([=]() { vmaDestroyImage(allocator, new_image.image, new_image.allocation); });
 

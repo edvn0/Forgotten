@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Assets.hpp"
 #include "Logger.hpp"
 
 #include <cstddef>

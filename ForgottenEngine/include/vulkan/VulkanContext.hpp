@@ -3,40 +3,42 @@
 #include <functional>
 #include <vulkan/vulkan.h>
 
+#include "Reference.hpp"
+#include "render/Renderer.hpp"
+#include "render/RendererContext.hpp"
+
+#include "vulkan/VulkanDevice.hpp"
+#include "vulkan/VulkanSwapchain.hpp"
+
 struct GLFWwindow;
 
 namespace ForgottenEngine {
 
-class VulkanContext {
-private:
+class VulkanContext : public RendererContext {
+public:
 	VulkanContext() = default;
+	~VulkanContext() override;
 
-public:
-	static VulkanContext& the()
-	{
-		static VulkanContext instance; // Guaranteed to be destroyed.
-		return instance;
-	}
+	void init() override;
 
-public:
-	VulkanContext(const VulkanContext& vc) = delete;
-	void operator=(const VulkanContext& vc) = delete;
+	Reference<VulkanDevice> get_device();
 
-public:
-	static void construct_and_initialize(GLFWwindow* handle);
+	static VkInstance get_instance() { return vulkan_instance; }
 
-	static VkInstance get_instance();
-	static VkSurfaceKHR get_surface();
-	static VkAllocationCallbacks* get_allocator();
-	static uint32_t get_queue_family();
-	static VkQueue get_queue();
-	static VkPhysicalDevice get_physical_device();
-	static VkDevice get_device();
-	static uint32_t get_alignment();
-	static GLFWwindow* get_window_handle();
-	static std::pair<int, int> get_framebuffer_size();
-	static float get_dpi();
-	static void cleanup();
+	static Reference<VulkanContext> get();
+	static Reference<VulkanDevice> get_current_device();
+
+private:
+	// Devices
+	Reference<VulkanPhysicalDevice> physical_device;
+	Reference<VulkanDevice> device;
+
+	// Vulkan instance
+	inline static VkInstance vulkan_instance;
+
+	VkPipelineCache pipeline_cache = nullptr;
+	VulkanSwapchain swapchain;
+	VkDebugUtilsMessengerEXT debug_messenger;
 };
 
 }

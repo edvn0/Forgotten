@@ -12,14 +12,14 @@ static std::mutex live_reference_mutex;
 
 namespace RefUtils {
 
-	void AddToLiveReferences(void* instance)
+	void add_to_live_references(void* instance)
 	{
 		std::scoped_lock<std::mutex> lock(live_reference_mutex);
 		CORE_ASSERT(instance, "No instance");
 		live_references.insert(instance);
 	}
 
-	void RemoveFromLiveReferences(void* instance)
+	void remove_from_live_references(void* instance)
 	{
 		std::scoped_lock<std::mutex> lock(live_reference_mutex);
 		CORE_ASSERT(instance, "No instance");
@@ -27,7 +27,7 @@ namespace RefUtils {
 		live_references.erase(instance);
 	}
 
-	bool IsLive(void* instance)
+	bool is_live(void* instance)
 	{
 		CORE_ASSERT(instance, "No instance");
 		return live_references.find(instance) != live_references.end();

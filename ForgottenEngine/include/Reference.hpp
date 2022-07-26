@@ -3,7 +3,7 @@
 #include <atomic>
 #include <stdint.h>
 
-namespace Hazel {
+namespace ForgottenEngine {
 
 class ReferenceCounted {
 public:
@@ -115,15 +115,15 @@ public:
 	T* raw() { return instance; }
 	const T* raw() const { return instance; }
 
-	void Reset(T* instance = nullptr)
+	void reset(T* instance = nullptr)
 	{
 		dec_ref();
 		instance = instance;
 	}
 
-	template <typename T2> Reference<T2> As() const { return Reference<T2>(*this); }
+	template <typename T2> Reference<T2> as() const { return Reference<T2>(*this); }
 
-	template <typename... Args> static Reference<T> Create(Args&&... args)
+	template <typename... Args> static Reference<T> create(Args&&... args)
 	{
 		return Reference<T>(new T(std::forward<Args>(args)...));
 	}
@@ -132,7 +132,7 @@ public:
 
 	bool operator!=(const Reference<T>& other) const { return !(*this == other); }
 
-	bool EqualsObject(const Reference<T>& other)
+	bool equals_object(const Reference<T>& other)
 	{
 		if (!instance || !other.instance)
 			return false;
@@ -179,8 +179,8 @@ public:
 	T& operator*() { return *instance; }
 	const T& operator*() const { return *instance; }
 
-	bool IsValid() const { return instance ? RefUtils::is_live(instance) : false; }
-	operator bool() const { return IsValid(); }
+	bool is_valid() const { return instance ? RefUtils::is_live(instance) : false; }
+	operator bool() const { return is_valid(); }
 
 private:
 	T* instance = nullptr;

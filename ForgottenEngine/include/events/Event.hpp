@@ -24,8 +24,6 @@ enum class EventType {
 	MouseScrolled
 };
 
-#define BIT(x) (1 << (x))
-
 enum EventCategory {
 	None = 0,
 	EventCategoryApplication = BIT(0),

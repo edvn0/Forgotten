@@ -30,7 +30,12 @@ const std::vector<uint32_t>& DynamicMesh::get_indices() const { return indices; 
 
 VulkanMesh::VulkanMesh(std::string path)
 {
-	std::filesystem::path fp{ path };
+	auto fp = Assets::find_resources_by_path(std::move(path));
+
+	CORE_ASSERT(fp, "Could not find file at {}", (*fp).c_str());
+
+	auto file_path = *fp;
+
 	// attrib will contain the vertex arrays of the file
 	tinyobj::attrib_t attrib;
 	// shapes contains the info for each separate object in the file
@@ -42,7 +47,8 @@ VulkanMesh::VulkanMesh(std::string path)
 	std::string warn;
 	std::string err;
 
-	tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, fp.c_str(), fp.parent_path().c_str());
+	tinyobj::LoadObj(
+		&attrib, &shapes, &materials, &warn, &err, file_path.c_str(), file_path.parent_path().c_str());
 	if (!warn.empty()) {
 		CORE_WARN("WARN: {}", warn);
 	}

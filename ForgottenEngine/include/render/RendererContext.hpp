@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Ref.hpp"
+#include "Reference.hpp"
 
 struct GLFWwindow;
 
-namespace Hazel {
+namespace ForgottenEngine {
 
-class RendererContext : public RefCounted {
+class RendererContext : public ReferenceCounted {
 public:
 	RendererContext() = default;
 	virtual ~RendererContext() = default;
 
-	virtual void Init() = 0;
+	virtual void init() = 0;
 
-	static Ref<RendererContext> Create();
+	static Reference<RendererContext> create();
 };
 
 }

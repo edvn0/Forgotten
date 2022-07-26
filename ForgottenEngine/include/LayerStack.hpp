@@ -31,7 +31,7 @@ public:
 				return l;
 			}
 		}
-		CORE_ERROR("Could not find an ImGui layer.");
+		CORE_ASSERT(false, "Could not find an ImGui layer.");
 	}
 
 private:

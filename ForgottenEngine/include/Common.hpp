@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Logger.hpp"
+#include "Reference.hpp"
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>

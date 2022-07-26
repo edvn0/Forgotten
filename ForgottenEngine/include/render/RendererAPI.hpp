@@ -10,6 +10,8 @@ enum class PrimitiveType { None = 0, Triangles, Lines };
 
 class RendererAPI {
 public:
+	virtual ~RendererAPI(){};
+
 	virtual void init() = 0;
 	virtual void shut_down() = 0;
 

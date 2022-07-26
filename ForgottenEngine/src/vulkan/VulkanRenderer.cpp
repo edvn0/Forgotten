@@ -3,6 +3,8 @@
 #include "render/RendererAPI.hpp"
 #include "vulkan/VulkanRenderer.hpp"
 
+#include "render/RenderCommandQueue.hpp"
+
 #include <vulkan/vulkan.h>
 
 namespace ForgottenEngine {

@@ -6,11 +6,13 @@ namespace ForgottenEngine {
 
 class VulkanRenderer : public RendererAPI {
 public:
-	virtual void init() override;
-	virtual void shut_down() override;
+	~VulkanRenderer() override = default;
 
-	virtual void begin_frame() override;
-	virtual void end_frame() override;
+	void init() override;
+	void shut_down() override;
+
+	void begin_frame() override;
+	void end_frame() override;
 };
 
 } // namespace ForgottenEngine
