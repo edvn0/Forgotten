@@ -27,15 +27,14 @@ void ImGuiLayer::on_attach()
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 
-	auto* instance = this;
-	Renderer::submit([instance]() {
+	Renderer::submit([]() {
 		Application& app = Application::the();
 		auto* window = static_cast<GLFWwindow*>(app.get_window().get_natively());
 
 		auto vulkanContext = VulkanContext::get();
 		auto device = vulkanContext->get_device();
 
-		VkDescriptorPool descriptorPool;
+		VkDescriptorPool imgui_descriptor_pool;
 
 		// Create Descriptor Pool
 		VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 100 },
@@ -50,7 +49,7 @@ void ImGuiLayer::on_attach()
 		pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
 		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 		pool_info.pPoolSizes = pool_sizes;
-		VK_CHECK(vkCreateDescriptorPool(device->get_vulkan_device(), &pool_info, nullptr, &descriptorPool));
+		VK_CHECK(vkCreateDescriptorPool(device->get_vulkan_device(), &pool_info, nullptr, &imgui_descriptor_pool));
 
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -61,7 +60,7 @@ void ImGuiLayer::on_attach()
 		init_info.QueueFamily = device->get_physical_device()->get_queue_family_indices().graphics;
 		init_info.Queue = device->get_graphics_queue();
 		init_info.PipelineCache = nullptr;
-		init_info.DescriptorPool = descriptorPool;
+		init_info.DescriptorPool = imgui_descriptor_pool;
 		init_info.Allocator = nullptr;
 		init_info.MinImageCount = 2;
 		auto& swapchain = Application::the().get_window().get_swapchain();
@@ -80,7 +79,7 @@ void ImGuiLayer::on_attach()
 		// - Read 'docs/FONTS.md' for more instructions and details.
 		// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a
 		// double backslash \\ !
-		// io.Fonts->AddFontDefault();
+		ImGui::GetIO().Fonts->AddFontFromFileTTF("fonts/Olive_Days.ttf", 12.0f);
 		// io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
 		// io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
 		// io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
@@ -155,8 +154,8 @@ void ImGuiLayer::end()
 	drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	drawCmdBufInfo.pNext = nullptr;
 
-	VkCommandBuffer drawCommandBuffer = swapchain.get_current_drawbuffer();
-	VK_CHECK(vkBeginCommandBuffer(drawCommandBuffer, &drawCmdBufInfo));
+	VkCommandBuffer draw_command_buffer = swapchain.get_current_drawbuffer();
+	VK_CHECK(vkBeginCommandBuffer(draw_command_buffer, &drawCmdBufInfo));
 
 	VkRenderPassBeginInfo renderPassBeginInfo = {};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -170,19 +169,19 @@ void ImGuiLayer::end()
 	renderPassBeginInfo.pClearValues = clearValues;
 	renderPassBeginInfo.framebuffer = swapchain.get_current_framebuffer();
 
-	vkCmdBeginRenderPass(drawCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+	vkCmdBeginRenderPass(draw_command_buffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
 	VkCommandBufferInheritanceInfo inheritanceInfo = {};
 	inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 	inheritanceInfo.renderPass = swapchain.get_render_pass();
 	inheritanceInfo.framebuffer = swapchain.get_current_framebuffer();
 
-	VkCommandBufferBeginInfo cmdBufInfo = {};
-	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-	cmdBufInfo.pInheritanceInfo = &inheritanceInfo;
+	VkCommandBufferBeginInfo cbi = {};
+	cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+	cbi.pInheritanceInfo = &inheritanceInfo;
 
-	VK_CHECK(vkBeginCommandBuffer(imgui_command_buffers[commandBufferIndex], &cmdBufInfo));
+	VK_CHECK(vkBeginCommandBuffer(imgui_command_buffers[commandBufferIndex], &cbi));
 
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
@@ -205,17 +204,16 @@ void ImGuiLayer::end()
 
 	VK_CHECK(vkEndCommandBuffer(imgui_command_buffers[commandBufferIndex]));
 
-	std::vector<VkCommandBuffer> commandBuffers;
-	commandBuffers.push_back(imgui_command_buffers[commandBufferIndex]);
+	std::vector<VkCommandBuffer> buffers;
+	buffers.push_back(imgui_command_buffers[commandBufferIndex]);
 
-	vkCmdExecuteCommands(drawCommandBuffer, uint32_t(commandBuffers.size()), commandBuffers.data());
+	vkCmdExecuteCommands(draw_command_buffer, uint32_t(buffers.size()), buffers.data());
 
-	vkCmdEndRenderPass(drawCommandBuffer);
+	vkCmdEndRenderPass(draw_command_buffer);
 
-	VK_CHECK(vkEndCommandBuffer(drawCommandBuffer));
+	VK_CHECK(vkEndCommandBuffer(draw_command_buffer));
 
 	ImGuiIO& io = ImGui::GetIO();
-	(void)io;
 	// Update and Render additional Platform Windows
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 		ImGui::UpdatePlatformWindows();

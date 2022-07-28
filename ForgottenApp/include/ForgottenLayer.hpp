@@ -16,7 +16,6 @@ public:
 	void on_detach() override;
 
 private:
-	void find_entity();
 	static void ui_toolbar();
 
 	void load_model(const std::filesystem::path& path);

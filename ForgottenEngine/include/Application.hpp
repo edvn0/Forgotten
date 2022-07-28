@@ -17,16 +17,13 @@
 namespace ForgottenEngine {
 
 class Application {
-public:
 	using EventCallbackFn = std::function<void(Event&)>;
-	static constexpr double FRAME_UPDATE_INTERVAL_S = 1.0;
 
 public:
 	explicit Application(const ApplicationProperties& props);
 	virtual ~Application();
 
 	void run();
-	virtual void cleanup();
 
 	virtual void on_init(){};
 	void on_event(Event& event);

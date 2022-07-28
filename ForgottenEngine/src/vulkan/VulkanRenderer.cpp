@@ -42,7 +42,7 @@ static VulkanRendererData* renderer_data = nullptr;
 
 static inline VulkanRendererData& the() { return *renderer_data; }
 
-static RenderCommandQueue* s_CommandQueue = nullptr;
+static RenderCommandQueue* command_queue = nullptr;
 
 void VulkanRenderer::init() { renderer_data = new VulkanRendererData(); };
 

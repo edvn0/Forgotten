@@ -227,7 +227,6 @@ VulkanDevice::VulkanDevice(const Reference<VulkanPhysicalDevice>& p_device, VkPh
 	VkDeviceCreateInfo dci = {};
 	dci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	dci.queueCreateInfoCount = static_cast<uint32_t>(physical_device->queue_create_infos.size());
-	;
 	dci.pQueueCreateInfos = physical_device->queue_create_infos.data();
 	dci.pEnabledFeatures = &enabled_features;
 

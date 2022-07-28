@@ -40,36 +40,28 @@ void VulkanSwapchain::init_surface(GLFWwindow* handle)
 
 	// Search for a graphics and a present queue in the array of queue
 	// families, try to find one that supports both
-	uint32_t graphicsQueueNodeIndex = UINT32_MAX;
-	uint32_t presentQueueNodeIndex = UINT32_MAX;
+	uint32_t graphics_queue_index = UINT32_MAX;
+	uint32_t present_queue_index = UINT32_MAX;
 	for (uint32_t i = 0; i < queueCount; i++) {
-		if ((queue_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
-			if (graphicsQueueNodeIndex == UINT32_MAX) {
-				graphicsQueueNodeIndex = i;
-			}
-
-			if (supportsPresent[i] == VK_TRUE) {
-				graphicsQueueNodeIndex = i;
-				presentQueueNodeIndex = i;
-				break;
-			}
+		if (queue_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			graphics_queue_index = i;
 		}
 	}
-	if (presentQueueNodeIndex == UINT32_MAX) {
+	if (present_queue_index == UINT32_MAX) {
 		// If there's no queue that supports both present and graphics
 		// try to find a separate present queue
 		for (uint32_t i = 0; i < queueCount; ++i) {
 			if (supportsPresent[i] == VK_TRUE) {
-				presentQueueNodeIndex = i;
+				present_queue_index = i;
 				break;
 			}
 		}
 	}
 
-	CORE_ASSERT(graphicsQueueNodeIndex != UINT32_MAX, "");
-	CORE_ASSERT(presentQueueNodeIndex != UINT32_MAX, "");
+	CORE_ASSERT(graphics_queue_index != UINT32_MAX, "");
+	CORE_ASSERT(present_queue_index != UINT32_MAX, "");
 
-	queue_node_index = graphicsQueueNodeIndex;
+	queue_node_index = graphics_queue_index;
 
 	find_image_format_and_color_space();
 }
@@ -82,7 +74,7 @@ void VulkanSwapchain::create(uint32_t* w, uint32_t* h, bool vsync)
 	VkPhysicalDevice physicalDevice
 		= VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
-	VkSwapchainKHR oldSwapchain = swapchain;
+	VkSwapchainKHR old_sc = swapchain;
 
 	// Get physical device surface properties and formats
 	VkSurfaceCapabilitiesKHR surfCaps;
@@ -96,17 +88,17 @@ void VulkanSwapchain::create(uint32_t* w, uint32_t* h, bool vsync)
 	VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
 		physicalDevice, surface, &presentModeCount, presentModes.data()));
 
-	VkExtent2D swapchainExtent = {};
+	VkExtent2D sc_extent = {};
 	// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the
 	// swapchain
 	if (surfCaps.currentExtent.width == (uint32_t)-1) {
 		// If the surface size is undefined, the size is set to
 		// the size of the images requested.
-		swapchainExtent.width = *w;
-		swapchainExtent.height = *h;
+		sc_extent.width = *w;
+		sc_extent.height = *h;
 	} else {
 		// If the surface size is defined, the swap chain size must match
-		swapchainExtent = surfCaps.currentExtent;
+		sc_extent = surfCaps.currentExtent;
 		*w = surfCaps.currentExtent.width;
 		*h = surfCaps.currentExtent.height;
 	}
@@ -118,40 +110,40 @@ void VulkanSwapchain::create(uint32_t* w, uint32_t* h, bool vsync)
 
 	// The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
 	// This mode waits for the vertical blank ("v-sync")
-	VkPresentModeKHR swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+	VkPresentModeKHR sc_present_mode = VK_PRESENT_MODE_FIFO_KHR;
 
 	// If v-sync is not requested, try to find a mailbox mode
 	// It's the lowest latency non-tearing present mode available
 	if (!vsync) {
 		for (size_t i = 0; i < presentModeCount; i++) {
 			if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-				swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+				sc_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 				break;
 			}
-			if ((swapchainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR)
+			if ((sc_present_mode != VK_PRESENT_MODE_MAILBOX_KHR)
 				&& (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
-				swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+				sc_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 			}
 		}
 	}
 
 	// Determine the number of images
-	uint32_t desiredNumberOfSwapchainImages = surfCaps.minImageCount + 1;
-	if ((surfCaps.maxImageCount > 0) && (desiredNumberOfSwapchainImages > surfCaps.maxImageCount)) {
-		desiredNumberOfSwapchainImages = surfCaps.maxImageCount;
+	uint32_t asked_sc_images = surfCaps.minImageCount + 1;
+	if ((surfCaps.maxImageCount > 0) && (asked_sc_images > surfCaps.maxImageCount)) {
+		asked_sc_images = surfCaps.maxImageCount;
 	}
 
 	// Find the transformation of the surface
-	VkSurfaceTransformFlagsKHR preTransform;
+	VkSurfaceTransformFlagsKHR pre_transform;
 	if (surfCaps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
 		// We prefer a non-rotated transform
-		preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+		pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	} else {
-		preTransform = surfCaps.currentTransform;
+		pre_transform = surfCaps.currentTransform;
 	}
 
 	// Find a supported composite alpha format (not all devices support alpha opaque)
-	VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	// Simply select the first composite alpha format available
 	std::vector<VkCompositeAlphaFlagBitsKHR> compositeAlphaFlags = {
 		VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
@@ -161,45 +153,45 @@ void VulkanSwapchain::create(uint32_t* w, uint32_t* h, bool vsync)
 	};
 	for (auto& compositeAlphaFlag : compositeAlphaFlags) {
 		if (surfCaps.supportedCompositeAlpha & compositeAlphaFlag) {
-			compositeAlpha = compositeAlphaFlag;
+			composite_alpha = compositeAlphaFlag;
 			break;
 		};
 	}
 
-	VkSwapchainCreateInfoKHR swapchainCI = {};
-	swapchainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapchainCI.pNext = nullptr;
-	swapchainCI.surface = surface;
-	swapchainCI.minImageCount = desiredNumberOfSwapchainImages;
-	swapchainCI.imageFormat = color_format;
-	swapchainCI.imageColorSpace = color_space;
-	swapchainCI.imageExtent = { swapchainExtent.width, swapchainExtent.height };
-	swapchainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	swapchainCI.preTransform = (VkSurfaceTransformFlagBitsKHR)preTransform;
-	swapchainCI.imageArrayLayers = 1;
-	swapchainCI.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	swapchainCI.queueFamilyIndexCount = 0;
-	swapchainCI.pQueueFamilyIndices = nullptr;
-	swapchainCI.presentMode = swapchainPresentMode;
-	swapchainCI.oldSwapchain = oldSwapchain;
+	VkSwapchainCreateInfoKHR swapchain_ci = {};
+	swapchain_ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapchain_ci.pNext = nullptr;
+	swapchain_ci.surface = surface;
+	swapchain_ci.minImageCount = asked_sc_images;
+	swapchain_ci.imageFormat = color_format;
+	swapchain_ci.imageColorSpace = color_space;
+	swapchain_ci.imageExtent = { sc_extent.width, sc_extent.height };
+	swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	swapchain_ci.preTransform = (VkSurfaceTransformFlagBitsKHR)pre_transform;
+	swapchain_ci.imageArrayLayers = 1;
+	swapchain_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	swapchain_ci.queueFamilyIndexCount = 0;
+	swapchain_ci.pQueueFamilyIndices = nullptr;
+	swapchain_ci.presentMode = sc_present_mode;
+	swapchain_ci.oldSwapchain = old_sc;
 	// Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
-	swapchainCI.clipped = VK_TRUE;
-	swapchainCI.compositeAlpha = compositeAlpha;
+	swapchain_ci.clipped = VK_TRUE;
+	swapchain_ci.compositeAlpha = composite_alpha;
 
 	// Enable transfer source on swap chain images if supported
 	if (surfCaps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
-		swapchainCI.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	}
 
 	// Enable transfer destination on swap chain images if supported
 	if (surfCaps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
-		swapchainCI.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	}
 
-	VK_CHECK(vkCreateSwapchainKHR(device->get_vulkan_device(), &swapchainCI, nullptr, &swapchain));
+	VK_CHECK(vkCreateSwapchainKHR(device->get_vulkan_device(), &swapchain_ci, nullptr, &swapchain));
 
-	if (oldSwapchain)
-		vkDestroySwapchainKHR(device->get_vulkan_device(), oldSwapchain, nullptr);
+	if (old_sc)
+		vkDestroySwapchainKHR(device->get_vulkan_device(), old_sc, nullptr);
 
 	for (auto& image : images)
 		vkDestroyImageView(device->get_vulkan_device(), image.view, nullptr);
@@ -214,24 +206,24 @@ void VulkanSwapchain::create(uint32_t* w, uint32_t* h, bool vsync)
 	// Get the swap chain buffers containing the image and imageview
 	images.resize(image_count);
 	for (uint32_t i = 0; i < image_count; i++) {
-		VkImageViewCreateInfo colorAttachmentView = {};
-		colorAttachmentView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		colorAttachmentView.pNext = nullptr;
-		colorAttachmentView.format = color_format;
-		colorAttachmentView.image = vulkan_images[i];
-		colorAttachmentView.components
+		VkImageViewCreateInfo cav = {};
+		cav.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		cav.pNext = nullptr;
+		cav.format = color_format;
+		cav.image = vulkan_images[i];
+		cav.components
 			= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-		colorAttachmentView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		colorAttachmentView.subresourceRange.baseMipLevel = 0;
-		colorAttachmentView.subresourceRange.levelCount = 1;
-		colorAttachmentView.subresourceRange.baseArrayLayer = 0;
-		colorAttachmentView.subresourceRange.layerCount = 1;
-		colorAttachmentView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		colorAttachmentView.flags = 0;
+		cav.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		cav.subresourceRange.baseMipLevel = 0;
+		cav.subresourceRange.levelCount = 1;
+		cav.subresourceRange.baseArrayLayer = 0;
+		cav.subresourceRange.layerCount = 1;
+		cav.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		cav.flags = 0;
 
 		images[i].image = vulkan_images[i];
 
-		VK_CHECK(vkCreateImageView(device->get_vulkan_device(), &colorAttachmentView, nullptr, &images[i].view));
+		VK_CHECK(vkCreateImageView(device->get_vulkan_device(), &cav, nullptr, &images[i].view));
 	}
 
 	// Create command buffers

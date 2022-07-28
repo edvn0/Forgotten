@@ -26,13 +26,11 @@ Application::Application(const ApplicationProperties& props)
 	add_overlay(std::make_unique<ImGuiLayer>());
 };
 
-Application::~Application(){};
-
-void Application::cleanup()
+Application::~Application()
 {
 	Renderer::wait_and_render();
 	Renderer::shut_down();
-}
+};
 
 void Application::run()
 {
@@ -100,7 +98,7 @@ void Application::on_event(Event& event)
 			break;
 	}
 
-	for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
+	for (auto it = stack.rbegin(); it != stack.rend(); ++it) { // NOLINT(modernize-loop-convert)
 		if (event) {
 			break;
 		}

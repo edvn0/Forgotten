@@ -33,7 +33,7 @@ void VulkanContext::init()
 	vkb::InstanceBuilder builder;
 	// make the Vulkan instance, with basic debug features
 	builder.set_app_name("ForgottenEngine")
-		.request_validation_layers(true)
+		.request_validation_layers(false)
 		.require_api_version(1, 1, 0)
 		.use_default_debug_messenger();
 

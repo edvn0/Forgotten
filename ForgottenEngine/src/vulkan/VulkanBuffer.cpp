@@ -34,10 +34,8 @@ AllocatedBuffer& VulkanBuffer::get_buffer() { return allocated_buffer; }
 
 void VulkanBuffer::set_data(void* data, size_t size)
 {
-	void* object_data;
-	vmaMapMemory(allocator, allocated_buffer.allocation, &object_data);
-	memcpy(object_data, data, size);
-	vmaUnmapMemory(allocator, allocated_buffer.allocation);
+	MemoryMapper::effect_mmap(
+		allocator, allocated_buffer, [&data, &size](void* p) { std::memcpy(p, data, size); });
 }
 
 }

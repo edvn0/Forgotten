@@ -88,8 +88,8 @@ private:
 	VkPhysicalDeviceFeatures enabled_features;
 	VkCommandPool command_pool = nullptr, compute_command_pool = nullptr;
 
-	VkQueue graphics_queue;
-	VkQueue compute_queue;
+	VkQueue graphics_queue{ nullptr };
+	VkQueue compute_queue{ nullptr };
 
 	bool enable_debug_markers = false;
 };

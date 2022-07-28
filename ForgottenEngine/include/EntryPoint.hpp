@@ -23,12 +23,13 @@ int main(int argc, char** argv)
 	program.add_argument("--width");
 	program.add_argument("--height");
 	program.add_argument("--name");
+	// program.add_argument("--vsync").default_value(true);
 
 	try {
 		program.parse_args(argc, argv);
 	} catch (const std::runtime_error& err) {
-		std::cerr << err.what() << std::endl;
-		std::cerr << program;
+		CORE_ERR("{}", err.what());
+		CORE_ERR("{}", program);
 		std::exit(1);
 	}
 
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
 	props.title = program.get("--name");
 	props.width = std::stoi(program.get("--width"));
 	props.height = std::stoi(program.get("--height"));
+	props.v_sync = true;
 
 	try {
 		app = ForgottenEngine::create_application(props);
@@ -49,10 +51,5 @@ int main(int argc, char** argv)
 		CORE_INFO("{}", e.what());
 	}
 
-	try {
-		app->cleanup();
-		delete app;
-	} catch (const std::system_error& e) {
-		CORE_INFO("{}", e.what());
-	}
+	delete app;
 }

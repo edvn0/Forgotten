@@ -25,7 +25,7 @@ OptionalIFStream Assets::load(const Path& path, FileModifier modifier)
 
 bool Assets::exists(const Path& path)
 {
-	struct stat buffer;
+	struct stat buffer { };
 	return (stat(path.c_str(), &buffer) == 0);
 }
 

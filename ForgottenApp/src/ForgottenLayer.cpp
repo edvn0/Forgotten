@@ -209,16 +209,3 @@ void ForgottenLayer::on_event(Event& event)
 		return false;
 	});
 }
-
-void ForgottenLayer::find_entity()
-{
-	auto [mx, my] = ImGui::GetMousePos();
-	mx -= viewport_bounds[0].x;
-	my -= viewport_bounds[0].y;
-	glm::vec2 viewport_size_picking = viewport_bounds[1] - viewport_bounds[0];
-	my = viewport_size_picking.y - my;
-	int mouse_x = (int)mx;
-	int mouse_y = (int)my;
-	auto mouse_okay = mouse_x >= 0 && mouse_y >= 0 && mouse_x < (int)viewport_size_picking.x
-		&& mouse_y < (int)viewport_size_picking.y;
-}
