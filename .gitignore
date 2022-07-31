@@ -276,3 +276,4 @@ ForgottenApp/resources/textures/*
 Xcode
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake,macos,visualstudiocode,clion+all,clion+iml
+/.ccls-cache/

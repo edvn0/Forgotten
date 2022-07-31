@@ -34,7 +34,7 @@ build_target() {
 
     copy_resources
 
-    ninja "$target" -j 10
+    ninja "$target" -j 4
     popd
 }
 

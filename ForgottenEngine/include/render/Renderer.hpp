@@ -1,32 +1,59 @@
 #pragma once
 
+#include "ApplicationProperties.hpp"
 #include "Reference.hpp"
 #include "render/RenderCommandQueue.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
 
 namespace ForgottenEngine {
 
-class RendererConfig;
 class RendererContext;
+class ShaderLibrary;
+class Pipeline;
+class UniformBufferSet;
+class StorageBufferSet;
+class Material;
+class VertexBuffer;
+class IndexBuffer;
+class Texture2D;
+class RenderPass;
 
 class Renderer {
 public:
 	Renderer() = delete;
+
 	Renderer(const Renderer&) = delete;
+
 	Renderer(Renderer&&) = delete;
+
 
 public:
 	static Reference<RendererContext> get_context();
 
 	static void init();
+
 	static void shut_down();
 
 	static void wait_and_render();
 
 	static void begin_frame();
+
+	static void begin_render_pass(
+		Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass, bool explicit_clean);
+	static void end_render_pass(Reference<RenderCommandBuffer> command_buffer);
 	static void end_frame();
 
+	// Submits
+	static void render_geometry(Reference<RenderCommandBuffer>, Reference<Pipeline>, Reference<UniformBufferSet>,
+		Reference<StorageBufferSet>, Reference<Material>, Reference<VertexBuffer>, Reference<IndexBuffer>,
+		const glm::mat4& transform, uint32_t index_count);
+	// end submits
+
+	static Reference<Texture2D> get_white_texture();
+
 	static RendererConfig& get_config();
+
+	static Reference<ShaderLibrary> get_shader_library();
 
 public:
 	template <typename SubmittedFunction> static void submit(SubmittedFunction&& func)
@@ -66,6 +93,7 @@ public:
 	}
 
 	static RenderCommandQueue& get_render_resource_free_queue(uint32_t index);
+	static uint32_t get_current_frame_index();
 
 private:
 	static RenderCommandQueue& get_render_command_queue();

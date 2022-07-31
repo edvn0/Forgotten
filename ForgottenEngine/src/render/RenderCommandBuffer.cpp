@@ -21,7 +21,6 @@ Reference<RenderCommandBuffer> RenderCommandBuffer::create(uint32_t count)
 		return Reference<VulkanRenderCommandBuffer>::create(count);
 	}
 	CORE_ASSERT(false, "Unknown RendererAPI");
-	return nullptr;
 }
 
 Reference<RenderCommandBuffer> RenderCommandBuffer::create_from_swapchain()
@@ -33,7 +32,6 @@ Reference<RenderCommandBuffer> RenderCommandBuffer::create_from_swapchain()
 		return Reference<VulkanRenderCommandBuffer>::create();
 	}
 	CORE_ASSERT(false, "Unknown RendererAPI");
-	return nullptr;
 }
 
 }

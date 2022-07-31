@@ -2,7 +2,7 @@
 
 #include "Common.hpp"
 
-#include "Mesh.hpp"
+#include "render/Mesh.hpp"
 
 #include "VulkanImage.hpp"
 

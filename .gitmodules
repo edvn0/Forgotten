@@ -28,3 +28,9 @@
 [submodule "ForgottenEngine/vendor/argparse"]
 	path = ForgottenEngine/vendor/argparse
 	url = https://github.com/edvn0/argparse
+[submodule "ForgottenEngine/vendor/assimp"]
+	path = ForgottenEngine/vendor/assimp
+	url = https://github.com/edvn0/assimp.git
+[submodule "ForgottenEngine/vendor/msdf-atlas-gen"]
+	path = ForgottenEngine/vendor/msdf-atlas-gen
+	url = https://github.com/edvn0/msdf-atlas-gen.git

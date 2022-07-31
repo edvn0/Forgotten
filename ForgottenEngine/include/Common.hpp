@@ -15,6 +15,9 @@
 
 namespace ForgottenEngine {
 
+using RendererID = uint32_t;
+typedef unsigned char byte;
+
 #define VK_CHECK(x)                                                                                               \
 	do {                                                                                                          \
 		VkResult err = x;                                                                                         \

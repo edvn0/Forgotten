@@ -21,7 +21,7 @@ using OptionalIFStream = std::optional<IFStream>;
 
 using FileModifier = unsigned int;
 
-namespace Asset {
+namespace AssetModifiers {
 	static const FileModifier APPEND = 0x01;
 	static const FileModifier OPEN_AT_END = 0x02;
 	static const FileModifier BINARY = 0x04;
@@ -35,7 +35,7 @@ static const Path RESOURCES = "resources";
 class Assets {
 public:
 	static OptionalIFStream load(
-		const Path&, FileModifier modifier = Asset::INPUT | Asset::BINARY | Asset::OPEN_AT_END);
+		const Path&, FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
 	static bool exists(const Path&);
 	static OptionalPath find_resources_by_path(const Path&);
 };

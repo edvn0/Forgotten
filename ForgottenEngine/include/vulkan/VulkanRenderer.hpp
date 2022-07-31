@@ -4,6 +4,8 @@
 
 namespace ForgottenEngine {
 
+class SceneRenderer;
+
 class VulkanRenderer : public RendererAPI {
 public:
 	~VulkanRenderer() override = default;
@@ -12,7 +14,20 @@ public:
 	void shut_down() override;
 
 	void begin_frame() override;
+
+	void begin_render_pass(Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass,
+		bool explicit_clear) override;
+
+	void end_render_pass(Reference<RenderCommandBuffer> command_buffer) override;
+
 	void end_frame() override;
+
+	// SUBMITS
+	void render_geometry(Reference<RenderCommandBuffer> command_buffer, Reference<Pipeline> pipeline,
+		Reference<UniformBufferSet> ubs, Reference<StorageBufferSet> sbs, Reference<Material> material,
+		Reference<VertexBuffer> vb, Reference<IndexBuffer> ib, const glm::mat4& transform,
+		uint32_t index_count) override;
+	// END SUBMITS
 };
 
 } // namespace ForgottenEngine

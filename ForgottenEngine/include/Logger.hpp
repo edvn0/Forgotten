@@ -42,4 +42,30 @@ private:
 #define CLIENT_DEBUG(...) ::ForgottenEngine::Logger::get_client_logger()->debug(__VA_ARGS__)
 #define CLIENT_TRACE(...) ::ForgottenEngine::Logger::get_client_logger()->trace(__VA_ARGS__)
 
-#define CORE_ASSERT(condition, ...) { if(!(condition)) { CORE_ERROR(__VA_ARGS__); } }
+
+#define DEBUG_BREAK abort();
+#define ENABLE_ASSERTS
+#define ENABLE_VERIFY
+
+#ifdef ENABLE_ASSERTS
+	#define CORE_ASSERT_MESSAGE_INTERNAL(...)  ::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed", __VA_ARGS__)
+	#define ASSERT_MESSAGE_INTERNAL(...)  ::ForgottenEngine::Logger::get_client_logger()->error("Assertion failed", __VA_ARGS__)
+
+	#define CORE_ASSERT(condition, ...) { if(!(condition)) { CORE_ASSERT_MESSAGE_INTERNAL(__VA_ARGS__); DEBUG_BREAK; } }
+	#define ASSERT(condition, ...) { if(!(condition)) { ASSERT_MESSAGE_INTERNAL(__VA_ARGS__); DEBUG_BREAK; } }
+#else
+	#define CORE_ASSERT(condition, ...)
+	#define ASSERT(condition, ...)
+#endif
+
+#ifdef ENABLE_VERIFY
+	#define CORE_VERIFY_MESSAGE_INTERNAL(...)  ::ForgottenEngine::Logger::get_core_logger()->warn("Verify failed", __VA_ARGS__)
+	#define VERIFY_MESSAGE_INTERNAL(...)  ::ForgottenEngine::Logger::get_core_logger()->warn("Verify failed", __VA_ARGS__)
+
+	#define CORE_VERIFY(condition, ...) { if(!(condition)) { CORE_VERIFY_MESSAGE_INTERNAL(__VA_ARGS__); DEBUG_BREAK; } }
+	#define VERIFY(condition, ...) { if(!(condition)) { VERIFY_MESSAGE_INTERNAL(__VA_ARGS__); DEBUG_BREAK; } }
+#else
+	#define CORE_VERIFY(condition, ...)
+	#define VERIFY(condition, ...)
+#endif
+

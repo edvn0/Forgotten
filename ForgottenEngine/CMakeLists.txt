@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.21)
 project(ForgottenEngine)
 
 find_package(Vulkan REQUIRED)
@@ -63,6 +63,7 @@ add_subdirectory(vendor/vk-bootstrap)
 add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/argparse)
 add_subdirectory(vendor/imgui)
+add_subdirectory(vendor/msdf-atlas-gen)
 
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(ForgottenEngine PUBLIC
@@ -81,9 +82,11 @@ target_include_directories(ForgottenEngine PUBLIC
     vendor/tinyobjloader
     vendor/stb
     vendor/argparse/include
+        vendor/msdf-atlas-gen/msdf-atlas-gen
 )
-target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse)
+target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse msdf-atlas-gen)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
+target_compile_definitions(ForgottenEngine PUBLIC VMA_RECORDING_ENABLED=1)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
 add_custom_command(TARGET CompileEngineShaders POST_BUILD

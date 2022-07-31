@@ -45,10 +45,12 @@ VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count)
 	queryPoolCreateInfo.pNext = nullptr;
 }
 
-VulkanRenderCommandBuffer::VulkanRenderCommandBuffer() { }
+VulkanRenderCommandBuffer::VulkanRenderCommandBuffer() : owned_by_swapchain(true) {};
 
 void VulkanRenderCommandBuffer::begin() { }
+
 void VulkanRenderCommandBuffer::end() { }
+
 void VulkanRenderCommandBuffer::submit() { }
 
 }
