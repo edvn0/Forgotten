@@ -33,7 +33,7 @@ void VulkanContext::init()
 	vkb::InstanceBuilder builder;
 	// make the Vulkan instance, with basic debug features
 	builder.set_app_name("ForgottenEngine")
-		.request_validation_layers(false)
+		.request_validation_layers(true)
 		.require_api_version(1, 1, 0)
 		.use_default_debug_messenger();
 
@@ -68,6 +68,7 @@ void VulkanContext::init()
 VulkanContext::~VulkanContext()
 {
 	device->destroy();
+	vkb::destroy_debug_utils_messenger(vulkan_instance, debug_messenger);
 
 	vkDestroyInstance(vulkan_instance, nullptr);
 	vulkan_instance = nullptr;

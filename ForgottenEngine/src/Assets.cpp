@@ -46,4 +46,32 @@ OptionalPath Assets::find_resources_by_path(const Path& path)
 	return {};
 }
 
+template <typename T>
+static auto load_from_directory_impl = [](const T& a, std::vector<OptionalPath>& out) -> void {
+	for (const auto& dir_entry : a) {
+		bool is_font_file = dir_entry.path().extension() == ".ttf" || dir_entry.path().extension() == ".otf";
+		bool is_regular_and_font_file = dir_entry.is_regular_file() && is_font_file;
+		if (is_regular_and_font_file) {
+			out.emplace_back(dir_entry.path());
+		}
+	}
+};
+
+std::vector<OptionalPath> Assets::load_from_directory(const std::filesystem::path& path, bool recurse)
+{
+	std::vector<OptionalPath> result;
+	result.reserve(30);
+
+	auto recursive_iterator = std::filesystem::recursive_directory_iterator{ path };
+	auto directory_iterator = std::filesystem::directory_iterator{ path };
+
+	if (recurse) {
+		load_from_directory_impl<std::filesystem::recursive_directory_iterator>(recursive_iterator, result);
+	} else {
+		load_from_directory_impl<std::filesystem::directory_iterator>(directory_iterator, result);
+	}
+
+	return result;
+}
+
 }

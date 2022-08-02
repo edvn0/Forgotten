@@ -91,6 +91,6 @@ target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
 add_custom_command(TARGET CompileEngineShaders POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders $<TARGET_FILE_DIR:ForgottenEngine>/resources/shaders)
+    ${CMAKE_CURRENT_BINARY_DIR}/resources $<TARGET_FILE_DIR:ForgottenEngine>/resources)
 
 add_dependencies(ForgottenEngine CompileEngineShaders)

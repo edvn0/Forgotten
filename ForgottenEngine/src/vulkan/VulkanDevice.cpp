@@ -13,7 +13,7 @@
 
 namespace ForgottenEngine {
 
-VulkanPhysicalDevice::VulkanPhysicalDevice(vkb::Instance& vkb_inst)
+VulkanPhysicalDevice::VulkanPhysicalDevice(const vkb::Instance& vkb_inst)
 {
 	auto vkInstance = VulkanContext::get_instance();
 
@@ -209,7 +209,7 @@ uint32_t VulkanPhysicalDevice::get_memory_type_index(uint32_t typeBits, VkMemory
 	return UINT32_MAX;
 }
 
-Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select(vkb::Instance& instance)
+Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select(const vkb::Instance& instance)
 {
 	return Reference<VulkanPhysicalDevice>::create(instance);
 }

@@ -78,8 +78,9 @@ target_include_directories(ForgottenApp PUBLIC
 target_link_libraries(ForgottenApp PUBLIC ForgottenEngine)
 target_compile_options(ForgottenApp PUBLIC -Wno-nullability-completeness)
 
+message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
+
 add_custom_command(TARGET CompileClientShaders POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders $<TARGET_FILE_DIR:ForgottenApp>/resources/shaders)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/resources ${CMAKE_CURRENT_BINARY_DIR}/resources)
 
 add_dependencies(ForgottenApp CompileClientShaders)
