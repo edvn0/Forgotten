@@ -17,15 +17,9 @@ FileSystem::FileSystemChangedCallbackFn FileSystem::s_Callback;
 static bool s_Watching = false;
 static bool s_IgnoreNextChange = false;
 
-void FileSystem::set_change_callback(const FileSystemChangedCallbackFn& callback)
-{
-	s_Callback = callback;
-}
+void FileSystem::set_change_callback(const FileSystemChangedCallbackFn& callback) { s_Callback = callback; }
 
-void FileSystem::start_watching()
-{
-	s_Watching = true;
-}
+void FileSystem::start_watching() { s_Watching = true; }
 
 void FileSystem::stop_watching()
 {
@@ -33,13 +27,9 @@ void FileSystem::stop_watching()
 		return;
 
 	s_Watching = false;
-
 }
 
-void FileSystem::skip_next_fs_change()
-{
-	s_IgnoreNextChange = true;
-}
+void FileSystem::skip_next_fs_change() { s_IgnoreNextChange = true; }
 
 unsigned long FileSystem::watch(void* param)
 {
@@ -168,14 +158,15 @@ unsigned long FileSystem::watch(void* param)
 
 	CloseHandle(directoryHandle);
 	return 0;*/
+
+	return 0;
 }
 
 bool FileSystem::write_bytes(const std::filesystem::path& filepath, const Buffer& buffer)
 {
 	std::ofstream stream(filepath, std::ios::binary | std::ios::trunc);
 
-	if (!stream)
-	{
+	if (!stream) {
 		stream.close();
 		return false;
 	}
@@ -205,16 +196,10 @@ Buffer FileSystem::read_bytes(const std::filesystem::path& filepath)
 	return buffer;
 }
 
-bool FileSystem::has_env_variable(const std::string& key){return false;}
+bool FileSystem::has_env_variable(const std::string& key) { return false; }
 
-bool FileSystem::set_env_variable(const std::string& key, const std::string& value)
-{
-	return false;
-}
+bool FileSystem::set_env_variable(const std::string& key, const std::string& value) { return false; }
 
-std::string FileSystem::get_env_variable(const std::string& key)
-{
-	return std::string{};
-}
+std::string FileSystem::get_env_variable(const std::string& key) { return std::string{}; }
 
 }

@@ -4,9 +4,9 @@
 
 #include <utility>
 
-#include "vulkan/VulkanShader.hpp"
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
+#include "vulkan/VulkanShader.hpp"
 
 namespace ForgottenEngine {
 
@@ -37,11 +37,9 @@ void ShaderLibrary::add(const Reference<Shader>& shader)
 
 void ShaderLibrary::load(std::string_view path, bool force_compile, bool disable_optimizations)
 {
-	Reference<Shader> shader;
+	Reference<Shader> shader = Shader::create(std::string{ path }, force_compile, disable_optimizations);
 	auto& name = shader->get_name();
 	CORE_ASSERT(shaders.find(name) == shaders.end(), "");
-
-	shader = Shader::create(std::string{ path }, force_compile, disable_optimizations);
 	shaders[name] = shader;
 }
 

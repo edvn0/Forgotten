@@ -1,12 +1,10 @@
 #include "fg_pch.hpp"
-#include "utilites/FileSystem.hpp"
 
-namespace ForgottenEngine{
+#include "utilities/FileSystem.hpp"
 
-bool FileSystem::exists(const std::filesystem::path& filepath)
-{
-	return std::filesystem::exists(filepath);
-}
+namespace ForgottenEngine {
+
+bool FileSystem::exists(const std::filesystem::path& filepath) { return std::filesystem::exists(filepath); }
 
 bool FileSystem::exists(const std::string& filepath)
 {

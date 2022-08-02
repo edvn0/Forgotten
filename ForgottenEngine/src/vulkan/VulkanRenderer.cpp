@@ -9,6 +9,7 @@
 #include "render/RendererCapabilites.hpp"
 #include "render/Texture.hpp"
 #include "render/VertexBuffer.hpp"
+#include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanShader.hpp"
 
 #include <vulkan/vulkan.h>
@@ -48,7 +49,11 @@ struct VulkanRendererData {
 
 static VulkanRendererData* renderer_data = nullptr;
 
-static inline VulkanRendererData& the() { return *renderer_data; }
+static inline VulkanRendererData& the()
+{
+	CORE_ASSERT(renderer_data, "");
+	return *renderer_data;
+}
 
 static RenderCommandQueue* command_queue = nullptr;
 
@@ -73,8 +78,20 @@ void VulkanRenderer::render_geometry(Reference<RenderCommandBuffer> command_buff
 	// TODO!!
 }
 
-void VulkanRenderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer) {
+void VulkanRenderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer)
+{
 	// TODO!!
+}
+
+VkDescriptorSet VulkanRenderer::rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo alloc_info)
+{
+	uint32_t buffer_index = Renderer::get_current_frame_index();
+	alloc_info.descriptorPool = the().descriptor_pools[buffer_index];
+	VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
+	VkDescriptorSet result;
+	VK_CHECK(vkAllocateDescriptorSets(device, &alloc_info, &result));
+	the().descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
+	return result;
 }
 
 };

@@ -82,7 +82,7 @@ target_include_directories(ForgottenEngine PUBLIC
     vendor/tinyobjloader
     vendor/stb
     vendor/argparse/include
-        vendor/msdf-atlas-gen/msdf-atlas-gen
+    vendor/msdf-atlas-gen/msdf-atlas-gen
 )
 target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse msdf-atlas-gen)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
