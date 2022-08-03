@@ -10,6 +10,7 @@
 
 #include <unordered_set>
 
+#include "vulkan/VulkanAllocator.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanDevice.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
@@ -57,6 +58,8 @@ void VulkanContext::init()
 	enabledFeatures.independentBlend = true;
 
 	device = Reference<VulkanDevice>::create(physical_device, enabledFeatures);
+
+	VulkanAllocator::init(device);
 
 	// Pipeline Cache
 	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};

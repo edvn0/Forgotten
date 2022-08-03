@@ -8,7 +8,7 @@
 
 namespace ForgottenEngine {
 
-Reference<IndexBuffer> create(void* data, uint32_t size)
+Reference<IndexBuffer> IndexBuffer::create(void* data, uint32_t size)
 {
 	switch (RendererAPI::current()) {
 	case RendererAPIType::None:
@@ -19,7 +19,7 @@ Reference<IndexBuffer> create(void* data, uint32_t size)
 	CORE_ASSERT(false, "Unknown RendererAPI");
 }
 
-Reference<IndexBuffer> create(uint32_t size)
+Reference<IndexBuffer> IndexBuffer::create(uint32_t size)
 {
 	switch (RendererAPI::current()) {
 	case RendererAPIType::None:

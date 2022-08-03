@@ -4,15 +4,15 @@
 
 #include "Common.hpp"
 
+#include "render/IndexBuffer.hpp"
 #include "render/RenderCommandBuffer.hpp"
+#include "render/VertexBuffer.hpp"
 
 namespace ForgottenEngine {
 
 class RenderCommandBuffer;
 class Texture2D;
 class Pipeline;
-class VertexBuffer;
-class IndexBuffer;
 class Material;
 class RenderPass;
 class UniformBufferSet;

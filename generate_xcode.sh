@@ -23,9 +23,4 @@ configure_xcode() {
     popd
 }
 
-if [ $1 == "Clean" ];
-then
-    rm -rf Xcode
-fi;
-
 configure_xcode

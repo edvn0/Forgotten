@@ -18,8 +18,6 @@ public:
 private:
 	static void ui_toolbar();
 
-	void load_model(const std::filesystem::path& path);
-
 	void on_overlay_render();
 
 private:

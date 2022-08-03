@@ -11,70 +11,69 @@ struct Buffer {
 	{
 	}
 
-	Buffer(void* in_data, uint32_t in_size)
-		: data(in_data)
-		, size(in_size)
+	Buffer(void* data, uint32_t size)
+		: data(data)
+		, size(size)
 	{
 	}
 
-	static Buffer copy(const void* in_data, uint32_t in_size)
+	static Buffer copy(const void* data, uint32_t in_size)
 	{
 		Buffer buffer;
 		buffer.allocate(in_size);
-		memcpy(buffer.data, in_data, in_size);
+		memcpy(buffer.data, data, in_size);
 		return buffer;
 	}
 
 	void allocate(uint32_t in_size)
 	{
-		delete[](byte*) data;
-		data = nullptr;
+		delete[](byte*) this->data;
+		this->data = nullptr;
 
 		if (in_size == 0)
 			return;
 
-		data = new byte[in_size];
-		size = in_size;
+		this->data = new byte[in_size];
+		this->size = in_size;
 	}
 
 	void release()
 	{
-		delete[](byte*) data;
-		data = nullptr;
-		size = 0;
+		delete[](byte*) this->data;
+		this->data = nullptr;
+		this->size = 0;
 	}
 
 	void zero_initialise()
 	{
-		if (data)
-			memset(data, 0, size);
+		if (this->data)
+			memset(this->data, 0, this->size);
 	}
 
-	template <typename T> T& read(uint32_t offset = 0) { return *(T*)((byte*)data + offset); }
+	template <typename T> T& read(uint32_t offset = 0) { return *(T*)((byte*)this->data + offset); }
 
-	byte* read_bytes(uint32_t size, uint32_t offset)
+	byte* read_bytes(uint32_t in_size, uint32_t offset) const
 	{
-		CORE_ASSERT(offset + size <= size, "Buffer overflow!");
-		byte* buffer = new byte[size];
-		memcpy(buffer, (byte*)data + offset, size);
+		CORE_ASSERT(offset + in_size <= this->size, "Buffer overflow!");
+		byte* buffer = new byte[in_size];
+		memcpy(buffer, (byte*)this->data + offset, in_size);
 		return buffer;
 	}
 
-	void write(const void* data, uint32_t size, uint32_t offset = 0)
+	void write(const void* in_data, uint32_t in_size, uint32_t offset = 0) const
 	{
-		CORE_ASSERT(offset + size <= size, "Buffer overflow!");
-		memcpy((byte*)data + offset, data, size);
+		CORE_ASSERT(offset + in_size <= this->size, "Buffer overflow!");
+		memcpy((byte*)this->data + offset, in_data, in_size);
 	}
 
-	operator bool() const { return data; }
+	operator bool() const { return this->data; }
 
-	byte& operator[](int index) { return ((byte*)data)[index]; }
+	byte& operator[](int index) { return ((byte*)this->data)[index]; }
+	byte operator[](int index) const { return ((byte*)this->data)[index]; }
 
-	byte operator[](int index) const { return ((byte*)data)[index]; }
+	template <typename T> T* as() const { return (T*)this->data; }
 
-	template <typename T> T* as() const { return (T*)data; }
-
-	inline uint32_t get_size() const { return size; }
+	[[nodiscard]] inline uint32_t get_size() const { return this->size; }
 
 public:
 	void* data;
@@ -84,11 +83,11 @@ public:
 struct BufferSafe : public Buffer {
 	~BufferSafe() { release(); }
 
-	static BufferSafe copy(const void* data, uint32_t size)
+	static BufferSafe copy(const void* data, uint32_t in_size)
 	{
 		BufferSafe buffer;
-		buffer.allocate(size);
-		memcpy(buffer.data, data, size);
+		buffer.allocate(in_size);
+		memcpy(buffer.data, data, in_size);
 		return buffer;
 	}
 };

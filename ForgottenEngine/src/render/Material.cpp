@@ -3,28 +3,29 @@
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
 
-#include "render/VertexBuffer.hpp"
-#include "vulkan/VulkanVertexBuffer.hpp"
+#include "render/Material.hpp"
+#include "vulkan/VulkanMaterial.hpp"
 
 namespace ForgottenEngine {
 
-Reference<VertexBuffer> VertexBuffer::create(void* data, uint32_t size, VertexBufferUsage usage)
+Reference<Material> Material::create(const Reference<Shader>& shader, const std::string& name)
 {
 	switch (RendererAPI::current()) {
 	case RendererAPIType::None:
 		return nullptr;
 	case RendererAPIType::Vulkan:
-		return Reference<VulkanVertexBuffer>::create(data, size, usage);
+		return Reference<VulkanMaterial>::create(shader, name);
 	}
 	CORE_ASSERT(false, "Unknown RendererAPI");
 }
-Reference<VertexBuffer> VertexBuffer::create(uint32_t size, VertexBufferUsage usage)
+
+Reference<Material> Material::copy(const Reference<Material>& other, const std::string& name)
 {
 	switch (RendererAPI::current()) {
 	case RendererAPIType::None:
 		return nullptr;
 	case RendererAPIType::Vulkan:
-		return Reference<VulkanVertexBuffer>::create(size, usage);
+		return Reference<VulkanMaterial>::create(other, name);
 	}
 	CORE_ASSERT(false, "Unknown RendererAPI");
 }

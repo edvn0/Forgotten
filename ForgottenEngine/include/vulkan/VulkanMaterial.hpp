@@ -6,6 +6,7 @@ namespace ForgottenEngine {
 
 class VulkanMaterial : public Material {
 public:
+	explicit VulkanMaterial(const Reference<Shader>& shader, const std::string& name = "");
 	void invalidate() override;
 	void on_shader_reloaded() override;
 

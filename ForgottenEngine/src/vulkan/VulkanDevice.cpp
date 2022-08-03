@@ -25,50 +25,42 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(const vkb::Instance& vkb_inst)
 	std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
 	VK_CHECK(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, physicalDevices.data()));
 
-	VkPhysicalDevice selectedPhysicalDevice = nullptr;
+	VkPhysicalDevice* selected_physical_device = nullptr;
 	for (VkPhysicalDevice physicalDevice : physicalDevices) {
 		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-			selectedPhysicalDevice = physicalDevice;
+			selected_physical_device = &physicalDevice;
 			break;
 		}
 	}
 
-	if (!selectedPhysicalDevice) {
-		selectedPhysicalDevice = physicalDevices.back();
+	if (!selected_physical_device) {
+		selected_physical_device = &physicalDevices.back();
 	}
 
-	CORE_ASSERT(selectedPhysicalDevice, "Could not find any physical devices!", "");
-	physical_device = selectedPhysicalDevice;
+	CORE_ASSERT(selected_physical_device, "Could not find any physical devices!", "");
+	physical_device = *selected_physical_device;
 
 	vkGetPhysicalDeviceFeatures(physical_device, &features);
 	vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
 
-	uint32_t queueFamilyCount;
-	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queueFamilyCount, nullptr);
-	CORE_ASSERT(queueFamilyCount > 0, "", "");
-	queue_family_properties.resize(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queueFamilyCount, queue_family_properties.data());
+	uint32_t family_count;
+	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &family_count, nullptr);
+	CORE_ASSERT(family_count > 0, "", "");
+	queue_family_properties.resize(family_count);
+	vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &family_count, queue_family_properties.data());
 
-	uint32_t extCount = 0;
-	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extCount, nullptr);
-	if (extCount > 0) {
-		std::vector<VkExtensionProperties> extensions(extCount);
-		if (vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extCount, &extensions.front())
+	uint32_t extension_count = 0;
+	vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
+	if (extension_count > 0) {
+		std::vector<VkExtensionProperties> extensions(extension_count);
+		if (vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, &extensions.front())
 			== VK_SUCCESS) {
 			for (const auto& ext : extensions) {
 				supported_extensions.emplace(ext.extensionName);
 			}
 		}
 	}
-
-	// Queue families
-	// Desired queues need to be requested upon logical device creation
-	// Due to differing queue family configurations of Vulkan implementations this can be a bit tricky, especially
-	// if the application requests different queue types
-
-	// Get queue family indices for the requested queue family types
-	// Note that the indices may overlap depending on the implementation
 
 	static const float defaultQueuePriority(0.0f);
 
@@ -116,7 +108,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(const vkb::Instance& vkb_inst)
 	CORE_ASSERT(depth_format, "");
 }
 
-VulkanPhysicalDevice::~VulkanPhysicalDevice() { }
+VulkanPhysicalDevice::~VulkanPhysicalDevice() = default;
 
 VkFormat VulkanPhysicalDevice::find_depth_format() const
 {
@@ -125,7 +117,6 @@ VkFormat VulkanPhysicalDevice::find_depth_format() const
 	std::vector<VkFormat> depthFormats = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT,
 		VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
 
-	// TODO: Move to VulkanPhysicalDevice
 	for (auto& format : depthFormats) {
 		VkFormatProperties formatProps;
 		vkGetPhysicalDeviceFormatProperties(physical_device, format, &formatProps);
@@ -152,7 +143,7 @@ VulkanPhysicalDevice::QueueFamilyIndices VulkanPhysicalDevice::get_queue_family_
 			auto& queueFamilyProperties = queue_family_properties[i];
 			if ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT)
 				&& ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
-				indices.compute = i;
+				indices.compute = static_cast<int32_t>(i);
 				break;
 			}
 		}
@@ -166,7 +157,7 @@ VulkanPhysicalDevice::QueueFamilyIndices VulkanPhysicalDevice::get_queue_family_
 			if ((queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT)
 				&& ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)
 				&& ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
-				indices.transfer = i;
+				indices.transfer = static_cast<int32_t>(i);
 				break;
 			}
 		}
@@ -177,29 +168,32 @@ VulkanPhysicalDevice::QueueFamilyIndices VulkanPhysicalDevice::get_queue_family_
 	for (uint32_t i = 0; i < queue_family_properties.size(); i++) {
 		if ((flags & VK_QUEUE_TRANSFER_BIT) && indices.transfer == -1) {
 			if (queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
-				indices.transfer = i;
+				indices.transfer = static_cast<int32_t>(i);
+			;
 		}
 
 		if ((flags & VK_QUEUE_COMPUTE_BIT) && indices.compute == -1) {
 			if (queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
-				indices.compute = i;
+				indices.compute = static_cast<int32_t>(i);
+			;
 		}
 
 		if (flags & VK_QUEUE_GRAPHICS_BIT) {
 			if (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-				indices.graphics = i;
+				indices.graphics = static_cast<int32_t>(i);
+			;
 		}
 	}
 
 	return indices;
 }
 
-uint32_t VulkanPhysicalDevice::get_memory_type_index(uint32_t typeBits, VkMemoryPropertyFlags properties) const
+uint32_t VulkanPhysicalDevice::get_memory_type_index(uint32_t typeBits, VkMemoryPropertyFlags in_properties) const
 {
 	// Iterate over all memory types available for the device used in this example
 	for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
 		if ((typeBits & 1) == 1) {
-			if ((memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
+			if ((memory_properties.memoryTypes[i].propertyFlags & in_properties) == in_properties)
 				return i;
 		}
 		typeBits >>= 1;

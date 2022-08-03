@@ -48,9 +48,9 @@ private:
 	QueueFamilyIndices queue_family_indices;
 
 	VkPhysicalDevice physical_device = nullptr;
-	VkPhysicalDeviceProperties properties;
-	VkPhysicalDeviceFeatures features;
-	VkPhysicalDeviceMemoryProperties memory_properties;
+	VkPhysicalDeviceProperties properties{};
+	VkPhysicalDeviceFeatures features{};
+	VkPhysicalDeviceMemoryProperties memory_properties{};
 
 	VkFormat depth_format = VK_FORMAT_UNDEFINED;
 
