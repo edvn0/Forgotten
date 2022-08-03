@@ -18,5 +18,6 @@
 #include "events/MouseEvent.hpp"
 
 #include "render/Renderer.hpp"
+#include "render/Renderer2D.hpp"
 
 #include <imgui.h>

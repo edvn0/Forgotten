@@ -5,39 +5,36 @@
 namespace ForgottenEngine {
 
 struct Buffer {
-	void* data;
-	uint32_t size;
-
 	Buffer()
 		: data(nullptr)
 		, size(0)
 	{
 	}
 
-	Buffer(void* data, uint32_t size)
-		: data(data)
-		, size(size)
+	Buffer(void* in_data, uint32_t in_size)
+		: data(in_data)
+		, size(in_size)
 	{
 	}
 
-	static Buffer copy(const void* data, uint32_t size)
+	static Buffer copy(const void* in_data, uint32_t in_size)
 	{
 		Buffer buffer;
-		buffer.allocate(size);
-		memcpy(buffer.data, data, size);
+		buffer.allocate(in_size);
+		memcpy(buffer.data, in_data, in_size);
 		return buffer;
 	}
 
-	void allocate(uint32_t size)
+	void allocate(uint32_t in_size)
 	{
 		delete[](byte*) data;
 		data = nullptr;
 
-		if (size == 0)
+		if (in_size == 0)
 			return;
 
-		data = new byte[size];
-		size = size;
+		data = new byte[in_size];
+		size = in_size;
 	}
 
 	void release()
@@ -47,7 +44,7 @@ struct Buffer {
 		size = 0;
 	}
 
-	void zero_initialize()
+	void zero_initialise()
 	{
 		if (data)
 			memset(data, 0, size);
@@ -78,6 +75,10 @@ struct Buffer {
 	template <typename T> T* as() const { return (T*)data; }
 
 	inline uint32_t get_size() const { return size; }
+
+public:
+	void* data;
+	uint32_t size;
 };
 
 struct BufferSafe : public Buffer {
@@ -91,5 +92,4 @@ struct BufferSafe : public Buffer {
 		return buffer;
 	}
 };
-
 }

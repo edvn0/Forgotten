@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common.hpp"
 #include "Assets.hpp"
+#include "Common.hpp"
 
 #include "render/Shader.hpp"
 #include "render/Texture.hpp"
@@ -10,17 +10,15 @@
 
 namespace ForgottenEngine {
 
-enum class MaterialFlag
-{
-	None       = BIT(0),
-	DepthTest  = BIT(1),
-	Blend      = BIT(2),
-	TwoSided   = BIT(3),
+enum class MaterialFlag {
+	None = BIT(0),
+	DepthTest = BIT(1),
+	Blend = BIT(2),
+	TwoSided = BIT(3),
 	DisableShadowCasting = BIT(4)
 };
 
-class Material : public ReferenceCounted
-{
+class Material : public ReferenceCounted {
 public:
 	virtual ~Material() = default;
 
@@ -56,11 +54,11 @@ public:
 	virtual glm::mat3& get_matrix3(const std::string& name) = 0;
 	virtual glm::mat4& get_matrix4(const std::string& name) = 0;
 
-	virtual Reference<Texture2D> GetTexture2D(const std::string& name) = 0;
-	virtual Reference<TextureCube> GetTextureCube(const std::string& name) = 0;
+	virtual Reference<Texture2D> get_texture_2d(const std::string& name) = 0;
+	virtual Reference<TextureCube> get_texture_cube(const std::string& name) = 0;
 
-	virtual Reference<Texture2D> TryGetTexture2D(const std::string& name) = 0;
-	virtual Reference<TextureCube> TryGetTextureCube(const std::string& name) = 0;
+	virtual Reference<Texture2D> try_get_texture_2d(const std::string& name) = 0;
+	virtual Reference<TextureCube> try_get_texture_cube(const std::string& name) = 0;
 
 	virtual uint32_t get_flags() const = 0;
 	virtual void set_flags(uint32_t flags) = 0;
@@ -73,7 +71,6 @@ public:
 
 	static Reference<Material> create(const Reference<Shader>& shader, const std::string& name = "");
 	static Reference<Material> copy(const Reference<Material>& other, const std::string& name = "");
-
 };
 
 }

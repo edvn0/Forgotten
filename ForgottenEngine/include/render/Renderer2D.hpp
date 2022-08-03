@@ -29,8 +29,8 @@ public:
 	explicit Renderer2D(const Renderer2DSpecification& specification = Renderer2DSpecification());
 	virtual ~Renderer2D();
 
-	void Init();
-	void Shutdown();
+	void init();
+	void shut_down();
 
 	void begin_scene(const glm::mat4& viewProj, const glm::mat4& view, bool depthTest = true);
 	void end_scene();
@@ -38,7 +38,7 @@ public:
 	Reference<RenderPass> get_target_render_pass();
 	void set_target_render_pass(Reference<RenderPass> renderPass);
 
-    void on_recreate_swapchain();
+	void on_recreate_swapchain();
 
 	// Primitives
 	void draw_quad(const glm::mat4& transform, const glm::vec4& color);
@@ -56,8 +56,10 @@ public:
 	void draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
 		float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 
-	void draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-	void draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+	void draw_rotated_quad(
+		const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+	void draw_rotated_quad(
+		const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 	void draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation,
 		const Reference<Texture2D>& texture, float tilingFactor = 1.0f,
 		const glm::vec4& tintColor = glm::vec4(1.0f));
@@ -65,8 +67,10 @@ public:
 		const Reference<Texture2D>& texture, float tilingFactor = 1.0f,
 		const glm::vec4& tintColor = glm::vec4(1.0f));
 
-	void draw_rotated_rect(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-	void draw_rotated_rect(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+	void draw_rotated_rect(
+		const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+	void draw_rotated_rect(
+		const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 
 	// Thickness is between 0 and 1
 	void draw_circle(const glm::vec3& p0, const glm::vec3& rotation, float radius, const glm::vec4& color);

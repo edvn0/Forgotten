@@ -10,7 +10,10 @@ ForgottenLayer::ForgottenLayer()
 {
 }
 
-void ForgottenLayer::on_attach() { }
+void ForgottenLayer::on_attach()
+{
+	// renderer = Reference<Renderer2D>::create();
+}
 
 void ForgottenLayer::on_detach() { }
 

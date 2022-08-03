@@ -18,13 +18,13 @@ VulkanVertexBuffer::VulkanVertexBuffer(uint32_t size, VertexBufferUsage usage)
 		auto device = VulkanContext::get_current_device();
 		VulkanAllocator allocator("VertexBuffer");
 
-		VkBufferCreateInfo vertexBufferCreateInfo = {};
-		vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		vertexBufferCreateInfo.size = instance->size;
-		vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		VkBufferCreateInfo vbci = {};
+		vbci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		vbci.size = instance->size;
+		vbci.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-		instance->memory_allocation = allocator.allocate_buffer(
-			vertexBufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->vulkan_buffer);
+		instance->memory_allocation
+			= allocator.allocate_buffer(vbci, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->vulkan_buffer);
 	});
 }
 
@@ -38,26 +38,26 @@ VulkanVertexBuffer::VulkanVertexBuffer(void* data, uint32_t size, VertexBufferUs
 		auto device = VulkanContext::get_current_device();
 		VulkanAllocator allocator("VertexBuffer");
 
-		VkBufferCreateInfo bufferCreateInfo{};
-		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferCreateInfo.size = instance->size;
-		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkBufferCreateInfo bci{};
+		bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bci.size = instance->size;
+		bci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		VkBuffer stagingBuffer;
 		VmaAllocation stagingBufferAllocation
-			= allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+			= allocator.allocate_buffer(bci, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
 
 		// copy data to staging buffer
 		uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
 		memcpy(destData, instance->local_data.data, instance->local_data.size);
 		allocator.unmap_memory(stagingBufferAllocation);
 
-		VkBufferCreateInfo vertexBufferCreateInfo = {};
-		vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		vertexBufferCreateInfo.size = instance->size;
-		vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		instance->memory_allocation = allocator.allocate_buffer(
-			vertexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->vulkan_buffer);
+		VkBufferCreateInfo vbci = {};
+		vbci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		vbci.size = instance->size;
+		vbci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		instance->memory_allocation
+			= allocator.allocate_buffer(vbci, VMA_MEMORY_USAGE_GPU_ONLY, instance->vulkan_buffer);
 
 		VkCommandBuffer copyCmd = device->get_command_buffer(true);
 

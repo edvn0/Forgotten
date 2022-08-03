@@ -2,6 +2,14 @@
 
 #include "render/RendererAPI.hpp"
 
+#include "vulkan/VulkanIndexBuffer.hpp"
+#include "vulkan/VulkanMaterial.hpp"
+#include "vulkan/VulkanPipeline.hpp"
+#include "vulkan/VulkanShader.hpp"
+#include "vulkan/VulkanStorageBuffer.hpp"
+#include "vulkan/VulkanUniformBuffer.hpp"
+#include "vulkan/VulkanVertexBuffer.hpp"
+
 namespace ForgottenEngine {
 
 class SceneRenderer;
@@ -32,6 +40,10 @@ public:
 	// END SUBMITS
 public:
 	static VkDescriptorSet rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo info);
+
+public:
+	void rt_update_material_for_rendering(Reference<VulkanMaterial> material,
+		Reference<UniformBufferSet> uniformBufferSet, Reference<StorageBufferSet> storageBufferSet);
 };
 
 } // namespace ForgottenEngine

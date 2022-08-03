@@ -2,19 +2,19 @@
 
 #include "render/Renderer2D.hpp"
 
+#include "render/Font.hpp"
+#include "render/IndexBuffer.hpp"
+#include "render/Material.hpp"
+#include "render/Mesh.hpp"
 #include "render/Pipeline.hpp"
 #include "render/RenderCommandBuffer.hpp"
 #include "render/Renderer.hpp"
 #include "render/Shader.hpp"
-#include "render/UniformBufferSet.hpp"
-#include "render/StorageBufferSet.hpp"
 #include "render/StorageBuffer.hpp"
+#include "render/StorageBufferSet.hpp"
 #include "render/UniformBuffer.hpp"
-#include "render/IndexBuffer.hpp"
+#include "render/UniformBufferSet.hpp"
 #include "render/VertexBuffer.hpp"
-#include "render/Material.hpp"
-#include "render/Mesh.hpp"
-#include "render/Font.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -28,12 +28,12 @@ namespace ForgottenEngine {
 Renderer2D::Renderer2D(const Renderer2DSpecification& specification)
 	: specification(specification)
 {
-	Init();
+	init();
 }
 
-Renderer2D::~Renderer2D() { Shutdown(); }
+Renderer2D::~Renderer2D() { shut_down(); }
 
-void Renderer2D::Init()
+void Renderer2D::init()
 {
 	if (specification.swap_chain_target)
 		render_command_buffer = RenderCommandBuffer::create_from_swapchain();
@@ -200,7 +200,7 @@ void Renderer2D::Init()
 	line_material = Material::create(line_pipeline->get_specification().Shader, "LineMaterial");
 }
 
-void Renderer2D::Shutdown()
+void Renderer2D::shut_down()
 {
 	for (auto buffer : quad_vertex_buffer_base)
 		delete[] buffer;
@@ -219,9 +219,9 @@ void Renderer2D::begin_scene(const glm::mat4& viewProj, const glm::mat4& view, b
 {
 	uint32_t frame_index = Renderer::get_current_frame_index();
 
-    // Dirty shader impl
-    // --------------------
-    // end dirty shader impl
+	// Dirty shader impl
+	// --------------------
+	// end dirty shader impl
 	camera_view_proj = viewProj;
 	camera_view = view;
 	depth_test = depthTest;
@@ -271,8 +271,8 @@ void Renderer2D::end_scene()
 				quad_material->set("u_Textures", white_texture, i);
 		}
 
-		Renderer::render_geometry(render_command_buffer, quad_pipeline, uniform_buffer_set, nullptr,
-			quad_material, quad_vertex_buffer[frame_index], quad_index_buffer, glm::mat4(1.0f), quad_index_count);
+		Renderer::render_geometry(render_command_buffer, quad_pipeline, uniform_buffer_set, nullptr, quad_material,
+			quad_vertex_buffer[frame_index], quad_index_buffer, glm::mat4(1.0f), quad_index_count);
 
 		stats.draw_calls++;
 	}
@@ -289,8 +289,8 @@ void Renderer2D::end_scene()
 				text_material->set("u_FontAtlases", white_texture, i);
 		}
 
-		Renderer::render_geometry(render_command_buffer, text_pipeline, uniform_buffer_set, nullptr,
-			text_material, text_vertex_buffer[frame_index], text_index_buffer, glm::mat4(1.0f), text_index_count);
+		Renderer::render_geometry(render_command_buffer, text_pipeline, uniform_buffer_set, nullptr, text_material,
+			text_vertex_buffer[frame_index], text_index_buffer, glm::mat4(1.0f), text_index_count);
 
 		stats.draw_calls++;
 	}
@@ -306,8 +306,8 @@ void Renderer2D::end_scene()
 				= renderCommandBuffer.as<VulkanRenderCommandBuffer>()->get_command_buffer(index);
 			vkCmdSetLineWidth(commandBuffer, lineWidth);
 		});
-		Renderer::render_geometry(render_command_buffer, line_pipeline, uniform_buffer_set, nullptr,
-			line_material, line_vertex_buffer[frame_index], line_index_buffer, glm::mat4(1.0f), line_index_count);
+		Renderer::render_geometry(render_command_buffer, line_pipeline, uniform_buffer_set, nullptr, line_material,
+			line_vertex_buffer[frame_index], line_index_buffer, glm::mat4(1.0f), line_index_count);
 
 		stats.draw_calls++;
 	}
@@ -341,7 +341,10 @@ void Renderer2D::Flush()
 #endif
 }
 
-Reference<RenderPass> Renderer2D::get_target_render_pass() { return quad_pipeline->get_specification().RenderPass; }
+Reference<RenderPass> Renderer2D::get_target_render_pass()
+{
+	return quad_pipeline->get_specification().RenderPass;
+}
 
 void Renderer2D::set_target_render_pass(Reference<RenderPass> renderPass)
 {
@@ -409,8 +412,8 @@ void Renderer2D::draw_quad(const glm::mat4& transform, const glm::vec4& color)
 	stats.quad_count++;
 }
 
-void Renderer2D::draw_quad(
-	const glm::mat4& transform, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+void Renderer2D::draw_quad(const glm::mat4& transform, const Reference<Texture2D>& texture, float tilingFactor,
+	const glm::vec4& tintColor)
 {
 	constexpr size_t quadVertexCount = 4;
 	constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -611,8 +614,8 @@ void Renderer2D::draw_quad_billboard(const glm::vec3& position, const glm::vec2&
 	stats.quad_count++;
 }
 
-void Renderer2D::draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-	float tilingFactor, const glm::vec4& tintColor)
+void Renderer2D::draw_quad_billboard(const glm::vec3& position, const glm::vec2& size,
+	const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 {
 	if (quad_index_count >= MaxIndices)
 		FlushAndReset();
@@ -676,7 +679,7 @@ void Renderer2D::draw_quad_billboard(const glm::vec3& position, const glm::vec2&
 void Renderer2D::draw_rotated_quad(
 	const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 {
-    draw_rotated_quad({ position.x, position.y, 0.0f }, size, rotation, color);
+	draw_rotated_quad({ position.x, position.y, 0.0f }, size, rotation, color);
 }
 
 void Renderer2D::draw_rotated_quad(
@@ -1076,9 +1079,10 @@ void Renderer2D::draw_string(const std::string& string, const Reference<Font>& f
 			l *= texelWidth, b *= texelHeight, r *= texelWidth, t *= texelHeight;
 
 			// ImGui::begin("Font");
-			// ImGui::Text("Size: %d, %d", m_ExampleFontSheet->get_width(), m_ExampleFontSheet->get_height());
-			// UI::Image(m_ExampleFontSheet, ImVec2(m_ExampleFontSheet->get_width(),
-			// m_ExampleFontSheet->get_height()), ImVec2(0, 1), ImVec2(1, 0)); ImGui::End();
+			// ImGui::Text("buffer_size: %d, %d", m_ExampleFontSheet->get_width(),
+			// m_ExampleFontSheet->get_height()); UI::Image(m_ExampleFontSheet,
+			// ImVec2(m_ExampleFontSheet->get_width(), m_ExampleFontSheet->get_height()), ImVec2(0, 1), ImVec2(1,
+			// 0)); ImGui::End();
 
 			text_vertex_buffer_ptr->Position = transform * glm::vec4(pl, pb, 0.0f, 1.0f);
 			text_vertex_buffer_ptr->Color = color;

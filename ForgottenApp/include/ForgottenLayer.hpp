@@ -27,5 +27,7 @@ private:
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 	bool viewport_focused = false, viewport_hovered = false;
 
+	Reference<Renderer2D> renderer;
+
 	int gizmo_type = -1;
 };

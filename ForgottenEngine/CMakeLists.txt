@@ -86,7 +86,6 @@ target_include_directories(ForgottenEngine PUBLIC
 )
 target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse msdf-atlas-gen)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
-target_compile_definitions(ForgottenEngine PUBLIC VMA_RECORDING_ENABLED=1)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
 add_custom_command(TARGET CompileEngineShaders POST_BUILD
