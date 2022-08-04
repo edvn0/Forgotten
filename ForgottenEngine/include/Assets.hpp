@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <vector>
 
 #define BIT(x) (1 << x)
 
@@ -39,6 +40,9 @@ public:
 	static bool exists(const Path&);
 	static OptionalPath find_resources_by_path(const Path&);
 	static std::vector<OptionalPath> load_from_directory(const std::filesystem::path& path, bool recurse = false);
+
+	static std::string path_without_extensions(
+		const std::string& input, const std::vector<std::string>& exceptions = {});
 };
 
 }

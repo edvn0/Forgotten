@@ -74,4 +74,32 @@ std::vector<OptionalPath> Assets::load_from_directory(const std::filesystem::pat
 	return result;
 }
 
+std::string Assets::path_without_extensions(const std::string& input, const std::vector<std::string>& exceptions)
+{
+	Path path = input;
+
+	auto short_circuit = [&exceptions](const Path& p) {
+		for (const auto& exception : exceptions) {
+			if (p.extension() == exception) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	if (short_circuit(path)) {
+		return path.string();
+	}
+
+	while (path.has_extension()) {
+		path = path.replace_extension();
+
+		if (short_circuit(path)) {
+			return path.string();
+		}
+	}
+
+	return path;
+}
+
 }

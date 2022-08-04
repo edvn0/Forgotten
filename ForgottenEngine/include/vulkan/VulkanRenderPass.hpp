@@ -13,6 +13,9 @@ public:
 	explicit VulkanRenderPass(const RenderPassSpecification& spec);
 	RenderPassSpecification& get_specification() override;
 	const RenderPassSpecification& get_specification() const override;
+
+private:
+	RenderPassSpecification spec;
 };
 
 }

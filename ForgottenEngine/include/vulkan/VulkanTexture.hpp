@@ -70,14 +70,14 @@ public:
 	~VulkanTextureCube() override;
 
 protected:
-	virtual void bind_impl(uint32_t slot) const override;
+	void bind_impl(uint32_t slot) const override;
 
 public:
-	virtual ImageFormat get_format() const override { return m_Format; }
+	ImageFormat get_format() const override { return m_Format; }
 
-	virtual uint32_t get_width() const override { return m_Width; }
-	virtual uint32_t get_height() const override { return m_Height; }
-	virtual glm::uvec2 get_size() const override { return { m_Width, m_Height }; }
+	uint32_t get_width() const override { return m_Width; }
+	uint32_t get_height() const override { return m_Height; }
+	glm::uvec2 get_size() const override { return { m_Width, m_Height }; }
 
 	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
 	uint64_t get_hash() const override;

@@ -14,11 +14,7 @@ VulkanShader::VulkanShader(const std::string& path, bool forceCompile, bool disa
 	: asset_path(path)
 	, disable_optimisations(disableOptimization)
 {
-	// TODO: This should be more "general"
-	size_t found = path.find_last_of("/\\");
-	name = found != std::string::npos ? path.substr(found + 1) : path;
-	found = name.find_last_of('.');
-	name = found != std::string::npos ? name.substr(0, found) : name;
+	name = Assets::path_without_extensions(path, { ".vert", ".frag" });
 
 	reload(forceCompile);
 }

@@ -66,14 +66,10 @@ void Renderer::init()
 	renderer_data->shader_library = Reference<ShaderLibrary>::create();
 
 	// Load 2D Renderer Shaders.
-	Renderer::get_shader_library()->load("shaders/2d_renderer.vert.spv");
-	Renderer::get_shader_library()->load("shaders/2d_renderer.frag.spv");
-	/*Renderer::get_shader_library()->load("shaders/2d_renderer_circle.vert.spv");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_circle.frag.spv");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_line.vert.spv");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_line.frag.spv");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_text.vert.spv");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_text.frag.spv");*/
+	Renderer::get_shader_library()->load("shaders/2d_renderer");
+	Renderer::get_shader_library()->load("shaders/2d_renderer_circle");
+	Renderer::get_shader_library()->load("shaders/2d_renderer_line");
+	Renderer::get_shader_library()->load("shaders/2d_renderer_text");
 
 	renderer_api->init();
 }

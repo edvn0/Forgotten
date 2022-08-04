@@ -6,7 +6,8 @@ namespace ForgottenEngine {
 
 class VulkanMaterial : public Material {
 public:
-	explicit VulkanMaterial(const Reference<Shader>& shader, const std::string& name = "");
+	explicit VulkanMaterial(const ShaderPair& shader, const std::string& name = "");
+	explicit VulkanMaterial(const Reference<Material>& other, const std::string& name = "");
 	void invalidate() override;
 	void on_shader_reloaded() override;
 
@@ -41,10 +42,7 @@ public:
 	Reference<Texture2D> get_texture_2d(const std::string& name) override;
 	Reference<TextureCube> get_texture_cube(const std::string& name) override;
 	Reference<Texture2D> try_get_texture_2d(const std::string& name) override;
-	Reference<TextureCube> try_get_texture_cube(const std::string& name) override
-	{
-		return Reference<TextureCube>();
-	}
+	Reference<TextureCube> try_get_texture_cube(const std::string& name) override;
 
 	uint32_t get_flags() const override;
 	void set_flags(uint32_t flags) override;

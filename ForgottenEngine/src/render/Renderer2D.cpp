@@ -59,7 +59,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Quad";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer");
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.BackfaceCulling = false;
 		pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" },
@@ -107,7 +107,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Line";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Line");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer_line");
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.Topology = PrimitiveTopology::Lines;
 		pipelineSpecification.LineWidth = 2.0f;
@@ -136,7 +136,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Text";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Text");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer_text");
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.BackfaceCulling = false;
 		pipelineSpecification.Layout
@@ -176,7 +176,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Circle";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer_circle");
 		pipelineSpecification.BackfaceCulling = false;
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.Layout

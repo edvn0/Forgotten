@@ -8,7 +8,7 @@
 
 namespace ForgottenEngine {
 
-Reference<Material> Material::create(const Reference<Shader>& shader, const std::string& name)
+Reference<Material> Material::create(const ShaderPair& shader, const std::string& name)
 {
 	switch (RendererAPI::current()) {
 	case RendererAPIType::None:

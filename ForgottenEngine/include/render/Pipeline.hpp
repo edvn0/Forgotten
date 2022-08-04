@@ -24,7 +24,7 @@ enum class DepthCompareOperator {
 };
 
 struct PipelineSpecification {
-	Reference<Shader> Shader;
+	ShaderPair Shader;
 	VertexBufferLayout Layout;
 	VertexBufferLayout InstanceLayout;
 	Reference<RenderPass> RenderPass;

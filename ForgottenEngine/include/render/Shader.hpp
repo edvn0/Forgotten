@@ -10,6 +10,7 @@
 #include <string>
 
 namespace ForgottenEngine {
+
 namespace ShaderUtils {
 	enum class SourceLang {
 		NONE,
@@ -81,7 +82,7 @@ class Shader : public ReferenceCounted {
 public:
 	using ShaderReloadedCallback = std::function<void()>;
 
-    virtual ~Shader() = default;
+	virtual ~Shader() = default;
 
 	virtual void reload(bool force_compile = false) = 0;
 	virtual void rt_reload(bool force_compile) = 0;
@@ -101,24 +102,27 @@ public:
 	virtual void add_shader_reloaded_callback(const ShaderReloadedCallback& callback) = 0;
 };
 
+using ShaderPair = std::pair<Reference<Shader>, Reference<Shader>>;
+
 // This should be eventually handled by the Asset Manager
 class ShaderLibrary : public ReferenceCounted {
 public:
 	ShaderLibrary();
 	~ShaderLibrary();
 
-	void add(const Reference<Shader>& shader);
+	void add(
+		const std::string& name, const Reference<Shader>& vert_shader, const Reference<Shader>& fragment_shader);
 	void load(std::string_view path, bool force_compile = false, bool disable_optimisations = false);
 	void load(std::string_view name, const std::string& path);
 
-	const Reference<Shader>& get(const std::string& name) const;
+	const ShaderPair& get(const std::string& name) const;
 	size_t get_size() const { return shaders.size(); }
 
-	std::unordered_map<std::string, Reference<Shader>>& get_shaders() { return shaders; }
-	const std::unordered_map<std::string, Reference<Shader>>& get_shaders() const { return shaders; }
+	std::unordered_map<std::string, ShaderPair>& get_shaders() { return shaders; }
+	const std::unordered_map<std::string, ShaderPair>& get_shaders() const { return shaders; }
 
 private:
-	std::unordered_map<std::string, Reference<Shader>> shaders;
+	std::unordered_map<std::string, ShaderPair> shaders;
 };
 
 }
