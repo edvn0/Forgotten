@@ -68,9 +68,9 @@ public:
 		const glm::vec4& tintColor = glm::vec4(1.0f));
 
 	void draw_rotated_rect(
-		const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+		const glm::vec2& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);
 	void draw_rotated_rect(
-		const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+		const glm::vec3& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);
 
 	// Thickness is between 0 and 1
 	void draw_circle(const glm::vec3& p0, const glm::vec3& rotation, float radius, const glm::vec4& color);

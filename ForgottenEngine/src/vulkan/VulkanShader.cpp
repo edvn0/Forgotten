@@ -10,11 +10,23 @@
 
 namespace ForgottenEngine {
 
+static ShaderType to_shader_type(const std::string& path)
+{
+	if (path == ".vert") {
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	}
+	if (path == ".frag") {
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	}
+	CORE_ERROR("Incorrect vert or frag extension");
+}
+
 VulkanShader::VulkanShader(const std::string& path, bool forceCompile, bool disableOptimization)
 	: asset_path(path)
 	, disable_optimisations(disableOptimization)
 {
 	name = Assets::path_without_extensions(path, { ".vert", ".frag" });
+	shader_type = to_shader_type(Assets::extract_extension(name));
 
 	reload(forceCompile);
 }
@@ -48,7 +60,22 @@ VulkanShader::~VulkanShader()
 	});
 }
 
-void VulkanShader::rt_reload(const bool forceCompile) { }
+void VulkanShader::rt_reload(const bool forceCompile)
+{
+
+	auto* f = fopen(asset_path.string().data(), "rb");
+	fseek(f, 0, SEEK_END);
+	uint64_t size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	auto out = std::vector<uint32_t>(size / sizeof(uint32_t));
+	fread(out.data(), sizeof(uint32_t), out.size(), f);
+	fclose(f);
+
+	std::map<VkShaderStageFlagBits, std::vector<uint32_t>> map;
+	map.emplace(shader_type, out);
+
+	load_and_create_shaders(map);
+}
 
 void VulkanShader::reload(bool forceCompile)
 {
@@ -101,30 +128,30 @@ void VulkanShader::create_descriptor()
 			typeCount.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			typeCount.descriptorCount = (uint32_t)(shader_desc_set.uniform_buffers.size());
 		}
-		if (!shader_desc_set.StorageBuffers.empty()) {
+		if (!shader_desc_set.storage_buffers.empty()) {
 			VkDescriptorPoolSize& typeCount = type_counts[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			typeCount.descriptorCount = (uint32_t)(shader_desc_set.StorageBuffers.size());
+			typeCount.descriptorCount = (uint32_t)(shader_desc_set.storage_buffers.size());
 		}
-		if (!shader_desc_set.ImageSamplers.empty()) {
+		if (!shader_desc_set.image_samplers.empty()) {
 			VkDescriptorPoolSize& typeCount = type_counts[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			typeCount.descriptorCount = (uint32_t)(shader_desc_set.ImageSamplers.size());
+			typeCount.descriptorCount = (uint32_t)(shader_desc_set.image_samplers.size());
 		}
-		if (!shader_desc_set.SeparateTextures.empty()) {
+		if (!shader_desc_set.separate_textures.empty()) {
 			VkDescriptorPoolSize& typeCount = type_counts[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			typeCount.descriptorCount = (uint32_t)(shader_desc_set.SeparateTextures.size());
+			typeCount.descriptorCount = (uint32_t)(shader_desc_set.separate_textures.size());
 		}
-		if (!shader_desc_set.SeparateSamplers.empty()) {
+		if (!shader_desc_set.separate_samplers.empty()) {
 			VkDescriptorPoolSize& typeCount = type_counts[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_SAMPLER;
-			typeCount.descriptorCount = (uint32_t)(shader_desc_set.SeparateSamplers.size());
+			typeCount.descriptorCount = (uint32_t)(shader_desc_set.separate_samplers.size());
 		}
-		if (!shader_desc_set.StorageImages.empty()) {
+		if (!shader_desc_set.storage_images.empty()) {
 			VkDescriptorPoolSize& typeCount = type_counts[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			typeCount.descriptorCount = (uint32_t)(shader_desc_set.StorageImages.size());
+			typeCount.descriptorCount = (uint32_t)(shader_desc_set.storage_images.size());
 		}
 
 		//////////////////////////////////////////////////////////////////////
@@ -148,7 +175,7 @@ void VulkanShader::create_descriptor()
 			set.dstBinding = layoutBinding.binding;
 		}
 
-		for (auto& [binding, storageBuffer] : shader_desc_set.StorageBuffers) {
+		for (auto& [binding, storageBuffer] : shader_desc_set.storage_buffers) {
 			VkDescriptorSetLayoutBinding& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			layoutBinding.descriptorCount = 1;
@@ -166,7 +193,7 @@ void VulkanShader::create_descriptor()
 			set.dstBinding = layoutBinding.binding;
 		}
 
-		for (auto& [binding, imageSampler] : shader_desc_set.ImageSamplers) {
+		for (auto& [binding, imageSampler] : shader_desc_set.image_samplers) {
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			layoutBinding.descriptorCount = imageSampler.ArraySize;
@@ -176,7 +203,7 @@ void VulkanShader::create_descriptor()
 
 			CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.StorageBuffers.find(binding) == shader_desc_set.StorageBuffers.end(),
+			CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
 				"Binding is already present!");
 
 			VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
@@ -187,7 +214,7 @@ void VulkanShader::create_descriptor()
 			set.dstBinding = layoutBinding.binding;
 		}
 
-		for (auto& [binding, imageSampler] : shader_desc_set.SeparateTextures) {
+		for (auto& [binding, imageSampler] : shader_desc_set.separate_textures) {
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			layoutBinding.descriptorCount = imageSampler.ArraySize;
@@ -197,9 +224,9 @@ void VulkanShader::create_descriptor()
 
 			CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.ImageSamplers.find(binding) == shader_desc_set.ImageSamplers.end(),
+			CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.StorageBuffers.find(binding) == shader_desc_set.StorageBuffers.end(),
+			CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
 				"Binding is already present!");
 
 			VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
@@ -210,7 +237,7 @@ void VulkanShader::create_descriptor()
 			set.dstBinding = layoutBinding.binding;
 		}
 
-		for (auto& [binding, imageSampler] : shader_desc_set.SeparateSamplers) {
+		for (auto& [binding, imageSampler] : shader_desc_set.separate_samplers) {
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 			layoutBinding.descriptorCount = imageSampler.ArraySize;
@@ -220,11 +247,11 @@ void VulkanShader::create_descriptor()
 
 			CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.ImageSamplers.find(binding) == shader_desc_set.ImageSamplers.end(),
+			CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.StorageBuffers.find(binding) == shader_desc_set.StorageBuffers.end(),
+			CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.SeparateTextures.find(binding) == shader_desc_set.SeparateTextures.end(),
+			CORE_ASSERT(shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(),
 				"Binding is already present!");
 
 			VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
@@ -235,7 +262,7 @@ void VulkanShader::create_descriptor()
 			set.dstBinding = layoutBinding.binding;
 		}
 
-		for (auto& [bindingAndSet, imageSampler] : shader_desc_set.StorageImages) {
+		for (auto& [bindingAndSet, imageSampler] : shader_desc_set.storage_images) {
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			layoutBinding.descriptorCount = imageSampler.ArraySize;
@@ -248,13 +275,13 @@ void VulkanShader::create_descriptor()
 
 			CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.StorageBuffers.find(binding) == shader_desc_set.StorageBuffers.end(),
+			CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.ImageSamplers.find(binding) == shader_desc_set.ImageSamplers.end(),
+			CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.SeparateTextures.find(binding) == shader_desc_set.SeparateTextures.end(),
+			CORE_ASSERT(shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(),
 				"Binding is already present!");
-			CORE_ASSERT(shader_desc_set.SeparateSamplers.find(binding) == shader_desc_set.SeparateSamplers.end(),
+			CORE_ASSERT(shader_desc_set.separate_samplers.find(binding) == shader_desc_set.separate_samplers.end(),
 				"Binding is already present!");
 
 			VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
@@ -344,46 +371,46 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(u
 			typeCount.descriptorCount = (uint32_t)shader_desc_set.uniform_buffers.size() * numberOfSets;
 		}
 
-		if (!shader_desc_set.StorageBuffers.empty()) {
+		if (!shader_desc_set.storage_buffers.empty()) {
 			VkDescriptorPoolSize& typeCount = poolSizes[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			typeCount.descriptorCount = (uint32_t)shader_desc_set.StorageBuffers.size() * numberOfSets;
+			typeCount.descriptorCount = (uint32_t)shader_desc_set.storage_buffers.size() * numberOfSets;
 		}
 
-		if (!shader_desc_set.ImageSamplers.empty()) {
+		if (!shader_desc_set.image_samplers.empty()) {
 			VkDescriptorPoolSize& typeCount = poolSizes[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			uint32_t descriptorSetCount = 0;
-			for (auto&& [binding, imageSampler] : shader_desc_set.ImageSamplers)
+			for (auto&& [binding, imageSampler] : shader_desc_set.image_samplers)
 				descriptorSetCount += imageSampler.ArraySize;
 
 			typeCount.descriptorCount = descriptorSetCount * numberOfSets;
 		}
 
-		if (!shader_desc_set.SeparateTextures.empty()) {
+		if (!shader_desc_set.separate_textures.empty()) {
 			VkDescriptorPoolSize& typeCount = poolSizes[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			uint32_t descriptorSetCount = 0;
-			for (auto&& [binding, imageSampler] : shader_desc_set.SeparateTextures)
+			for (auto&& [binding, imageSampler] : shader_desc_set.separate_textures)
 				descriptorSetCount += imageSampler.ArraySize;
 
 			typeCount.descriptorCount = descriptorSetCount * numberOfSets;
 		}
 
-		if (!shader_desc_set.SeparateTextures.empty()) {
+		if (!shader_desc_set.separate_textures.empty()) {
 			VkDescriptorPoolSize& typeCount = poolSizes[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_SAMPLER;
 			uint32_t descriptorSetCount = 0;
-			for (auto&& [binding, imageSampler] : shader_desc_set.SeparateSamplers)
+			for (auto&& [binding, imageSampler] : shader_desc_set.separate_samplers)
 				descriptorSetCount += imageSampler.ArraySize;
 
 			typeCount.descriptorCount = descriptorSetCount * numberOfSets;
 		}
 
-		if (!shader_desc_set.StorageImages.empty()) {
+		if (!shader_desc_set.storage_images.empty()) {
 			VkDescriptorPoolSize& typeCount = poolSizes[set].emplace_back();
 			typeCount.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			typeCount.descriptorCount = (uint32_t)shader_desc_set.StorageImages.size() * numberOfSets;
+			typeCount.descriptorCount = (uint32_t)shader_desc_set.storage_images.size() * numberOfSets;
 		}
 	}
 

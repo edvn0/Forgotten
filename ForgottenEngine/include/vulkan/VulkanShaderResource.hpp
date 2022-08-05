@@ -42,18 +42,18 @@ struct PushConstantRange {
 
 struct ShaderDescriptorSet {
 	std::unordered_map<uint32_t, UniformBuffer> uniform_buffers;
-	std::unordered_map<uint32_t, StorageBuffer> StorageBuffers;
-	std::unordered_map<uint32_t, ImageSampler> ImageSamplers;
-	std::unordered_map<uint32_t, ImageSampler> StorageImages;
-	std::unordered_map<uint32_t, ImageSampler> SeparateTextures; // Not really an image sampler.
-	std::unordered_map<uint32_t, ImageSampler> SeparateSamplers;
+	std::unordered_map<uint32_t, StorageBuffer> storage_buffers;
+	std::unordered_map<uint32_t, ImageSampler> image_samplers;
+	std::unordered_map<uint32_t, ImageSampler> storage_images;
+	std::unordered_map<uint32_t, ImageSampler> separate_textures; // Not really an image sampler.
+	std::unordered_map<uint32_t, ImageSampler> separate_samplers;
 
 	std::unordered_map<std::string, VkWriteDescriptorSet> write_descriptor_sets;
 
 	operator bool() const
 	{
-		return !(
-			StorageBuffers.empty() && uniform_buffers.empty() && ImageSamplers.empty() && StorageImages.empty());
+		return !(storage_buffers.empty() && uniform_buffers.empty() && image_samplers.empty()
+			&& storage_images.empty());
 	}
 };
 

@@ -61,16 +61,9 @@ public:
 	// TEMP: remove this when render command buffers are a thing
 	virtual void bind() = 0;
 
-	void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set = 0)
-	{
-		set_uniform_buffer_impl(ub, binding, set);
-	};
+	virtual void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set) = 0;
 
 	static Reference<Pipeline> create(const PipelineSpecification& spec);
-
-protected:
-	virtual void set_uniform_buffer_impl(Reference<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set)
-		= 0;
 };
 
 }

@@ -19,7 +19,8 @@ void ForgottenLayer::on_update(const TimeStep& ts) { Renderer::wait_and_render()
 void ForgottenLayer::on_ui_render(const TimeStep& ts)
 {
 	renderer->begin_scene(glm::mat4{ 1 }, glm::mat4{ 1 }, false);
-	renderer->end_scene();
+
+	renderer->draw_rotated_rect(glm::vec2{ 0, 0 }, glm::vec2{ 10, 10 }, 3.14159 / 4, { 0.1, 0.9, 0.9, 1.0 });
 
 	static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
@@ -134,6 +135,7 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 		ui_toolbar();
 	}
+	renderer->end_scene();
 
 	ImGui::End();
 }

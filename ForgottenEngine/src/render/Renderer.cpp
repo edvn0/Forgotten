@@ -47,6 +47,12 @@ static RendererAPI* init_renderer_api()
 	return nullptr;
 }
 
+struct ShaderDependencies {
+	std::vector<Reference<Pipeline>> Pipelines;
+	std::vector<Reference<Material>> Materials;
+};
+static std::unordered_map<size_t, ShaderDependencies> shader_dependencies;
+
 static inline auto& get() { return *renderer_data; }
 
 void Renderer::init()
@@ -120,6 +126,14 @@ void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
 }
 
 // End submits
+
+// Start Registrations
+void Renderer::register_shader_dependency(const ShaderPair& shaders, Pipeline* pipeline)
+{
+	shader_dependencies[shaders.first->get_hash()].Pipelines.push_back(shaders.first);
+	shader_dependencies[shaders.second->get_hash()].Pipelines.push_back(shaders.second);
+}
+// end Registrations
 
 RenderCommandQueue& Renderer::get_render_resource_free_queue(uint32_t index) { return resource_free_queue[index]; }
 

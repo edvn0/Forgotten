@@ -106,4 +106,11 @@ std::string Assets::path_without_extensions(const std::string& input, const std:
 	return path;
 }
 
+std::string Assets::extract_extension(const std::string& input)
+{
+	Path path = input;
+
+	return path.extension();
+}
+
 }

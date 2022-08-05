@@ -3,6 +3,7 @@
 #include "ApplicationProperties.hpp"
 #include "Reference.hpp"
 #include "render/RenderCommandQueue.hpp"
+#include "render/Shader.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
 
 namespace ForgottenEngine {
@@ -17,6 +18,7 @@ class VertexBuffer;
 class IndexBuffer;
 class Texture2D;
 class RenderPass;
+class Shader;
 
 class Renderer {
 public:
@@ -48,6 +50,10 @@ public:
 		const Reference<VertexBuffer>&, const Reference<IndexBuffer>&, const glm::mat4& transform,
 		uint32_t index_count);
 	// end submits
+
+	// Registrations
+	static void register_shader_dependency(const ShaderPair& shaders, Pipeline* pipeline);
+	// end Registrations
 
 	static Reference<Texture2D> get_white_texture();
 

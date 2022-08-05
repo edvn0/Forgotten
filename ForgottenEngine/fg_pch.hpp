@@ -15,6 +15,7 @@
 #include <memory>
 #include <random>
 #include <set>
+#include <stdio.h>
 #include <string>
 #include <string_view>
 #include <unordered_map>

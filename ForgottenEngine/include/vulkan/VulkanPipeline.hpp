@@ -2,16 +2,16 @@
 
 #include <utility>
 
+#include "VulkanShader.hpp"
 #include "render/Pipeline.hpp"
 
 namespace ForgottenEngine {
 
 class VulkanPipeline : public Pipeline {
 public:
-	explicit VulkanPipeline(PipelineSpecification spec)
-		: spec(std::move(spec)){};
+	explicit VulkanPipeline(const PipelineSpecification& spec);
 
-	~VulkanPipeline() override = default;
+	~VulkanPipeline() override;
 
 	void bind() override;
 	void invalidate() override;
@@ -19,16 +19,20 @@ public:
 	PipelineSpecification& get_specification() override { return spec; }
 	const PipelineSpecification& get_specification() const override { return spec; }
 
-	VkPipelineLayout get_vulkan_pipeline_layout() const { return layout; }
+	VkPipelineLayout get_vulkan_pipeline_layout() const { return pipeline_layout; }
 	VkPipeline get_vulkan_pipeline() const { return pipeline; }
 
-protected:
-	void set_uniform_buffer_impl(Reference<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set) override;
+	auto get_descriptor_set(uint32_t set) { return descriptor_sets.descriptor_sets[set]; }
+
+	void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set) override;
+	void rt_set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set = 0);
 
 private:
 	PipelineSpecification spec;
-	VkPipelineLayout layout{};
+	VkPipelineLayout pipeline_layout{};
 	VkPipeline pipeline{};
+	VkPipelineCache pipeline_cache = nullptr;
+	VulkanShader::ShaderMaterialDescriptorSet descriptor_sets;
 };
 
 }

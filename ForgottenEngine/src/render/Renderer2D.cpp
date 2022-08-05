@@ -9,19 +9,17 @@
 #include "render/Pipeline.hpp"
 #include "render/RenderCommandBuffer.hpp"
 #include "render/Renderer.hpp"
-#include "render/Shader.hpp"
 #include "render/StorageBuffer.hpp"
 #include "render/StorageBufferSet.hpp"
 #include "render/UniformBuffer.hpp"
 #include "render/UniformBufferSet.hpp"
 #include "render/VertexBuffer.hpp"
 
+#include <codecvt>
 #include <glm/gtc/matrix_transform.hpp>
 
 // TEMP
 #include "vulkan/VulkanRenderCommandBuffer.hpp"
-
-#include <codecvt>
 
 namespace ForgottenEngine {
 
@@ -46,7 +44,7 @@ void Renderer2D::init()
 	framebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
 	framebufferSpec.Samples = 1;
 	framebufferSpec.ClearColorOnLoad = true;
-	framebufferSpec.ClearColor = { 0.1f, 0.5f, 0.5f, 1.0f };
+	framebufferSpec.ClearColor = { 0.1f, 0.9f, 0.5f, 1.0f };
 	framebufferSpec.DebugName = "Renderer2D Framebuffer";
 
 	Reference<Framebuffer> framebuffer = Framebuffer::create(framebufferSpec);

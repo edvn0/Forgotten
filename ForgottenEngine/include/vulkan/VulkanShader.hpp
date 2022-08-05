@@ -11,6 +11,8 @@
 
 namespace ForgottenEngine {
 
+using ShaderType = VkShaderStageFlagBits;
+
 class VulkanShader : public Shader {
 public:
 	struct ReflectionData {
@@ -121,6 +123,7 @@ private:
 	// VkDescriptorPool m_DescriptorPool = nullptr;
 
 	std::unordered_map<uint32_t, std::vector<VkDescriptorPoolSize>> type_counts;
+	ShaderType shader_type;
 };
 
 }

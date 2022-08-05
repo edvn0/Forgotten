@@ -43,6 +43,8 @@ public:
 
 	static std::string path_without_extensions(
 		const std::string& input, const std::vector<std::string>& exceptions = {});
+
+	static std::string extract_extension(const std::string& input);
 };
 
 }

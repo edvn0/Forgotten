@@ -296,7 +296,7 @@ rt_retrieve_or_create_storage_buffer_write_descriptors(
 	if (vulkanShader->has_descriptor_set(0)) {
 		const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
 		if (!shaderDescriptorSets.empty()) {
-			for (auto&& [binding, shaderSB] : shaderDescriptorSets[0].StorageBuffers) {
+			for (auto&& [binding, shaderSB] : shaderDescriptorSets[0].storage_buffers) {
 				auto& writeDescriptors
 					= renderer_data->storage_buffer_write_descriptor_cache[storageBufferSet.raw()][shaderHash];
 				writeDescriptors.resize(frames_in_flight);
@@ -540,7 +540,6 @@ void VulkanRenderer::render_geometry(Reference<RenderCommandBuffer> command_buff
 		index_count = ib->get_count();
 
 	Renderer::submit([command_buffer, pipeline, ubs, vulkan_material, vb, ib, transform, index_count]() mutable {
-		uint32_t frameIndex = Renderer::get_current_frame_index();
 		VkCommandBuffer render_command_buffer
 			= command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
