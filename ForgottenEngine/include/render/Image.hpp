@@ -32,7 +32,7 @@ enum class ImageFormat {
 	Depth = DEPTH24STENCIL8,
 };
 
-enum class ImageUsage { None = 0, Texture, Attachment, Storage };
+enum class ImageUsage { None = 0, Texture, Attachment, Storage, HostRead };
 
 enum class TextureWrap { None = 0, Clamp, Repeat };
 
@@ -54,6 +54,7 @@ struct ImageSpecification {
 
 	ImageFormat Format = ImageFormat::RGBA;
 	ImageUsage Usage = ImageUsage::Texture;
+	bool Transfer = false;
 	uint32_t Width = 1;
 	uint32_t Height = 1;
 	uint32_t Mips = 1;
@@ -64,42 +65,42 @@ class Image : public ReferenceCounted {
 public:
 	virtual ~Image() = default;
 
-	virtual void Resize(const uint32_t width, const uint32_t height) = 0;
+	virtual void resize(uint32_t width, uint32_t height) = 0;
 
-	virtual void Invalidate() = 0;
+	virtual void invalidate() = 0;
 
-	virtual void Release() = 0;
+	virtual void release() = 0;
 
-	virtual uint32_t GetWidth() const = 0;
+	virtual uint32_t get_width() const = 0;
 
-	virtual uint32_t GetHeight() const = 0;
+	virtual uint32_t get_height() const = 0;
 
-	virtual glm::uvec2 GetSize() const = 0;
+	virtual glm::uvec2 get_size() const = 0;
 
-	virtual float GetAspectRatio() const = 0;
+	virtual float get_aspect_ratio() const = 0;
 
-	virtual ImageSpecification& GetSpecification() = 0;
+	virtual ImageSpecification& get_specification() = 0;
 
-	virtual const ImageSpecification& GetSpecification() const = 0;
+	virtual const ImageSpecification& get_specification() const = 0;
 
-	virtual Buffer GetBuffer() const = 0;
+	virtual Buffer get_buffer() const = 0;
 
-	virtual Buffer& GetBuffer() = 0;
+	virtual Buffer& get_buffer() = 0;
 
-	virtual void CreatePerLayerImageViews() = 0;
+	virtual void create_per_layer_image_views() = 0;
 
-	virtual uint64_t GetHash() const = 0;
+	virtual uint64_t get_hash() const = 0;
 
 	// TODO: usage (eg. shader read)
 };
 
 class Image2D : public Image {
 public:
-	static Reference<Image2D> Create(ImageSpecification specification, Buffer buffer);
+	static Reference<Image2D> create(ImageSpecification specification, Buffer buffer);
 
-	static Reference<Image2D> Create(ImageSpecification specification, const void* data = nullptr);
+	static Reference<Image2D> create(ImageSpecification specification, const void* data = nullptr);
 
-	virtual void Resize(const glm::uvec2& size) = 0;
+	virtual void resize(const glm::uvec2& size) = 0;
 };
 
 namespace Utils {

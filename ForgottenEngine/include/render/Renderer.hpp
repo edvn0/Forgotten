@@ -26,7 +26,6 @@ public:
 
 	Renderer(Renderer&&) = delete;
 
-
 public:
 	static Reference<RendererContext> get_context();
 
@@ -38,15 +37,16 @@ public:
 
 	static void begin_frame();
 
-	static void begin_render_pass(
-		Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass, bool explicit_clean);
-	static void end_render_pass(Reference<RenderCommandBuffer> command_buffer);
+	static void begin_render_pass(const Reference<RenderCommandBuffer>& command_buffer,
+		Reference<RenderPass> render_pass, bool explicit_clean);
+	static void end_render_pass(const Reference<RenderCommandBuffer>& command_buffer);
 	static void end_frame();
 
 	// Submits
-	static void render_geometry(Reference<RenderCommandBuffer>, Reference<Pipeline>, Reference<UniformBufferSet>,
-		Reference<StorageBufferSet>, Reference<Material>, Reference<VertexBuffer>, Reference<IndexBuffer>,
-		const glm::mat4& transform, uint32_t index_count);
+	static void render_geometry(const Reference<RenderCommandBuffer>&, const Reference<Pipeline>&,
+		const Reference<UniformBufferSet>&, const Reference<StorageBufferSet>&, const Reference<Material>&,
+		const Reference<VertexBuffer>&, const Reference<IndexBuffer>&, const glm::mat4& transform,
+		uint32_t index_count);
 	// end submits
 
 	static Reference<Texture2D> get_white_texture();
@@ -86,7 +86,7 @@ public:
 		};
 
 		Renderer::submit([render_command, func]() {
-			const uint32_t index = 0; // Renderer::GetCurrentFrameIndex();
+			const uint32_t index = Renderer::get_current_frame_index();
 			auto storage_buffer = get_render_resource_free_queue(index).allocate(render_command, sizeof(func));
 			new (storage_buffer) SubmittedFunction(std::forward<SubmittedFunction>((SubmittedFunction &&) func));
 		});

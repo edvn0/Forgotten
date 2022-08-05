@@ -7,6 +7,8 @@
 #include "render/IndexBuffer.hpp"
 #include "render/VertexBuffer.hpp"
 
+#include "Application.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "render/RenderCommandQueue.hpp"
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
@@ -17,6 +19,7 @@
 #include "render/UniformBufferSet.hpp"
 #include "render/VertexBuffer.hpp"
 #include "vulkan/VulkanContext.hpp"
+#include "vulkan/VulkanFramebuffer.hpp"
 #include "vulkan/VulkanIndexBuffer.hpp"
 #include "vulkan/VulkanPipeline.hpp"
 #include "vulkan/VulkanRenderCommandBuffer.hpp"
@@ -26,6 +29,155 @@
 #include <vulkan/vulkan.h>
 
 namespace ForgottenEngine {
+
+namespace Utils {
+
+	void insert_image_memory_barrier(VkCommandBuffer cmdbuffer, VkImage image, VkAccessFlags srcAccessMask,
+		VkAccessFlags dstAccessMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout,
+		VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
+		VkImageSubresourceRange subresourceRange)
+	{
+		VkImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+		imageMemoryBarrier.srcAccessMask = srcAccessMask;
+		imageMemoryBarrier.dstAccessMask = dstAccessMask;
+		imageMemoryBarrier.oldLayout = oldImageLayout;
+		imageMemoryBarrier.newLayout = newImageLayout;
+		imageMemoryBarrier.image = image;
+		imageMemoryBarrier.subresourceRange = subresourceRange;
+
+		vkCmdPipelineBarrier(
+			cmdbuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+	}
+
+	void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageLayout oldImageLayout,
+		VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange, VkPipelineStageFlags srcStageMask,
+		VkPipelineStageFlags dstStageMask)
+	{
+		// Create an image barrier object
+		VkImageMemoryBarrier imageMemoryBarrier = {};
+		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.oldLayout = oldImageLayout;
+		imageMemoryBarrier.newLayout = newImageLayout;
+		imageMemoryBarrier.image = image;
+		imageMemoryBarrier.subresourceRange = subresourceRange;
+
+		// Source layouts (old)
+		// Source access mask controls actions that have to be finished on the old layout
+		// before it will be transitioned to the new layout
+		switch (oldImageLayout) {
+		case VK_IMAGE_LAYOUT_UNDEFINED:
+			// Image layout is undefined (or does not matter)
+			// Only valid as initial layout
+			// No flags required, listed only for completeness
+			imageMemoryBarrier.srcAccessMask = 0;
+			break;
+
+		case VK_IMAGE_LAYOUT_PREINITIALIZED:
+			// Image is preinitialized
+			// Only valid as initial layout for linear images, preserves memory contents
+			// Make sure host writes have been finished
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+			// Image is a color attachment
+			// Make sure any writes to the color buffer have been finished
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			// Image is a depth/stencil attachment
+			// Make sure any writes to the depth/stencil buffer have been finished
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+			// Image is a transfer source
+			// Make sure any reads from the image have been finished
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			// Image is a transfer destination
+			// Make sure any writes to the image have been finished
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			// Image is read by a shader
+			// Make sure any shader reads from the image have been finished
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			break;
+		default:
+			// Other source layouts aren't handled (yet)
+			break;
+		}
+
+		// Target layouts (new)
+		// Destination access mask controls the dependency for the new image layout
+		switch (newImageLayout) {
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			// Image will be used as a transfer destination
+			// Make sure any writes to the image have been finished
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+			// Image will be used as a transfer source
+			// Make sure any reads from the image have been finished
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+			// Image will be used as a color attachment
+			// Make sure any writes to the color buffer have been finished
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			// Image layout will be used as a depth/stencil attachment
+			// Make sure any writes to depth/stencil buffer have been finished
+			imageMemoryBarrier.dstAccessMask
+				= imageMemoryBarrier.dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			// Image will be read in a shader (sampler, input attachment)
+			// Make sure any writes to the image have been finished
+			if (imageMemoryBarrier.srcAccessMask == 0) {
+				imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+			}
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			break;
+		default:
+			// Other source layouts aren't handled (yet)
+			break;
+		}
+
+		// Put barrier inside setup command buffer
+		vkCmdPipelineBarrier(
+			cmdbuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+	}
+
+	void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageAspectFlags aspectMask,
+		VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask,
+		VkPipelineStageFlags dstStageMask)
+	{
+		VkImageSubresourceRange subresourceRange = {};
+		subresourceRange.aspectMask = aspectMask;
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.levelCount = 1;
+		subresourceRange.layerCount = 1;
+		set_image_layout(
+			cmdbuffer, image, oldImageLayout, newImageLayout, subresourceRange, srcStageMask, dstStageMask);
+	}
+}
 
 static const char* vulkan_vendor_to_identifier_string(uint32_t vendorID)
 {
@@ -246,14 +398,137 @@ void VulkanRenderer::shut_down()
 	delete renderer_data;
 };
 
-void VulkanRenderer::begin_frame(){};
+void VulkanRenderer::begin_frame()
+{
+	Renderer::submit([]() {
+		auto& swapChain = Application::the().get_window().get_swapchain();
+
+		// Reset descriptor pools here
+		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
+		uint32_t bufferIndex = swapChain.get_current_buffer_index();
+		vkResetDescriptorPool(device, renderer_data->descriptor_pools[bufferIndex], 0);
+		memset(renderer_data->descriptor_pool_allocation_count.data(), 0,
+			renderer_data->descriptor_pool_allocation_count.size() * sizeof(uint32_t));
+
+		renderer_data->draw_call_count = 0;
+	});
+};
 
 void VulkanRenderer::end_frame() { }
 
 void VulkanRenderer::begin_render_pass(
 	Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
 {
-	// TODO!!!!
+	Renderer::submit([command_buffer, render_pass, explicit_clear]() {
+		uint32_t frameIndex = Renderer::get_current_frame_index();
+		VkCommandBuffer commandBuffer
+			= command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
+
+		auto fb = render_pass->get_specification().TargetFramebuffer;
+		Reference<VulkanFramebuffer> framebuffer = fb.as<VulkanFramebuffer>();
+		const auto& fbSpec = framebuffer->get_specification();
+
+		uint32_t width = framebuffer->get_width();
+		uint32_t height = framebuffer->get_height();
+
+		VkViewport viewport = {};
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRenderPassBeginInfo renderPassBeginInfo = {};
+		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.pNext = nullptr;
+		renderPassBeginInfo.renderPass = framebuffer->get_render_pass();
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = width;
+		renderPassBeginInfo.renderArea.extent.height = height;
+		if (framebuffer->get_specification().SwapChainTarget) {
+			VulkanSwapchain& swapChain = Application::the().get_window().get_swapchain();
+			width = swapChain.get_width();
+			height = swapChain.get_height();
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.pNext = nullptr;
+			renderPassBeginInfo.renderPass = framebuffer->get_render_pass();
+			renderPassBeginInfo.renderArea.offset.x = 0;
+			renderPassBeginInfo.renderArea.offset.y = 0;
+			renderPassBeginInfo.renderArea.extent.width = width;
+			renderPassBeginInfo.renderArea.extent.height = height;
+			renderPassBeginInfo.framebuffer = swapChain.get_current_framebuffer();
+
+			viewport.x = 0.0f;
+			viewport.y = (float)height;
+			viewport.width = (float)width;
+			viewport.height = -(float)height;
+		} else {
+			width = framebuffer->get_width();
+			height = framebuffer->get_height();
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.pNext = nullptr;
+			renderPassBeginInfo.renderPass = framebuffer->get_render_pass();
+			renderPassBeginInfo.renderArea.offset.x = 0;
+			renderPassBeginInfo.renderArea.offset.y = 0;
+			renderPassBeginInfo.renderArea.extent.width = width;
+			renderPassBeginInfo.renderArea.extent.height = height;
+			renderPassBeginInfo.framebuffer = framebuffer->get_vulkan_framebuffer();
+
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float)width;
+			viewport.height = (float)height;
+		}
+
+		// TODO: Does our framebuffer have a depth attachment?
+		const auto& clearValues = framebuffer->get_vulkan_clear_values();
+		renderPassBeginInfo.clearValueCount = (uint32_t)clearValues.size();
+		renderPassBeginInfo.pClearValues = clearValues.data();
+
+		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		if (explicit_clear) {
+			const auto colorAttachmentCount = (uint32_t)framebuffer->get_color_attachment_count();
+			const uint32_t totalAttachmentCount
+				= colorAttachmentCount + (framebuffer->has_depth_attachment() ? 1 : 0);
+			CORE_ASSERT(clearValues.size() == totalAttachmentCount, "");
+
+			std::vector<VkClearAttachment> attachments(totalAttachmentCount);
+			std::vector<VkClearRect> clearRects(totalAttachmentCount);
+			for (uint32_t i = 0; i < colorAttachmentCount; i++) {
+				attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				attachments[i].colorAttachment = i;
+				attachments[i].clearValue = clearValues[i];
+
+				clearRects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+				clearRects[i].rect.extent = { width, height };
+				clearRects[i].baseArrayLayer = 0;
+				clearRects[i].layerCount = 1;
+			}
+
+			if (framebuffer->has_depth_attachment()) {
+				attachments[colorAttachmentCount].aspectMask
+					= VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+				attachments[colorAttachmentCount].clearValue = clearValues[colorAttachmentCount];
+				clearRects[colorAttachmentCount].rect.offset = { (int32_t)0, (int32_t)0 };
+				clearRects[colorAttachmentCount].rect.extent = { width, height };
+				clearRects[colorAttachmentCount].baseArrayLayer = 0;
+				clearRects[colorAttachmentCount].layerCount = 1;
+			}
+
+			vkCmdClearAttachments(
+				commandBuffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
+		}
+
+		// Update dynamic viewport state
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+		// Update dynamic scissor state
+		VkRect2D scissor = {};
+		scissor.extent.width = width;
+		scissor.extent.height = height;
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	});
 }
 
 void VulkanRenderer::render_geometry(Reference<RenderCommandBuffer> command_buffer, Reference<Pipeline> pipeline,
@@ -308,9 +583,10 @@ void VulkanRenderer::render_geometry(Reference<RenderCommandBuffer> command_buff
 
 void VulkanRenderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer)
 {
-	Renderer::submit([rcb = command_buffer]() {
+	Renderer::submit([command_buffer]() {
 		uint32_t frameIndex = Renderer::get_current_frame_index();
-		VkCommandBuffer commandBuffer = rcb.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
+		VkCommandBuffer commandBuffer
+			= command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 		vkCmdEndRenderPass(commandBuffer);
 	});

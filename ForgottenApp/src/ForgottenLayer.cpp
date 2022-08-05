@@ -18,6 +18,9 @@ void ForgottenLayer::on_update(const TimeStep& ts) { Renderer::wait_and_render()
 
 void ForgottenLayer::on_ui_render(const TimeStep& ts)
 {
+	renderer->begin_scene(glm::mat4{ 1 }, glm::mat4{ 1 }, false);
+	renderer->end_scene();
+
 	static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;

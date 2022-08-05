@@ -45,7 +45,7 @@ void Renderer2D::init()
 	FramebufferSpecification framebufferSpec;
 	framebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
 	framebufferSpec.Samples = 1;
-	framebufferSpec.ClearColorOnLoad = false;
+	framebufferSpec.ClearColorOnLoad = true;
 	framebufferSpec.ClearColor = { 0.1f, 0.5f, 0.5f, 1.0f };
 	framebufferSpec.DebugName = "Renderer2D Framebuffer";
 
@@ -228,7 +228,8 @@ void Renderer2D::begin_scene(const glm::mat4& viewProj, const glm::mat4& view, b
 
 	Renderer::submit([ubs = uniform_buffer_set, viewProj]() mutable {
 		uint32_t bufferIndex = Renderer::get_current_frame_index();
-		ubs->get(0, 0, bufferIndex)->rt_set_data(&viewProj, sizeof(UBCamera));
+		auto ub = ubs->get(0, 0, bufferIndex);
+		ub->rt_set_data(&viewProj, sizeof(UBCamera), 0);
 	});
 
 	quad_index_count = 0;
@@ -249,8 +250,8 @@ void Renderer2D::begin_scene(const glm::mat4& viewProj, const glm::mat4& view, b
 	for (uint32_t i = 1; i < texture_slots.size(); i++)
 		texture_slots[i] = nullptr;
 
-	for (uint32_t i = 0; i < font_texture_slots.size(); i++)
-		font_texture_slots[i] = nullptr;
+	for (auto& font_texture_slot : font_texture_slots)
+		font_texture_slot = nullptr;
 }
 
 void Renderer2D::end_scene()

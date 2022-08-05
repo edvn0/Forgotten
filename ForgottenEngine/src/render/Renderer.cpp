@@ -94,7 +94,7 @@ void Renderer::wait_and_render() { command_queue->execute(); }
 void Renderer::begin_frame() { }
 
 void Renderer::begin_render_pass(
-	Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
+	const Reference<RenderCommandBuffer>& command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
 {
 
 	CORE_ASSERT(render_pass, "Render pass cannot be null!");
@@ -102,7 +102,7 @@ void Renderer::begin_render_pass(
 	renderer_api->begin_render_pass(command_buffer, render_pass, explicit_clear);
 }
 
-void Renderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer)
+void Renderer::end_render_pass(const Reference<RenderCommandBuffer>& command_buffer)
 {
 	renderer_api->end_render_pass(command_buffer);
 }
@@ -111,9 +111,10 @@ void Renderer::end_frame() { }
 
 // Submits
 
-void Renderer::render_geometry(Reference<RenderCommandBuffer> cmd_buffer, Reference<Pipeline> pipeline,
-	Reference<UniformBufferSet> ubs, Reference<StorageBufferSet> sbs, Reference<Material> material,
-	Reference<VertexBuffer> vb, Reference<IndexBuffer> ib, const glm::mat4& transform, uint32_t index_count)
+void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
+	const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& ubs,
+	const Reference<StorageBufferSet>& sbs, const Reference<Material>& material, const Reference<VertexBuffer>& vb,
+	const Reference<IndexBuffer>& ib, const glm::mat4& transform, uint32_t index_count)
 {
 	return renderer_api->render_geometry(cmd_buffer, pipeline, ubs, sbs, material, vb, ib, transform, index_count);
 }

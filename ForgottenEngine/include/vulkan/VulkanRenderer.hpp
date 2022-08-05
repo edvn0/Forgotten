@@ -10,9 +10,28 @@
 #include "vulkan/VulkanUniformBuffer.hpp"
 #include "vulkan/VulkanVertexBuffer.hpp"
 
+#include "vulkan/vulkan.h"
+
 namespace ForgottenEngine {
 
 class SceneRenderer;
+
+namespace Utils {
+	void insert_image_memory_barrier(VkCommandBuffer cmdbuffer, VkImage image, VkAccessFlags srcaccessmask,
+		VkAccessFlags dstaccessmask, VkImageLayout oldimagelayout, VkImageLayout newimagelayout,
+		VkPipelineStageFlags srcstagemask, VkPipelineStageFlags dststagemask,
+		VkImageSubresourceRange subresourcerange);
+
+	void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageLayout oldimagelayout,
+		VkImageLayout newimagelayout, VkImageSubresourceRange subresourcerange,
+		VkPipelineStageFlags srcstagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+		VkPipelineStageFlags dststagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+
+	void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageAspectFlags aspectmask,
+		VkImageLayout oldimagelayout, VkImageLayout newimagelayout,
+		VkPipelineStageFlags srcstagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+		VkPipelineStageFlags dststagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+}
 
 class VulkanRenderer : public RendererAPI {
 public:

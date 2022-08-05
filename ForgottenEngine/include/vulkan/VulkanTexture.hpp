@@ -35,12 +35,15 @@ public:
 	Reference<Image2D> get_image() const override { return m_Image; }
 	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const
 	{
-		return m_Image.as<VulkanImage2D>()->GetDescriptorInfo();
+		return m_Image.as<VulkanImage2D>()->get_descriptor_info();
 	}
 
 	uint32_t get_mip_level_count() const override;
 	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
-	uint64_t get_hash() const override { return (uint64_t)m_Image.as<VulkanImage2D>()->GetImageInfo().ImageView; }
+	uint64_t get_hash() const override
+	{
+		return (uint64_t)m_Image.as<VulkanImage2D>()->get_image_info().ImageView;
+	}
 
 	void generate_mips();
 

@@ -6,6 +6,7 @@
 
 #include "ApplicationProperties.hpp"
 
+#include "Application.hpp"
 #include "render/Renderer.hpp"
 #include "vulkan/VulkanContext.hpp"
 
@@ -45,12 +46,75 @@ VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count)
 	queryPoolCreateInfo.pNext = nullptr;
 }
 
-VulkanRenderCommandBuffer::VulkanRenderCommandBuffer() : owned_by_swapchain(true) {};
+VulkanRenderCommandBuffer::VulkanRenderCommandBuffer()
+	: owned_by_swapchain(true){};
 
-void VulkanRenderCommandBuffer::begin() { }
+void VulkanRenderCommandBuffer::begin()
+{
+	Renderer::submit([this]() mutable {
+		uint32_t frameIndex = Renderer::get_current_frame_index();
 
-void VulkanRenderCommandBuffer::end() { }
+		VkCommandBufferBeginInfo cmdBufInfo = {};
+		cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		cmdBufInfo.pNext = nullptr;
 
-void VulkanRenderCommandBuffer::submit() { }
+		VkCommandBuffer commandBuffer = nullptr;
+		if (this->owned_by_swapchain) {
+			auto& swapChain = Application::the().get_window().get_swapchain();
+			commandBuffer = swapChain.get_drawbuffer(frameIndex);
+		} else {
+			commandBuffer = this->command_buffers[frameIndex];
+		}
+		this->active_command_buffer = commandBuffer;
+		VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufInfo));
+	});
+}
+
+void VulkanRenderCommandBuffer::end()
+{
+	Renderer::submit([this]() mutable {
+		uint32_t frameIndex = Renderer::get_current_frame_index();
+		VkCommandBuffer commandBuffer = this->active_command_buffer;
+		VK_CHECK(vkEndCommandBuffer(commandBuffer));
+
+		this->active_command_buffer = nullptr;
+	});
+}
+
+void VulkanRenderCommandBuffer::submit()
+{
+	if (owned_by_swapchain)
+		return;
+
+	Renderer::submit([this]() mutable {
+		auto device = VulkanContext::get_current_device();
+
+		uint32_t frameIndex = Renderer::get_current_frame_index();
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		VkCommandBuffer commandBuffer = this->command_buffers[frameIndex];
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		VK_CHECK(
+			vkWaitForFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex], VK_TRUE, UINT64_MAX));
+		VK_CHECK(vkResetFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex]));
+		VK_CHECK(vkQueueSubmit(device->get_graphics_queue(), 1, &submitInfo, this->wait_fences[frameIndex]));
+	});
+}
+
+VulkanRenderCommandBuffer::~VulkanRenderCommandBuffer()
+{
+	if (owned_by_swapchain)
+		return;
+
+	VkCommandPool commandPool = command_pool;
+	Renderer::submit_resource_free([commandPool]() {
+		auto device = VulkanContext::get_current_device()->get_vulkan_device();
+		vkDestroyCommandPool(device, commandPool, nullptr);
+	});
+}
 
 }

@@ -20,59 +20,55 @@ struct VulkanImageInfo {
 class VulkanImage2D : public Image2D {
 public:
 	VulkanImage2D(const ImageSpecification& specification);
-	virtual ~VulkanImage2D() override;
+	~VulkanImage2D() override;
 
-	virtual void Resize(const glm::uvec2& size) override { Resize(size.x, size.y); }
-	virtual void Resize(const uint32_t width, const uint32_t height) override
+	void resize(const glm::uvec2& size) override { resize(size.x, size.y); }
+	void resize(const uint32_t width, const uint32_t height) override
 	{
 		m_Specification.Width = width;
 		m_Specification.Height = height;
-		Invalidate();
+		invalidate();
 	}
-	virtual void Invalidate() override;
-	virtual void Release() override;
+	void invalidate() override;
+	void release() override;
+	uint32_t get_width() const override { return m_Specification.Width; }
+	uint32_t get_height() const override { return m_Specification.Height; }
+	glm::uvec2 get_size() const override { return { m_Specification.Width, m_Specification.Height }; }
 
-	virtual uint32_t GetWidth() const override { return m_Specification.Width; }
-	virtual uint32_t GetHeight() const override { return m_Specification.Height; }
-	virtual glm::uvec2 GetSize() const override { return { m_Specification.Width, m_Specification.Height }; }
-
-	virtual float GetAspectRatio() const override
+	float get_aspect_ratio() const override
 	{
 		return (float)m_Specification.Width / (float)m_Specification.Height;
 	}
 
-	virtual ImageSpecification& GetSpecification() override { return m_Specification; }
-	virtual const ImageSpecification& GetSpecification() const override { return m_Specification; }
+	ImageSpecification& get_specification() override { return m_Specification; }
+	const ImageSpecification& get_specification() const override { return m_Specification; }
 
-	void RT_Invalidate();
+	void rt_invalidate();
 
-	virtual void CreatePerLayerImageViews() override;
-	void RT_CreatePerLayerImageViews();
-	void RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layerIndices);
+	void create_per_layer_image_views() override;
+	void rt_create_per_layer_image_views();
+	void rt_create_per_specific_layer_image_views(const std::vector<uint32_t>& layer_indices);
 
-	virtual VkImageView GetLayerImageView(uint32_t layer)
+	VkImageView get_layer_image_view(uint32_t layer)
 	{
 		CORE_ASSERT(layer < m_PerLayerImageViews.size(), "");
 		return m_PerLayerImageViews[layer];
 	}
 
-	VkImageView GetMipImageView(uint32_t mip);
-	VkImageView RT_GetMipImageView(uint32_t mip);
+	VkImageView get_mip_image_view(uint32_t mip);
+	VkImageView rt_get_mip_image_view(uint32_t mip);
 
-	VulkanImageInfo& GetImageInfo() { return m_Info; }
-	const VulkanImageInfo& GetImageInfo() const { return m_Info; }
+	VulkanImageInfo& get_image_info() { return m_Info; }
+	const VulkanImageInfo& get_image_info() const { return m_Info; }
 
-	const VkDescriptorImageInfo& GetDescriptorInfo() const { return m_DescriptorImageInfo; }
+	const VkDescriptorImageInfo& get_descriptor_info() const { return m_DescriptorImageInfo; }
 
-	virtual Buffer GetBuffer() const override { return m_ImageData; }
-	virtual Buffer& GetBuffer() override { return m_ImageData; }
+	Buffer get_buffer() const override { return m_ImageData; }
+	Buffer& get_buffer() override { return m_ImageData; }
 
-	virtual uint64_t GetHash() const override { return (uint64_t)m_Info.Image; }
+	uint64_t get_hash() const override { return (uint64_t)m_Info.Image; }
 
-	void UpdateDescriptor();
-
-	// Debug
-	static const std::map<VkImage, WeakReference<VulkanImage2D>>& GetImageRefs();
+	void update_descriptor();
 
 private:
 	ImageSpecification m_Specification;
