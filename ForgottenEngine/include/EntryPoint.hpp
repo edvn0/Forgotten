@@ -20,9 +20,9 @@ int main(int argc, char** argv)
 
 	argparse::ArgumentParser program("main");
 
-	program.add_argument("--width");
-	program.add_argument("--height");
-	program.add_argument("--name");
+	program.add_argument("--width").default_value(uint32_t(1280));
+	program.add_argument("--height").default_value(uint32_t(720));
+	program.add_argument("--name").default_value(std::string{ "ForgottenEngine" });
 	// program.add_argument("--vsync").default_value(true);
 
 	try {
@@ -34,15 +34,15 @@ int main(int argc, char** argv)
 	}
 
 	ForgottenEngine::ApplicationProperties props;
-	props.title = program.get("--name");
-	props.width = std::stoi(program.get("--width"));
-	props.height = std::stoi(program.get("--height"));
+	props.title = program.get<std::string>("--name");
+	props.width = program.get<uint32_t>("--width");
+	props.height = program.get<uint32_t>("--height");
 	props.v_sync = true;
 
 	try {
 		app = ForgottenEngine::create_application(props);
 	} catch (const std::system_error& e) {
-		CORE_INFO("{}", e.what());
+		CORE_INFO("Error in app creation: {}", e.what());
 	}
 
 	try {

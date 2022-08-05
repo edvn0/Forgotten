@@ -8,12 +8,11 @@
 #include "vulkan/VulkanInitializers.hpp"
 
 #include "Application.hpp"
-#include "VkBootstrap.h"
 #include "vk_mem_alloc.h"
 
 namespace ForgottenEngine {
 
-VulkanPhysicalDevice::VulkanPhysicalDevice(const vkb::Instance& vkb_inst)
+VulkanPhysicalDevice::VulkanPhysicalDevice()
 {
 	auto vkInstance = VulkanContext::get_instance();
 
@@ -203,9 +202,9 @@ uint32_t VulkanPhysicalDevice::get_memory_type_index(uint32_t typeBits, VkMemory
 	return UINT32_MAX;
 }
 
-Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select(const vkb::Instance& instance)
+Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select()
 {
-	return Reference<VulkanPhysicalDevice>::create(instance);
+	return Reference<VulkanPhysicalDevice>::create();
 }
 
 VulkanDevice::VulkanDevice(const Reference<VulkanPhysicalDevice>& p_device, VkPhysicalDeviceFeatures enabled)

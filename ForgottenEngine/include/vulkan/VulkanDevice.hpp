@@ -23,7 +23,7 @@ public:
 	};
 
 public:
-	explicit VulkanPhysicalDevice(const vkb::Instance& instance);
+	explicit VulkanPhysicalDevice();
 	~VulkanPhysicalDevice();
 
 	bool is_extension_supported(const std::string& extension) const;
@@ -38,7 +38,7 @@ public:
 
 	VkFormat get_depth_format() const { return depth_format; }
 
-	static Reference<VulkanPhysicalDevice> select(const vkb::Instance& instance);
+	static Reference<VulkanPhysicalDevice> select();
 
 private:
 	VkFormat find_depth_format() const;

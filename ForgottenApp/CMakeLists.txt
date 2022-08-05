@@ -32,19 +32,19 @@ add_custom_command(
 foreach(shader_file IN LISTS SHADERS)
     get_filename_component(FILENAME ${shader_file} NAME)
     message(STATUS ${shader_file})
-    add_custom_command(
-        COMMAND
-        ${glslc_executable}
-        -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
-        ${shader_file}
-        OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
-        DEPENDS ${shader_file} ${SHADER_BINARY_DIR}
-        COMMENT "Compiling ${FILENAME}"
-    )
+#    add_custom_command(
+#        COMMAND
+#        ${glslc_executable}
+#        -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
+#        ${shader_file}
+#        OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
+#        DEPENDS ${shader_file} ${SHADER_BINARY_DIR}  #
+#    COMMENT "Compiling ${FILENAME}"
+#    )
     list(APPEND SPV_SHADERS ${SHADER_BINARY_DIR}/${FILENAME}.spv)
 endforeach()
 
-add_custom_target(CompileClientShaders ALL DEPENDS ${SPV_SHADERS})
+# add_custom_target(CompileClientShaders ALL DEPENDS ${SPV_SHADERS})
 
 # ----------------------------------------------
 # End
@@ -69,7 +69,6 @@ target_include_directories(ForgottenApp PUBLIC
     ../ForgottenEngine/vendor/spdlog/include
     ../ForgottenEngine/vendor/vk_init
     ../ForgottenEngine/vendor/glfw/include
-    ../ForgottenEngine/vendor/vk-bootstrap/src
     ../ForgottenEngine/vendor/tinyobjloader
     ../ForgottenEngine/vendor/stb
     ../ForgottenEngine/vendor/imgui
@@ -80,7 +79,5 @@ target_compile_options(ForgottenApp PUBLIC -Wno-nullability-completeness)
 
 message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
 
-add_custom_command(TARGET CompileClientShaders POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/resources ${CMAKE_CURRENT_BINARY_DIR}/resources)
-
-add_dependencies(ForgottenApp CompileClientShaders)
+#add_custom_command(TARGET ForgottenApp POST_BUILD
+ #       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/resources ${CMAKE_CURRENT_BINARY_DIR}/resources)

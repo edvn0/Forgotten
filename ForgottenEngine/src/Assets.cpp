@@ -59,6 +59,10 @@ static auto load_from_directory_impl = [](const T& a, std::vector<OptionalPath>&
 
 std::vector<OptionalPath> Assets::load_from_directory(const std::filesystem::path& path, bool recurse)
 {
+	if (!exists(path)) {
+		return {};
+	}
+
 	std::vector<OptionalPath> result;
 	result.reserve(30);
 

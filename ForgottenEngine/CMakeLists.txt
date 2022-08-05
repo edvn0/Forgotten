@@ -34,19 +34,19 @@ add_custom_command(
 foreach(shader_file IN LISTS SHADERS)
     get_filename_component(FILENAME ${shader_file} NAME)
     message(STATUS ${shader_file})
-    add_custom_command(
-        COMMAND
-        ${glslc_executable}
-        -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
-        ${shader_file}
-        OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
-        DEPENDS ${shader_file} ${SHADER_BINARY_DIR}
-        COMMENT "Compiling ${FILENAME}"
-    )
+#    add_custom_command(
+#        COMMAND
+#        ${glslc_executable}
+#        -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
+#        ${shader_file}
+#        OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
+#        DEPENDS ${shader_file} ${SHADER_BINARY_DIR}
+#        COMMENT "Compiling ${FILENAME}"
+#    )
     list(APPEND SPV_SHADERS ${SHADER_BINARY_DIR}/${FILENAME}.spv)
 endforeach()
 
-add_custom_target(CompileEngineShaders ALL DEPENDS ${SPV_SHADERS})
+# add_custom_target(CompileEngineShaders ALL DEPENDS ${SPV_SHADERS})
 
 # ----------------------------------------------
 # End
@@ -59,7 +59,6 @@ file(GLOB_RECURSE sources fg_pch.hpp
 add_subdirectory(vendor/VulkanMemoryAllocator)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glfw)
-add_subdirectory(vendor/vk-bootstrap)
 add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/argparse)
 add_subdirectory(vendor/imgui)
@@ -78,19 +77,18 @@ target_include_directories(ForgottenEngine PUBLIC
     vendor/spdlog/include
     vendor/vk_init
     vendor/glfw/include
-    vendor/vk-bootstrap/src
     vendor/tinyobjloader
     vendor/stb
     vendor/argparse/include
     vendor/msdf-atlas-gen/msdf-atlas-gen
 )
-target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog vk-bootstrap tinyobjloader imgui argparse msdf-atlas-gen)
+target_link_libraries(ForgottenEngine PRIVATE ${Vulkan_LIBRARIES} VulkanMemoryAllocator glfw spdlog tinyobjloader imgui argparse msdf-atlas-gen)
 # target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
-add_custom_command(TARGET CompileEngineShaders POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_BINARY_DIR}/resources $<TARGET_FILE_DIR:ForgottenEngine>/resources)
+#add_custom_command(TARGET ForgottenEngine POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory
+#    ${CMAKE_CURRENT_BINARY_DIR}/resources $<TARGET_FILE_DIR:ForgottenEngine>/resources)
 
-add_dependencies(ForgottenEngine CompileEngineShaders)
+# add_dependencies(ForgottenEngine CompileEngineShaders)

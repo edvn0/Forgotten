@@ -123,10 +123,12 @@ void ImGuiLayer::end()
 {
 	ImGui::Render();
 
+	static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 0.1f, 1.0f };
+
 	auto& swapchain = Application::the().get_window().get_swapchain();
 
 	VkClearValue clearValues[2];
-	clearValues[0].color = { { 0.1f, 0.1f, 0.1f, 1.0f } };
+	clearValues[0].color = clear_colour;
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
 	uint32_t width = swapchain.get_width();

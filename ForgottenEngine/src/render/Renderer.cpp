@@ -71,15 +71,22 @@ void Renderer::init()
 	Renderer::get_shader_library()->load("shaders/2d_renderer_line");
 	Renderer::get_shader_library()->load("shaders/2d_renderer_text");
 
+	Renderer::wait_and_render();
+
 	renderer_api->init();
 }
 
 void Renderer::shut_down()
 {
-	delete renderer_data;
-
 	renderer_api->shut_down();
-	delete renderer_api;
+	delete renderer_data;
+	// Resource release queue
+	for (uint32_t i = 0; i < config.frames_in_flight; i++) {
+		auto& queue = Renderer::get_render_resource_free_queue(i);
+		queue.execute();
+	}
+
+	delete command_queue;
 }
 
 void Renderer::wait_and_render() { command_queue->execute(); }
