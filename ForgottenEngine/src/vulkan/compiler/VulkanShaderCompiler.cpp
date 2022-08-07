@@ -68,34 +68,35 @@ namespace Utils {
 				return ShaderUniformType::Vec4;
 			break;
 		}
-		CORE_AS(false, "Unknown type!");
+		CORE_ASSERT(false, "Unknown type!");
 		return ShaderUniformType::None;
 	}
 }
 
 VulkanShaderCompiler::VulkanShaderCompiler(const std::filesystem::path& shaderSourcePath, bool disableOptimization)
-	: m_ShaderSourcePath(shaderSourcePath)
-	, m_DisableOptimization(disableOptimization)
+	: shader_source_path(shaderSourcePath)
+	, disable_optimization(disableOptimization)
 {
-	m_Language = ShaderUtils::ShaderLangFromExtension(shaderSourcePath.extension().string());
+	language = ShaderUtils::ShaderLangFromExtension(shaderSourcePath.extension().string());
 }
 
-bool VulkanShaderCompiler::Reload(bool forceCompile)
+bool VulkanShaderCompiler::reload(bool forceCompile)
 {
-	m_ShaderSource.clear();
-	m_StagesMetadata.clear();
-	m_SPIRVDebugData.clear();
-	m_SPIRVData.clear();
+	shader_source.clear();
+	stages_metadata.clear();
+	spirv_debug_data.clear();
+	spirv_data.clear();
 
 	Utils::CreateCacheDirectoryIfNeeded();
 	const std::string source = Utils::ReadFileAndSkipBOM(m_ShaderSourcePath);
-	CORE_VE(source.size(), "Failed to load shader!");
+	CORE_VERIFY(source.size(), "Failed to load shader!");
 
 	CORE_TRACE("Renderer Compiling shader: {}", m_ShaderSourcePath.string());
-	m_ShaderSource = PreProcess(source);
+	shader_source = PreProcess(source);
 	const VkShaderStageFlagBits changedStages = VulkanShaderCache::HasChanged(this);
 
-	bool compileSucceeded = CompileOrGetVulkanBinaries(m_SPIRVDebugData, m_SPIRVData, changedStages, forceCompile);
+	bool compileSucceeded
+		= compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, forceCompile);
 	if (!compileSucceeded) {
 		CORE_AS(false);
 		return false;
@@ -103,7 +104,7 @@ bool VulkanShaderCompiler::Reload(bool forceCompile)
 
 	// Reflection
 	if (forceCompile || changedStages || !TryReadCachedReflectionData()) {
-		ReflectAllShaderStages(m_SPIRVDebugData);
+		ReflectAllShaderStages(spirv_debug_data);
 		SerializeReflectionData();
 	}
 
@@ -118,7 +119,7 @@ void VulkanShaderCompiler::ClearUniformBuffers()
 
 std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::PreProcess(const std::string& source)
 {
-	switch (m_Language) {
+	switch (language) {
 	case ShaderUtils::SourceLang::GLSL:
 		return PreProcessGLSL(source);
 	case ShaderUtils::SourceLang::HLSL:
@@ -159,8 +160,8 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::PreProcessGLS
 				fmt::format("Failed to pre-process \"{}\"'s {} shader.\nError: {}", m_ShaderSourcePath.string(),
 					ShaderUtils::ShaderStageToString(stage), preProcessingResult.GetErrorMessage()));
 
-		m_StagesMetadata[stage].HashValue = Hash::GenerateFNVHash(shaderSource);
-		m_StagesMetadata[stage].Headers = std::move(includer->GetIncludeData());
+		stages_metadata[stage].HashValue = Hash::GenerateFNVHash(shaderSource);
+		stages_metadata[stage].Headers = std::move(includer->GetIncludeData());
 
 		m_AcknowledgedMacros.merge(includer->GetParsedSpecialMacros());
 
@@ -243,8 +244,8 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::PreProcessHLS
 			CORE_ERROR("Renderer", error);
 		}
 
-		m_StagesMetadata[stage].HashValue = Hash::GenerateFNVHash(shaderSource);
-		m_StagesMetadata[stage].Headers = std::move(includer->GetIncludeData());
+		stages_metadata[stage].HashValue = Hash::GenerateFNVHash(shaderSource);
+		stages_metadata[stage].Headers = std::move(includer->GetIncludeData());
 
 		m_AcknowledgedMacros.merge(includer->GetParsedSpecialMacros());
 	}
@@ -254,9 +255,9 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::PreProcessHLS
 std::string VulkanShaderCompiler::Compile(
 	std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const
 {
-	const std::string& stageSource = m_ShaderSource.at(stage);
+	const std::string& stageSource = shader_source.at(stage);
 
-	if (m_Language == ShaderUtils::SourceLang::GLSL) {
+	if (language == ShaderUtils::SourceLang::GLSL) {
 		static shaderc::Compiler compiler;
 		shaderc::CompileOptions shaderCOptions;
 		shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
@@ -277,7 +278,7 @@ std::string VulkanShaderCompiler::Compile(
 
 		outputBinary = std::vector<uint32_t>(module.begin(), module.end());
 		return {}; // Success
-	} else if (m_Language == ShaderUtils::SourceLang::HLSL) {
+	} else if (language == ShaderUtils::SourceLang::HLSL) {
 		std::vector<const wchar_t*> arguments{
 			m_ShaderSourcePath.c_str(), L"-E", L"main", L"-T", ShaderUtils::HLSLShaderProfile(stage), L"-spirv",
 			L"-fspv-target-env=vulkan1.2", DXC_ARG_PACK_MATRIX_COLUMN_MAJOR, DXC_ARG_WARNINGS_ARE_ERRORS
@@ -387,12 +388,12 @@ bool VulkanShaderCompiler::TryRecompile(Ref<VulkanShader> shader)
 	return true;
 }
 
-bool VulkanShaderCompiler::CompileOrGetVulkanBinaries(
+bool VulkanShaderCompiler::compile_or_get_vulkan_binaries(
 	std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
 	std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
 	const VkShaderStageFlagBits changedStages, const bool forceCompile)
 {
-	for (auto [stage, source] : m_ShaderSource) {
+	for (auto [stage, source] : shader_source) {
 		if (!CompileOrGetVulkanBinary(stage, outputDebugBinary[stage], true, changedStages, forceCompile))
 			return false;
 		if (!CompileOrGetVulkanBinary(stage, outputBinary[stage], false, changedStages, forceCompile))
