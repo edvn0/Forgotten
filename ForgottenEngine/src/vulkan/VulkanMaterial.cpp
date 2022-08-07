@@ -105,11 +105,11 @@ void VulkanMaterial::on_shader_reloaded()
 	invalidate_descriptor_sets();
 }
 
-const ShaderUniform* VulkanMaterial::FindUniformDeclaration(const std::string& name)
+const ShaderUniform* VulkanMaterial::find_uniform_declaration(const std::string& name)
 {
 	const auto& shaderBuffers = material_shader->get_shader_buffers();
 
-	HZ_CORE_ASSERT(shaderBuffers.size() <= 1, "We currently only support ONE material buffer!");
+	CORE_ASSERT(shaderBuffers.size() <= 1, "We currently only support ONE material buffer!", "");
 
 	if (shaderBuffers.size() > 0) {
 		const ShaderBuffer& buffer = (*shaderBuffers.begin()).second;
@@ -123,19 +123,19 @@ const ShaderUniform* VulkanMaterial::FindUniformDeclaration(const std::string& n
 
 const ShaderResourceDeclaration* VulkanMaterial::FindResourceDeclaration(const std::string& name)
 {
-	auto& resources = material_shader->GetResources();
+	auto& resources = material_shader->get_resources();
 	if (resources.find(name) != resources.end())
 		return &resources.at(name);
 
 	return nullptr;
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Reference<Texture2D>& texture)
+void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture)
 {
 	const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
-	HZ_CORE_ASSERT(resource);
+	CORE_ASSERT(resource, "");
 
-	uint32_t binding = resource->GetRegister();
+	uint32_t binding = resource->get_register();
 
 	// Texture is already set
 	// TODO(Karim): Shouldn't need to check resident descriptors..
@@ -148,8 +148,8 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Referenc
 		material_textures.resize(binding + 1);
 	material_textures[binding] = texture;
 
-	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->GetDescriptorSet(name);
-	HZ_CORE_ASSERT(wds);
+	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
+	CORE_ASSERT(wds, "");
 	resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
 		PendingDescriptor{ PendingDescriptorType::Texture2D, *wds, {}, texture.as<Texture>(), nullptr });
 	pending_descriptors.push_back(resident_descriptors.at(binding));
@@ -157,13 +157,13 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Referenc
 	invalidate_descriptor_sets();
 }
 
-void VulkanMaterial::SetVulkanDescriptor(
+void VulkanMaterial::set_vulkan_descriptor(
 	const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex)
 {
 	const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
-	HZ_CORE_ASSERT(resource);
+	CORE_ASSERT(resource, "");
 
-	uint32_t binding = resource->GetRegister();
+	uint32_t binding = resource->get_register();
 	// Texture is already set
 	if (binding < texture_arrays.size() && texture_arrays[binding].size() < arrayIndex
 		&& texture->GetHash() == texture_arrays[binding][arrayIndex]->GetHash())
@@ -177,30 +177,30 @@ void VulkanMaterial::SetVulkanDescriptor(
 
 	texture_arrays[binding][arrayIndex] = texture;
 
-	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->GetDescriptorSet(name);
-	HZ_CORE_ASSERT(wds);
+	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
+	CORE_ASSERT(wds, "");
 	if (resident_descriptors_array.find(binding) == resident_descriptors_array.end()) {
 		resident_descriptors_array[binding] = std::make_shared<PendingDescriptorArray>(
 			PendingDescriptorArray{ PendingDescriptorType::Texture2D, *wds, {}, {}, {} });
 	}
 
 	auto& residentDesriptorArray = resident_descriptors_array.at(binding);
-	if (arrayIndex >= residentDesriptorArray->Textures.size())
-		residentDesriptorArray->Textures.resize(arrayIndex + 1);
+	if (arrayIndex >= residentDesriptorArray->textures.size())
+		residentDesriptorArray->textures.resize(arrayIndex + 1);
 
-	residentDesriptorArray->Textures[arrayIndex] = texture;
+	residentDesriptorArray->textures[arrayIndex] = texture;
 
 	// pending_descriptors.push_back(resident_descriptors.at(binding));
 
 	invalidate_descriptor_sets();
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Reference<TextureCube>& texture)
+void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<TextureCube>& texture)
 {
 	const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
-	HZ_CORE_ASSERT(resource);
+	CORE_ASSERT(resource, "");
 
-	uint32_t binding = resource->GetRegister();
+	uint32_t binding = resource->get_register();
 	// Texture is already set
 	// TODO(Karim): Shouldn't need to check resident descriptors..
 	if (binding < material_textures.size() && material_textures[binding]
@@ -212,8 +212,8 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Referenc
 		material_textures.resize(binding + 1);
 	material_textures[binding] = texture;
 
-	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->GetDescriptorSet(name);
-	HZ_CORE_ASSERT(wds);
+	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
+	CORE_ASSERT(wds, "");
 	resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
 		PendingDescriptor{ PendingDescriptorType::TextureCube, *wds, {}, texture.as<Texture>(), nullptr });
 	pending_descriptors.push_back(resident_descriptors.at(binding));
@@ -221,27 +221,27 @@ void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Referenc
 	invalidate_descriptor_sets();
 }
 
-void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Reference<Image2D>& image)
+void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Image2D>& image)
 {
-	HZ_CORE_VERIFY(image);
-	HZ_CORE_ASSERT(image.as<VulkanImage2D>()->GetImageInfo().ImageView, "ImageView is null");
+	CORE_VERIFY(image, "");
+	CORE_ASSERT(image.as<VulkanImage2D>()->GetImageInfo().ImageView, "ImageView is null", "");
 
 	const ShaderResourceDeclaration* resource = FindResourceDeclaration(name);
-	HZ_CORE_VERIFY(resource);
+	CORE_VERIFY(resource, "");
 
-	uint32_t binding = resource->GetRegister();
+	uint32_t binding = resource->get_register();
 	// Image is already set
 	// TODO(Karim): Shouldn't need to check resident descriptors..
 	if (binding < images.size() && images[binding]
 		&& resident_descriptors.find(binding) != resident_descriptors.end())
 		return;
 
-	if (resource->GetRegister() >= images.size())
-		images.resize(resource->GetRegister() + 1);
-	images[resource->GetRegister()] = image;
+	if (resource->get_register() >= images.size())
+		images.resize(resource->get_register() + 1);
+	images[resource->get_register()] = image;
 
-	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->GetDescriptorSet(name);
-	HZ_CORE_ASSERT(wds);
+	const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
+	CORE_ASSERT(wds, "");
 	resident_descriptors[binding] = std::make_shared<PendingDescriptor>(
 		PendingDescriptor{ PendingDescriptorType::Image2D, *wds, {}, nullptr, image.as<Image>() });
 	pending_descriptors.push_back(resident_descriptors.at(binding));
@@ -279,22 +279,22 @@ void VulkanMaterial::Set(const std::string& name, const glm::mat4& value) { Set<
 
 void VulkanMaterial::Set(const std::string& name, const Reference<Texture2D>& texture)
 {
-	SetVulkanDescriptor(name, texture);
+	set_vulkan_descriptor(name, texture);
 }
 
 void VulkanMaterial::Set(const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex)
 {
-	SetVulkanDescriptor(name, texture, arrayIndex);
+	set_vulkan_descriptor(name, texture, arrayIndex);
 }
 
 void VulkanMaterial::Set(const std::string& name, const Reference<TextureCube>& texture)
 {
-	SetVulkanDescriptor(name, texture);
+	set_vulkan_descriptor(name, texture);
 }
 
 void VulkanMaterial::Set(const std::string& name, const Reference<Image2D>& image)
 {
-	SetVulkanDescriptor(name, image);
+	set_vulkan_descriptor(name, image);
 }
 
 float& VulkanMaterial::GetFloat(const std::string& name) { return Get<float>(name); }
@@ -340,7 +340,7 @@ void VulkanMaterial::RT_UpdateForRendering(
 	for (auto&& [binding, descriptor] : resident_descriptors) {
 		if (descriptor->Type == PendingDescriptorType::Image2D) {
 			Reference<VulkanImage2D> image = descriptor->Image.as<VulkanImage2D>();
-			HZ_CORE_ASSERT(image->GetImageInfo().ImageView, "ImageView is null");
+			CORE_ASSERT(image->GetImageInfo().ImageView, "ImageView is null", "");
 			if (descriptor->WDS.pImageInfo
 				&& image->GetImageInfo().ImageView != descriptor->WDS.pImageInfo->imageView) {
 				// HZ_CORE_WARN("Found out of date Image2D descriptor ({0} vs. {1})",
@@ -385,7 +385,7 @@ void VulkanMaterial::RT_UpdateForRendering(
 
 		for (auto&& [binding, pd] : resident_descriptors_array) {
 			if (pd->Type == PendingDescriptorType::Texture2D) {
-				for (auto tex : pd->Textures) {
+				for (auto tex : pd->textures) {
 					Reference<VulkanTexture2D> texture = tex.as<VulkanTexture2D>();
 					arrayImageInfos.emplace_back(texture->GetVulkanDescriptorInfo());
 				}

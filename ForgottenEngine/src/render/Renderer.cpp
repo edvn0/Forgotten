@@ -128,10 +128,9 @@ void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
 // End submits
 
 // Start Registrations
-void Renderer::register_shader_dependency(const ShaderPair& shaders, Pipeline* pipeline)
+void Renderer::register_shader_dependency(const Reference<Shader>& shader, Pipeline* pipeline)
 {
-	shader_dependencies[shaders.first->get_hash()].pipelines.push_back(shaders.first);
-	shader_dependencies[shaders.second->get_hash()].pipelines.push_back(shaders.second);
+	shader_dependencies[shader->get_hash()].pipelines.push_back(pipeline);
 }
 // end Registrations
 

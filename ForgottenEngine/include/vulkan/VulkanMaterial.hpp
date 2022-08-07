@@ -8,8 +8,8 @@ namespace ForgottenEngine {
 
 class VulkanMaterial : public Material {
 public:
-	VulkanMaterial(const Reference<Shader>& shader, std::string name = "");
-	VulkanMaterial(Reference<Material> material, const std::string& name = "");
+	VulkanMaterial(const Reference<Shader>& shader, std::string name);
+	VulkanMaterial(Reference<Material> material, const std::string& name);
 	virtual ~VulkanMaterial() override;
 
 	virtual void invalidate() override;

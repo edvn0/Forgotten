@@ -15,8 +15,6 @@
 
 namespace ForgottenEngine {
 
-class VulkanShader;
-
 struct StageData {
 	std::unordered_set<IncludeData> Headers;
 	uint32_t HashValue = 0;
@@ -53,9 +51,11 @@ private:
 
 	std::string compile(
 		std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
+
 	bool compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
 		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
 		const VkShaderStageFlagBits changedStages, const bool forceCompile);
+
 	bool compile_or_get_vulkan_binary(VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug,
 		VkShaderStageFlagBits changedStages, bool forceCompile);
 
@@ -63,9 +63,11 @@ private:
 
 	void try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory, const std::string& extension,
 		std::vector<uint32_t>& outputBinary) const;
+
 	bool try_read_cached_reflection_data();
 
 	void reflect_all_shader_stages(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData);
+
 	void reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData);
 
 private:
@@ -78,9 +80,10 @@ private:
 	// Reflection info
 	VulkanShader::ReflectionData reflection_data;
 
-	// Names of macros that are parsed from shader.
-	// These are used to reliably get informattion about what shaders need what macros
+	std::map<VkShaderStageFlagBits, StageData> stages_metadata;
+
 	std::unordered_set<std::string> acknowledged_macros;
+
 	ShaderUtils::SourceLang language;
 
 	friend class VulkanShader;

@@ -17,8 +17,6 @@ copy_resources() {
 set -e
 
 build_target() {
-    local directXShaderCompilerPath="ForgottenEngine/vendor/DirectXShaderCompiler/cmake/caches/PredefinedParams.cmake"
-
     local build_type="$2"
     local target="$1"
 
@@ -32,7 +30,7 @@ build_target() {
     if ! [ -a "build.ninja" ];
     then
         local root_folder="../.."
-        cmake "$root_folder" -G Ninja -DCMAKE_BUILD_TYPE="$build_type" -C "$root_folder/$directXShaderCompilerPath"
+        cmake "$root_folder" -G Ninja -DCMAKE_BUILD_TYPE="$build_type"
     fi;
 
     copy_resources

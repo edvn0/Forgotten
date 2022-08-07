@@ -109,7 +109,15 @@ target_link_libraries(
           yaml-cpp)
 target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY
                                                    SPIRV_CROSS_STATIC=ON)
-target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
+target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
+                                              -fcolor-diagnostics)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  target_compile_definitions(ForgottenEngine PUBLIC -fcolor-diagnostics)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_definitions(ForgottenEngine PUBLIC -fdiagnostics-color=always)
+endif()
+
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 
 add_custom_command(

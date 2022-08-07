@@ -69,7 +69,7 @@ public:
 	virtual Reference<Shader> get_shader() = 0;
 	virtual const std::string& get_name() const = 0;
 
-	static Reference<Material> create(const ShaderPair& shader, const std::string& name = "");
+	static Reference<Material> create(const Reference<Shader>& shader, const std::string& name = "");
 	static Reference<Material> copy(const Reference<Material>& other, const std::string& name = "");
 };
 

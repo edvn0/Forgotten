@@ -11,6 +11,8 @@
 
 namespace ForgottenEngine {
 
+class VulkanShaderCompiler;
+
 using ShaderType = VkShaderStageFlagBits;
 
 class VulkanShader : public Shader {
@@ -106,7 +108,7 @@ public:
 private:
 	void load_and_create_shaders(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
 
-	void create_descriptor();
+	void create_descriptors();
 
 private:
 	std::vector<VkPipelineShaderStageCreateInfo> stage_create_infos;
@@ -124,6 +126,7 @@ private:
 
 	std::unordered_map<uint32_t, std::vector<VkDescriptorPoolSize>> type_counts;
 	ShaderType shader_type;
-};
 
+	friend class VulkanShaderCompiler;
+};
 }

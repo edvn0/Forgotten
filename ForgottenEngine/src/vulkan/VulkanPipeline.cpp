@@ -86,7 +86,7 @@ static VkFormat ShaderDataTypeToVulkanFormat(ShaderDataType type)
 VulkanPipeline::VulkanPipeline(const PipelineSpecification& in_spec)
 	: spec(in_spec)
 {
-	CORE_ASSERT(in_spec.Shader.first && in_spec.Shader.second, "");
+	CORE_ASSERT(in_spec.Shader, "");
 	CORE_ASSERT(in_spec.RenderPass, "");
 	invalidate();
 	Renderer::register_shader_dependency(in_spec.Shader, this);
@@ -110,8 +110,8 @@ void VulkanPipeline::invalidate()
 		// HZ_CORE_WARN("[VulkanPipeline] Creating pipeline {0}", instance->spec.DebugName);
 
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-		CORE_ASSERT(instance->spec.Shader.first && instance->spec.Shader.second, "");
-		Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(instance->spec.Shader.first);
+		CORE_ASSERT(instance->spec.Shader, "");
+		Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(instance->spec.Shader);
 		Reference<VulkanFramebuffer> framebuffer
 			= instance->spec.RenderPass->get_specification().TargetFramebuffer.as<VulkanFramebuffer>();
 
@@ -386,7 +386,7 @@ void VulkanPipeline::bind() { }
 void VulkanPipeline::rt_set_uniform_buffer(
 	Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
 {
-	Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(spec.Shader.first);
+	Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(spec.Shader);
 	Reference<VulkanUniformBuffer> vulkanUniformBuffer = ub.as<VulkanUniformBuffer>();
 
 	CORE_ASSERT(descriptor_sets.descriptor_sets.size() > set, "");
@@ -403,7 +403,7 @@ void VulkanPipeline::rt_set_uniform_buffer(
 	VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 
-	vulkanShader = Reference<VulkanShader>(spec.Shader.second);
+	vulkanShader = Reference<VulkanShader>(spec.Shader);
 	CORE_ASSERT(descriptor_sets.descriptor_sets.size() > set, "");
 
 	writeDescriptorSet = {};

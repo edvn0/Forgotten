@@ -52,7 +52,7 @@ public:
 	// end submits
 
 	// Registrations
-	static void register_shader_dependency(const ShaderPair& shaders, Pipeline* pipeline);
+	static void register_shader_dependency(const Reference<Shader>& shader, Pipeline* pipeline);
 	// end Registrations
 
 	static Reference<Texture2D> get_white_texture();

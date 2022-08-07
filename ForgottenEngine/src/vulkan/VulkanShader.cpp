@@ -150,7 +150,7 @@ void VulkanShader::load_and_create_shaders(
 	}
 }
 
-void VulkanShader::create_descriptor()
+void VulkanShader::create_descriptors()
 {
 	VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 
