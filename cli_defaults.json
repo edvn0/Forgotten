@@ -22,5 +22,20 @@
             "type": "str",
             "value": "ForgottenEngine"
         }
+    },
+    {
+        "name": "clean",
+        "type": "Positional",
+        "default": {
+            "type": "bool"
+        }
+    },
+    {
+        "name": "build_type",
+        "type": "Positional",
+        "default": {
+            "type": "str",
+            "value": "Debug"
+        }
     }
 ]
