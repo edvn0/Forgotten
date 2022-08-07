@@ -1,24 +1,25 @@
-#version 450
+#version 430 core
 
 layout(location = 0) out vec4 color;
 
 struct VertexOutput
 {
+    vec2 LocalPosition;
+    float Thickness;
     vec4 Color;
-    vec2 TexCoord;
-    float TilingFactor;
 };
 
 layout (location = 0) in VertexOutput Input;
-layout (location = 5) in flat float TexIndex;
-
-layout (binding = 1) uniform sampler2D u_Textures[32];
 
 void main()
 {
-    color = texture(u_Textures[int(TexIndex)], Input.TexCoord * Input.TilingFactor) * Input.Color;
-
-    // Discard to avoid depth write
-    if (color.a == 0.0)
+    float fade = 0.01;
+    float dist = sqrt(dot(Input.LocalPosition, Input.LocalPosition));
+    if (dist > 1.0 || dist < 1.0 - Input.Thickness - fade)
     discard;
+
+    float alpha = 1.0 - smoothstep(1.0f - fade, 1.0f, dist);
+    alpha *= smoothstep(1.0 - Input.Thickness - fade, 1.0 - Input.Thickness, dist);
+    color = Input.Color;
+    color.a = alpha;
 }

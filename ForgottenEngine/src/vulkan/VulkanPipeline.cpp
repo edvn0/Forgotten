@@ -341,10 +341,10 @@ void VulkanPipeline::invalidate()
 			device, instance->pipeline_cache, 1, &pipelineCreateInfo, nullptr, &instance->pipeline));
 
 		// Shader modules are no longer needed once the graphics pipeline has been created
-		// vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
-		// vkDestroyShaderModule(device, shaderStages[1].module, nullptr);
+		vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
+		vkDestroyShaderModule(device, shaderStages[1].module, nullptr);
 
-		// instance->m_DescriptorSets = vulkanShader->AllocateDescriptorSets();
+		// instance->descriptor_sets = vulkanShader->allocate_descriptor_set(0);
 
 #if OLD
 		const auto& shaderDescriptorSets = vulkanShader->GetShaderDescriptorSets();

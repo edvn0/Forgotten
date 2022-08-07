@@ -48,8 +48,8 @@ static RendererAPI* init_renderer_api()
 }
 
 struct ShaderDependencies {
-	std::vector<Reference<Pipeline>> Pipelines;
-	std::vector<Reference<Material>> Materials;
+	std::vector<Reference<Pipeline>> pipelines;
+	std::vector<Reference<Material>> materials;
 };
 static std::unordered_map<size_t, ShaderDependencies> shader_dependencies;
 
@@ -130,8 +130,8 @@ void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
 // Start Registrations
 void Renderer::register_shader_dependency(const ShaderPair& shaders, Pipeline* pipeline)
 {
-	shader_dependencies[shaders.first->get_hash()].Pipelines.push_back(shaders.first);
-	shader_dependencies[shaders.second->get_hash()].Pipelines.push_back(shaders.second);
+	shader_dependencies[shaders.first->get_hash()].pipelines.push_back(shaders.first);
+	shader_dependencies[shaders.second->get_hash()].pipelines.push_back(shaders.second);
 }
 // end Registrations
 

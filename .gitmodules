@@ -31,3 +31,12 @@
 [submodule "ForgottenEngine/vendor/msdf-atlas-gen"]
 	path = ForgottenEngine/vendor/msdf-atlas-gen
 	url = https://github.com/edvn0/msdf-atlas-gen.git
+[submodule "ForgottenEngine/vendor/spirv-cross"]
+	path = ForgottenEngine/vendor/spirv-cross
+	url = https://github.com/edvn0/SPIRV-Cross
+[submodule "ForgottenEngine/vendor/shaderc"]
+	path = ForgottenEngine/vendor/shaderc
+	url = https://github.com/edvn0/shaderc
+[submodule "ForgottenEngine/vendor/yaml-cpp"]
+	path = ForgottenEngine/vendor/yaml-cpp
+	url = https://github.com/edvn0/yaml-cpp

@@ -31,7 +31,7 @@ public:
 
 	void release();
 
-	void reload(bool forceCompile = false) override;
+	void reload(bool forceCompile) override;
 
 	void rt_reload(bool forceCompile) override;
 

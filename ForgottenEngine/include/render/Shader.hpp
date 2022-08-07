@@ -15,7 +15,6 @@ namespace ShaderUtils {
 	enum class SourceLang {
 		NONE,
 		GLSL,
-		HLSL,
 	};
 }
 
@@ -84,7 +83,7 @@ public:
 
 	virtual ~Shader() = default;
 
-	virtual void reload(bool force_compile = false) = 0;
+	virtual void reload(bool force_compile) = 0;
 	virtual void rt_reload(bool force_compile) = 0;
 
 	virtual size_t get_hash() const = 0;

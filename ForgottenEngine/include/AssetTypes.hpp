@@ -2,6 +2,7 @@
 
 #include "Assets.hpp"
 #include "Common.hpp"
+#include "vendor/spirv-cross/spirv_common.hpp"
 
 namespace ForgottenEngine {
 
@@ -108,8 +109,6 @@ namespace Utils {
 		default:
 			CORE_ASSERT(false, "Unknown Asset Type");
 		}
-
 	}
-
 }
 }

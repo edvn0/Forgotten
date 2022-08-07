@@ -67,6 +67,8 @@ add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/argparse)
 add_subdirectory(vendor/imgui)
 add_subdirectory(vendor/msdf-atlas-gen)
+add_subdirectory(vendor/spirv-cross)
+add_subdirectory(vendor/yaml-cpp)
 
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(
@@ -84,7 +86,12 @@ target_include_directories(
           vendor/tinyobjloader
           vendor/stb
           vendor/argparse/include
-          vendor/msdf-atlas-gen/msdf-atlas-gen)
+          vendor/msdf-atlas-gen/msdf-atlas-gen
+          vendor/spirv-cross
+          vendor/shaderc
+          vendor/yaml-cpp/include
+          vendor/shaderc/libshaderc/include
+          vendor/shaderc/libshaderc_util/include)
 target_link_libraries(
   ForgottenEngine
   PRIVATE ${Vulkan_LIBRARIES}
@@ -94,8 +101,14 @@ target_link_libraries(
           tinyobjloader
           imgui
           argparse
-          msdf-atlas-gen)
-target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY)
+          msdf-atlas-gen
+          spirv-cross-core
+          spirv-cross-glsl
+          spirv-cross-msl
+          spirv-cross-reflect
+          yaml-cpp)
+target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY
+                                                   SPIRV_CROSS_STATIC=ON)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness)
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)
 

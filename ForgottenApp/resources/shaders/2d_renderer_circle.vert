@@ -1,10 +1,9 @@
-#version 450
+#version 430 core
 
-layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec4 a_Color;
-layout(location = 2) in vec2 a_TexCoord;
-layout(location = 3) in float a_TexIndex;
-layout(location = 4) in float a_TilingFactor;
+layout(location = 0) in vec3 a_WorldPosition;
+layout(location = 1) in float a_Thickness;
+layout(location = 2) in vec2 a_LocalPosition;
+layout(location = 3) in vec4 a_Color;
 
 layout (std140, binding = 0) uniform Camera
 {
@@ -18,19 +17,17 @@ layout (push_constant) uniform Transform
 
 struct VertexOutput
 {
+    vec2 LocalPosition;
+    float Thickness;
     vec4 Color;
-    vec2 TexCoord;
-    float TilingFactor;
 };
 
 layout (location = 0) out VertexOutput Output;
-layout (location = 5) out flat float TexIndex;
 
 void main()
 {
+    Output.LocalPosition = a_LocalPosition;
+    Output.Thickness = a_Thickness;
     Output.Color = a_Color;
-    Output.TexCoord = a_TexCoord;
-    TexIndex = a_TexIndex;
-    Output.TilingFactor = a_TilingFactor;
-    gl_Position = u_ViewProjection * u_Renderer.Transform * vec4(a_Position, 1.0);
+    gl_Position = u_ViewProjection * u_Renderer.Transform * vec4(a_WorldPosition, 1.0);
 }

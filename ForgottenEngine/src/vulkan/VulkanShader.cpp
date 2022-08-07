@@ -5,10 +5,55 @@
 #include <filesystem>
 
 #include "render/Renderer.hpp"
+#include "spirv_cross.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanRenderer.hpp"
+#include "vulkan/compiler/VulkanShaderCompiler.hpp"
+
+#include <iostream>
 
 namespace ForgottenEngine {
+
+namespace Utils {
+	static ShaderUniformType SPIRTypeToShaderUniformType(const spirv_cross::SPIRType& type)
+	{
+		switch (type.basetype) {
+		case spirv_cross::SPIRType::Boolean:
+			return ShaderUniformType::Bool;
+		case spirv_cross::SPIRType::Int:
+			if (type.vecsize == 1)
+				return ShaderUniformType::Int;
+			if (type.vecsize == 2)
+				return ShaderUniformType::IVec2;
+			if (type.vecsize == 3)
+				return ShaderUniformType::IVec3;
+			if (type.vecsize == 4)
+				return ShaderUniformType::IVec4;
+
+		case spirv_cross::SPIRType::UInt:
+			return ShaderUniformType::UInt;
+		case spirv_cross::SPIRType::Float:
+			if (type.columns == 3)
+				return ShaderUniformType::Mat3;
+			if (type.columns == 4)
+				return ShaderUniformType::Mat4;
+
+			if (type.vecsize == 1)
+				return ShaderUniformType::Float;
+			if (type.vecsize == 2)
+				return ShaderUniformType::Vec2;
+			if (type.vecsize == 3)
+				return ShaderUniformType::Vec3;
+			if (type.vecsize == 4)
+				return ShaderUniformType::Vec4;
+			break;
+		default:
+			CORE_ASSERT(false, "Unknown type!");
+		}
+		return ShaderUniformType::None;
+	}
+
+}
 
 static ShaderType to_shader_type(const std::string& path)
 {
@@ -25,6 +70,10 @@ VulkanShader::VulkanShader(const std::string& path, bool forceCompile, bool disa
 	: asset_path(path)
 	, disable_optimisations(disableOptimization)
 {
+	if (auto fp = std::filesystem::path{ path }; fp.extension() != ".spv") {
+		asset_path += ".spv";
+	}
+
 	name = Assets::path_without_extensions(path, { ".vert", ".frag" });
 	shader_type = to_shader_type(Assets::extract_extension(name));
 
@@ -62,24 +111,14 @@ VulkanShader::~VulkanShader()
 
 void VulkanShader::rt_reload(const bool forceCompile)
 {
-
-	auto* f = fopen(asset_path.string().data(), "rb");
-	fseek(f, 0, SEEK_END);
-	uint64_t size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-	auto out = std::vector<uint32_t>(size / sizeof(uint32_t));
-	fread(out.data(), sizeof(uint32_t), out.size(), f);
-	fclose(f);
-
-	std::map<VkShaderStageFlagBits, std::vector<uint32_t>> map;
-	map.emplace(shader_type, out);
-
-	load_and_create_shaders(map);
+	if (!VulkanShaderCompiler::try_recompile(this)) {
+		CORE_ERROR("Failed to recompile shader!");
+	}
 }
 
 void VulkanShader::reload(bool forceCompile)
 {
-	Renderer::submit([instance = Reference(this), forceCompile]() mutable { instance->rt_reload(forceCompile); });
+	Renderer::submit([this, forceCompile]() mutable { this->rt_reload(forceCompile); });
 }
 
 size_t VulkanShader::get_hash() const { return 1; }
@@ -353,7 +392,8 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(u
 	return result;
 }
 
-VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(uint32_t set, uint32_t numberOfSets)
+VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(
+	uint32_t desc_set, uint32_t numberOfSets)
 {
 	ShaderMaterialDescriptorSet result;
 
@@ -414,14 +454,14 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(u
 		}
 	}
 
-	CORE_ASSERT(poolSizes.find(set) != poolSizes.end(), "");
+	CORE_ASSERT(poolSizes.find(desc_set) != poolSizes.end(), "");
 
 	// TODO: Move this to the centralized renderer
 	VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
 	descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	descriptorPoolInfo.pNext = nullptr;
-	descriptorPoolInfo.poolSizeCount = (uint32_t)poolSizes.at(set).size();
-	descriptorPoolInfo.pPoolSizes = poolSizes.at(set).data();
+	descriptorPoolInfo.poolSizeCount = (uint32_t)poolSizes.at(desc_set).size();
+	descriptorPoolInfo.pPoolSizes = poolSizes.at(desc_set).data();
 	descriptorPoolInfo.maxSets = numberOfSets;
 
 	VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.Pool));
@@ -433,7 +473,7 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(u
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = result.Pool;
 		allocInfo.descriptorSetCount = 1;
-		allocInfo.pSetLayouts = &descriptor_set_layouts[set];
+		allocInfo.pSetLayouts = &descriptor_set_layouts[desc_set];
 		VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, &result.descriptor_sets[i]));
 	}
 	return result;
@@ -446,7 +486,7 @@ const VkWriteDescriptorSet* VulkanShader::get_descriptor_set(const std::string& 
 	if (reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.find(desc_set_name)
 		== reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.end()) {
 		CORE_WARN(
-			"Renderer", "Shader {0} does not contain requested descriptor set {1}", desc_set_name, desc_set_name);
+			"Renderer Shader {0} does not contain requested descriptor set {1}", desc_set_name, desc_set_name);
 		return nullptr;
 	}
 	return &reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.at(desc_set_name);
@@ -473,4 +513,5 @@ void VulkanShader::set_reflection_data(const ForgottenEngine::VulkanShader::Refl
 {
 	reflection_data = reflectionData;
 }
+
 }

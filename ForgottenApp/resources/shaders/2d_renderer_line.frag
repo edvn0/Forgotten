@@ -1,24 +1,10 @@
-#version 450
+#version 450 core
 
 layout(location = 0) out vec4 color;
 
-struct VertexOutput
-{
-    vec4 Color;
-    vec2 TexCoord;
-    float TilingFactor;
-};
-
-layout (location = 0) in VertexOutput Input;
-layout (location = 5) in flat float TexIndex;
-
-layout (binding = 1) uniform sampler2D u_Textures[32];
+layout (location = 0) in vec4 v_Color;
 
 void main()
 {
-    color = texture(u_Textures[int(TexIndex)], Input.TexCoord * Input.TilingFactor) * Input.Color;
-
-    // Discard to avoid depth write
-    if (color.a == 0.0)
-    discard;
+    color = v_Color;
 }
