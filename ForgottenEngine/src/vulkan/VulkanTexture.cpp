@@ -1,10 +1,13 @@
-//
-// Created by Edwin Carlsson on 2022-08-04.
-//
-
 #include "fg_pch.hpp"
 
 #include "vulkan/VulkanTexture.hpp"
+
+#include "vulkan/VulkanContext.hpp"
+
+#include "stb_image.h"
+
+#include "vulkan/VulkanImage.hpp"
+#include "vulkan/VulkanRenderer.hpp"
 
 namespace ForgottenEngine {
 
@@ -90,14 +93,18 @@ VulkanTexture2D::VulkanTexture2D(const std::string& path, const TexturePropertie
 	imageSpec.DebugName = properties.DebugName;
 	image = Image2D::create(imageSpec);
 
-	CORE_ASSERT(format != ImageFormat::None, "");
+	CORE_ASSERT(format != ImageFormat::None);
 
 	Reference<VulkanTexture2D> instance = this;
 	Renderer::submit([instance]() mutable { instance->invalidate(); });
 }
 
 VulkanTexture2D::VulkanTexture2D(
-	ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+	ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties properties)
+	: width(width)
+	, height(height)
+	, properties(properties)
+	, format(format)
 {
 	auto size = (uint32_t)Utils::GetMemorySize(format, width, height);
 
@@ -177,7 +184,7 @@ void VulkanTexture2D::invalidate()
 	if (!image_data) // TODO(Yan): better management for this, probably from texture spec
 		imageSpec.Usage = ImageUsage::Storage;
 
-	Reference<VulkanImage2D> image = this->image.as<VulkanImage2D>();
+	Reference<VulkanImage2D> image = image.as<VulkanImage2D>();
 	image->rt_invalidate();
 
 	auto& info = image->get_image_info();
@@ -202,7 +209,7 @@ void VulkanTexture2D::invalidate()
 
 		// Copy data to staging buffer
 		uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
-		CORE_ASSERT(image_data.data, "");
+		CORE_ASSERT(image_data.data);
 		memcpy(destData, image_data.data, size);
 		allocator.unmap_memory(stagingBufferAllocation);
 
@@ -303,13 +310,14 @@ void VulkanTexture2D::invalidate()
 	auto& props = VulkanContext::get_current_device()->get_physical_device()->get_properties();
 	// TODO:
 	if (props.limits.maxSamplerAnisotropy) {
-		// Use max. level of anisotropy for this example
-		sampler.maxAnisotropy = 1.0f; // vulkanDevice->properties.limits.maxSamplerAnisotropy;
-		sampler.anisotropyEnable = VK_TRUE;
-	} else {
-		// The device does not support anisotropic filtering
-		sampler.maxAnisotropy = 1.0;
-		sampler.anisotropyEnable = VK_FALSE;
+			// Use max. level of anisotropy for this example
+			sampler.maxAnisotropy = 1.0f;// vulkanDevice->properties.limits.maxSamplerAnisotropy;
+			sampler.anisotropyEnable = VK_TRUE;
+	}
+	else {
+			// The device does not support anisotropic filtering
+			sampler.maxAnisotropy = 1.0;
+			sampler.anisotropyEnable = VK_FALSE;
 	}
 	sampler.maxAnisotropy = 1.0;
 	sampler.anisotropyEnable = VK_FALSE;
@@ -345,32 +353,36 @@ void VulkanTexture2D::invalidate()
 	stbi_image_free(image_data.data);
 	image_data = Buffer();
 }
-VulkanTexture2D::~VulkanTexture2D() { }
-void VulkanTexture2D::resize(const glm::uvec2& size) { }
-void VulkanTexture2D::resize(uint32_t width, uint32_t height) { }
 
 void VulkanTexture2D::lock() { }
+
 void VulkanTexture2D::unlock() { }
-Buffer VulkanTexture2D::get_writeable_buffer() { }
-bool VulkanTexture2D::is_loaded() const { }
-const std::string& VulkanTexture2D::get_path() const { }
 
-void VulkanTexture2D::bind_impl(uint32_t slot) const { }
+Buffer VulkanTexture2D::get_writeable_buffer() { return image_data; }
 
-uint32_t VulkanTexture2D::get_mip_level_count() const { }
+const std::string& VulkanTexture2D::get_path() const { return path; }
 
-std::pair<uint32_t, uint32_t> VulkanTexture2D::get_mip_size(uint32_t mip) const { }
+uint32_t VulkanTexture2D::get_mip_level_count() const { return Utils::CalculateMipCount(width, height); }
 
-void VulkanTexture2D::generate_mips() { }
+std::pair<uint32_t, uint32_t> VulkanTexture2D::get_mip_size(uint32_t mip) const
+{
+	uint32_t width = this->width;
+	uint32_t height = this->height;
+	while (mip != 0) {
+		width /= 2;
+		height /= 2;
+		mip--;
+	}
 
-bool VulkanTexture2D::load_image(const std::string& path) { }
+	return { width, height };
+}
 
 void VulkanTexture2D::generate_mips()
 {
 	auto device = VulkanContext::get_current_device();
 	auto vulkanDevice = device->get_vulkan_device();
 
-	Reference<VulkanImage2D> image = this->image.as<VulkanImage2D>();
+	Reference<VulkanImage2D> image = image.as<VulkanImage2D>();
 	const auto& info = image->get_image_info();
 
 	const VkCommandBuffer blitCmd = VulkanContext::get_current_device()->get_command_buffer(true);
@@ -443,26 +455,60 @@ void VulkanTexture2D::generate_mips()
 
 VulkanTextureCube::VulkanTextureCube(
 	ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+	: format(format)
+	, width(width)
+	, height(height)
+	, properties(properties)
 {
+	if (data) {
+		uint32_t size = width * height * 4 * 6; // six layers
+		local_storage = Buffer::copy(data, size);
+	}
+
+	Reference<VulkanTextureCube> instance = this;
+	Renderer::submit([instance]() mutable { instance->invalidate(); });
 }
 
-VulkanTextureCube::VulkanTextureCube(const std::string& path, TextureProperties properties) { }
+VulkanTextureCube::VulkanTextureCube(const std::string& path, TextureProperties properties)
+	: properties(properties)
+{
+	CORE_ASSERT(false, "Not implemented");
+}
 
-void VulkanTextureCube::release() { }
+void VulkanTextureCube::release()
+{
+	if (image == nullptr)
+		return;
 
-VulkanTextureCube::~VulkanTextureCube() { }
+	Renderer::submit_resource_free([image = image, allocation = memory_alloc, texInfo = descriptor_image_info]() {
+		CORE_TRACE("Destroying VulkanTextureCube");
+		auto vulkanDevice = VulkanContext::get_current_device()->get_vulkan_device();
+		vkDestroyImageView(vulkanDevice, texInfo.imageView, nullptr);
+		vkDestroySampler(vulkanDevice, texInfo.sampler, nullptr);
 
-void VulkanTextureCube::bind_impl(uint32_t slot) const { }
+		VulkanAllocator allocator("TextureCube");
+		allocator.destroy_image(image, allocation);
+	});
+	image = nullptr;
+	memory_alloc = nullptr;
+	descriptor_image_info.imageView = nullptr;
+	descriptor_image_info.sampler = nullptr;
+}
 
-std::pair<uint32_t, uint32_t> VulkanTextureCube::get_mip_size(uint32_t mip) const { }
+VulkanTextureCube::~VulkanTextureCube() { release(); }
 
-uint64_t VulkanTextureCube::get_hash() const { }
+void VulkanTextureCube::invalidate()
+{
+	auto device = VulkanContext::get_current_device();
+	auto vulkanDevice = device->get_vulkan_device();
 
-VkImageView VulkanTextureCube::create_image_view_single_mip(uint32_t mip) { }
+	release();
 
-void VulkanTextureCube::generate_mips(bool readonly) { }
+	VkFormat format = Utils::VulkanImageFormat(this->format);
+	uint32_t mipCount = get_mip_level_count();
 
-void VulkanTextureCube::invalidate() { }
+	VkMemoryAllocateInfo memAllocInfo{};
+	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
 	VulkanAllocator allocator("TextureCube");
 
@@ -656,7 +702,7 @@ VkImageView VulkanTextureCube::create_image_view_single_mip(uint32_t mip)
 
 	VkImageView result;
 	VK_CHECK(vkCreateImageView(vulkanDevice, &view, nullptr, &result));
-
+	
 	return result;
 }
 
@@ -665,7 +711,7 @@ void VulkanTextureCube::generate_mips(bool readonly)
 	auto device = VulkanContext::get_current_device();
 	auto vulkanDevice = device->get_vulkan_device();
 
-	VkCommandBuffer blitCmd = device->get_command_buffer(true);
+	VkCommandBuffer blitCmd =device->get_command_buffer(true);
 
 	uint32_t mipLevels = get_mip_level_count();
 	for (uint32_t face = 0; face < 6; face++) {
@@ -677,9 +723,9 @@ void VulkanTextureCube::generate_mips(bool readonly)
 		mipSubRange.layerCount = 1;
 
 		// Prepare current mip level as image blit destination
-		Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
-			VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
+		Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+			mipSubRange);
 	}
 
 	for (uint32_t i = 1; i < mipLevels; i++) {

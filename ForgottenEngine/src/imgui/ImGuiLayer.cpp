@@ -70,7 +70,7 @@ void ImGuiLayer::on_attach()
 		std::vector<OptionalPath> fonts = Assets::load_from_directory("fonts", false);
 		for (const auto& font : fonts) {
 			if (font) {
-				ImGui::GetIO().Fonts->AddFontFromFileTTF((*font).c_str(), 12.0f);
+				ImGui::GetIO().Fonts->AddFontFromFileTTF((*font).string().c_str(), 12.0f);
 			}
 		}
 

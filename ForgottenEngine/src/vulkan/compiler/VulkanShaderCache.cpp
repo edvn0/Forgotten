@@ -67,11 +67,11 @@ void VulkanShaderCache::serialize(
 
 				out << YAML::BeginMap;
 
-				FG_SERIALIZE_PROPERTY(HeaderPath, header.IncludedFilePath.string(), out);
-				FG_SERIALIZE_PROPERTY(IncludeDepth, header.IncludeDepth, out);
-				FG_SERIALIZE_PROPERTY(IsRelative, header.IsRelative, out);
-				FG_SERIALIZE_PROPERTY(IsGaurded, header.IsGuarded, out);
-				FG_SERIALIZE_PROPERTY(HashValue, header.HashValue, out);
+				FG_SERIALIZE_PROPERTY("HeaderPath", header.IncludedFilePath.string(), out);
+				FG_SERIALIZE_PROPERTY("IncludeDepth", header.IncludeDepth, out);
+				FG_SERIALIZE_PROPERTY("IsRelative", header.IsRelative, out);
+				FG_SERIALIZE_PROPERTY("IsGuarded", header.IsGuarded, out);
+				FG_SERIALIZE_PROPERTY("HashValue", header.HashValue, out);
 
 				out << YAML::EndMap;
 			}
@@ -114,13 +114,13 @@ void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStage
 
 	for (auto shader : handles) {
 		std::string path;
-		FG_DESERIALIZE_PROPERTY(ShaderPath, path, shader, std::string());
+		FG_DESERIALIZE_PROPERTY("ShaderPath", path, shader, std::string());
 		for (auto stage : shader["Stages"]) // Stages
 		{
 			std::string stageType;
 			uint32_t stageHash;
-			FG_DESERIALIZE_PROPERTY(Stage, stageType, stage, std::string());
-			FG_DESERIALIZE_PROPERTY(StageHash, stageHash, stage, 0u);
+			FG_DESERIALIZE_PROPERTY("Stage", stageType, stage, std::string());
+			FG_DESERIALIZE_PROPERTY("StageHash", stageHash, stage, 0u);
 
 			auto& stageCache = shaderCache[path][ShaderUtils::ShaderTypeFromString(stageType)];
 			stageCache.HashValue = stageHash;
@@ -131,11 +131,11 @@ void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStage
 				bool isRelative;
 				bool isGuarded;
 				uint32_t hashValue;
-				FG_DESERIALIZE_PROPERTY(HeaderPath, headerPath, header, std::string());
-				FG_DESERIALIZE_PROPERTY(IncludeDepth, includeDepth, header, 0u);
-				FG_DESERIALIZE_PROPERTY(IsRelative, isRelative, header, false);
-				FG_DESERIALIZE_PROPERTY(IsGaurded, isGuarded, header, false);
-				FG_DESERIALIZE_PROPERTY(HashValue, hashValue, header, 0u);
+				FG_DESERIALIZE_PROPERTY("HeaderPath", headerPath, header, std::string());
+				FG_DESERIALIZE_PROPERTY("IncludeDepth", includeDepth, header, 0u);
+				FG_DESERIALIZE_PROPERTY("IsRelative", isRelative, header, false);
+				FG_DESERIALIZE_PROPERTY("IsGuarded", isGuarded, header, false);
+				FG_DESERIALIZE_PROPERTY("HashValue", hashValue, header, 0u);
 
 				stageCache.Headers.emplace(
 					IncludeData{ headerPath, includeDepth, isRelative, isGuarded, hashValue });

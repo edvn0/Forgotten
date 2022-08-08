@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
+import multiprocessing
 import os
 from subprocess import check_call, CalledProcessError
 import sys
@@ -37,6 +38,10 @@ def log_success(message: str, with_time=True):
 
 def log_failure(message: str, with_time=True):
     print(__message_to_coloured(message, Color.FAIL, with_time), file=sys.stderr)
+
+
+def log_info(message: str, with_time=True):
+    print(__message_to_coloured(message, Color.WARNING, with_time), file=sys.stdout)
 
 
 def in_directory_call_process(directory: str, process_func: Callable[[None], bool]):
@@ -94,6 +99,25 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
     return parsed
 
 
+def build_project(build_folder: str, generator: str):
+    if generator.count("Visual Studio") > 0:
+        log_success(
+            "Usage of Visual Studio generator detected, this script will not build the solution.")
+        exit(0)
+
+    try:
+        build_call = f"ninja -j{multiprocessing.cpu_count()}"
+        if in_directory_call_process(
+                build_folder, lambda: check_call(build_call.split(" "))):
+            log_success("Built Forgotten.")
+        else:
+            log_failure("Could not build Forgotten.")
+            exit(1)
+    except CalledProcessError as e:
+        log_failure(f"Could not build Forgotten, reason: \n\t\t{str(e)}")
+        exit(e.returncode)
+
+
 def main():
     current_directory = Path(__file__).parent
 
@@ -122,48 +146,32 @@ def main():
             log_failure(f"Could not clean folder, reason: \n\t\t{str(e)}")
             exit(e.returncode)
 
-    build_folder_name = f"build-{cli_results.generator}".replace(" ", "")
+    build_folder = f"build-{cli_results.generator}".replace(" ", "")
 
     build_dir_exists = os.path.isdir(
-        f"{forgotten_root}/build/{cli_results.build_type}")
+        f"{forgotten_root}/{build_folder}/{cli_results.build_type}")
 
     if did_clean or not build_dir_exists or cli_results.force_regenerate:
         try:
-            cmake_call = f"cmake -DCMAKE_BUILD_TYPE={cli_results.build_type} -DUSE_ALTERNATE_LINKER={cli_results.linker} -DSPIRV_CROSS_STATIC=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -B{forgotten_root}/{build_folder_name}/{cli_results.build_type}"
+            cmake_call = f"cmake -S. -DCMAKE_BUILD_TYPE={cli_results.build_type} -DUSE_ALTERNATE_LINKER={cli_results.linker} -DSPIRV_CROSS_STATIC=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -B{forgotten_root}/{build_folder}/{cli_results.build_type}"
             configure_call = cmake_call.split(" ")
             configure_call.append(f"-G{cli_results.generator}")
-            check_call(configure_call.split(" "))
+            check_call(configure_call)
         except CalledProcessError as e:
             log_failure(
                 f"Could not configure Forgotten, reason: \n\t\t{str(e)}")
             exit(e.returncode)
 
-    build_project(f"{build_folder}/{cli_results.build_type}", cli_results.generator)
+    build_project(build_folder, cli_results.generator)
 
     try:
-        build_call = "ninja -j8"
-        build_folder = f"{forgotten_root}/build/{cli_results.build_type}"
-        if in_directory_call_process(
-                build_folder, lambda: check_call(build_call.split(" "))):
-            log_success("Built Forgotten.")
-        else:
-            log_failure("Could not build Forgotten.")
-            exit(1)
-    except CalledProcessError as e:
-        log_failure(f"Could not build Forgotten, reason: \n\t\t{str(e)}")
-        exit(e.returncode)
-
-    generator = str(cli_results.generator)
-    if generator.count("Visual Studio") == 0:
-        print("We are not using Visual Studio")
-        try:
         run_call = [
             "./ForgottenApp",
             f"--width={cli_results.width}",
             f"--name={cli_results.name}",
             f"--height={cli_results.height}",
         ]
-        run_folder = f"{forgotten_root}/build/{cli_results.build_type}/ForgottenApp"
+        run_folder = f"{forgotten_root}/{build_folder}/{cli_results.build_type}/ForgottenApp"
 
         if in_directory_call_process(run_folder, lambda: check_call(run_call)):
             log_success("Running Forgotten...")

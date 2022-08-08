@@ -35,6 +35,7 @@ public:
 	const VkPhysicalDeviceProperties& get_properties() const { return properties; }
 	const VkPhysicalDeviceLimits& get_limits() const { return properties.limits; }
 	const VkPhysicalDeviceMemoryProperties& get_memory_properties() const { return memory_properties; }
+	const VkPhysicalDeviceFeatures& get_features() const { return features; }
 
 	VkFormat get_depth_format() const { return depth_format; }
 

@@ -17,27 +17,29 @@ public:
 	void resize(const glm::uvec2& size) override;
 	void resize(uint32_t width, uint32_t height) override;
 
+	void invalidate();
+
+	void bind(uint32_t slot) const override{};
 	void lock() override;
 	void unlock() override;
 	Buffer get_writeable_buffer() override;
-	bool is_loaded() const override;
+	bool is_loaded() const override { return image_data; };
 	const std::string& get_path() const override;
 
-	ImageFormat get_format() const override { return m_Format; }
-	uint32_t get_width() const override { return m_Width; }
-	uint32_t get_height() const override { return m_Height; }
-	glm::uvec2 get_size() const override { return { m_Width, m_Height }; }
-
-protected:
-	void bind_impl(uint32_t slot = 0) const override;
-
-public:
-	Reference<Image2D> get_image() const override { return image; }
-	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const
+	const VkDescriptorImageInfo& get_vulkan_descriptor_info() const
 	{
 		return image.as<VulkanImage2D>()->get_descriptor_info();
 	}
 
+
+
+	ImageFormat get_format() const override { return format; }
+	uint32_t get_width() const override { return width; }
+	uint32_t get_height() const override { return height; }
+	glm::uvec2 get_size() const override { return { width, height }; }
+
+public:
+	Reference<Image2D> get_image() const override { return image; }
 	uint32_t get_mip_level_count() const override;
 	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
 	uint64_t get_hash() const override { return (uint64_t)image.as<VulkanImage2D>()->get_image_info().image_view; }
@@ -49,16 +51,16 @@ private:
 	bool load_image(const void* data, uint32_t size);
 
 private:
-	std::string m_Path;
-	uint32_t m_Width;
-	uint32_t m_Height;
-	TextureProperties m_Properties;
+	std::string path;
+	uint32_t width;
+	uint32_t height;
+	TextureProperties properties;
 
-	Buffer imageData;
+	Buffer image_data;
 
 	Reference<Image2D> image;
 
-	ImageFormat m_Format = ImageFormat::None;
+	ImageFormat format = ImageFormat::None;
 };
 
 class VulkanTextureCube : public TextureCube {
@@ -69,21 +71,22 @@ public:
 	void release();
 	~VulkanTextureCube() override;
 
-protected:
-	void bind_impl(uint32_t slot) const override;
+	void bind(uint32_t slot) const override{};
 
 public:
-	ImageFormat get_format() const override { return m_Format; }
+	ImageFormat get_format() const override { return format; }
 
-	uint32_t get_width() const override { return m_Width; }
-	uint32_t get_height() const override { return m_Height; }
-	glm::uvec2 get_size() const override { return { m_Width, m_Height }; }
+	uint32_t get_width() const override { return width; }
+	uint32_t get_height() const override { return height; }
+	glm::uvec2 get_size() const override { return { width, height }; }
 
 	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
-	uint64_t get_hash() const override;
-	uint32_t get_mip_level_count() const override { return 0; }
+	uint32_t get_mip_level_count() const override;
 
-	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const { return m_DescriptorImageInfo; }
+
+	uint64_t get_hash() const override { return (uint64_t)image; }
+
+	const VkDescriptorImageInfo& get_vulkan_descriptor_info() const { return descriptor_image_info; }
 	VkImageView create_image_view_single_mip(uint32_t mip);
 
 	void generate_mips(bool readonly = false);
@@ -92,16 +95,16 @@ private:
 	void invalidate();
 
 private:
-	ImageFormat m_Format = ImageFormat::None;
-	uint32_t m_Width = 0, m_Height = 0;
-	TextureProperties m_Properties;
+	ImageFormat format = ImageFormat::None;
+	uint32_t width = 0, height = 0;
+	TextureProperties properties;
 
-	bool m_MipsGenerated = false;
+	bool mips_generated = false;
 
-	Buffer m_LocalStorage;
-	VmaAllocation m_MemoryAlloc;
+	Buffer local_storage;
+	VmaAllocation memory_alloc;
 	VkImage image{ nullptr };
-	VkDescriptorImageInfo m_DescriptorImageInfo = {};
+	VkDescriptorImageInfo descriptor_image_info = {};
 };
 
 }
