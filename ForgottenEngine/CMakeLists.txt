@@ -101,7 +101,8 @@ add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/argparse)
 add_subdirectory(vendor/imgui)
-add_subdirectory(vendor/msdf-atlas-gen)
+
+# add_subdirectory(vendor/msdf-atlas-gen)
 add_subdirectory(vendor/spirv-cross)
 add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/shaderc)
@@ -137,7 +138,7 @@ target_link_libraries(
           tinyobjloader
           imgui
           argparse
-          msdf-atlas-gen
+          # msdf-atlas-gen
           spirv-cross-core
           spirv-cross-glsl
           spirv-cross-msl

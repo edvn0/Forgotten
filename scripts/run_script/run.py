@@ -122,13 +122,17 @@ def main():
             log_failure(f"Could not clean folder, reason: \n\t\t{str(e)}")
             exit(e.returncode)
 
+    build_folder_name = f"build-{cli_results.generator}".replace(" ", "")
+
     build_dir_exists = os.path.isdir(
         f"{forgotten_root}/build/{cli_results.build_type}")
 
     if did_clean or not build_dir_exists or cli_results.force_regenerate:
         try:
-            cmake_call = f"cmake {forgotten_root} -GNinja -DCMAKE_BUILD_TYPE={cli_results.build_type} -DUSE_ALTERNATE_LINKER={cli_results.linker} -DSPIRV_CROSS_STATIC=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -B{forgotten_root}/build/{cli_results.build_type}"
-            check_call(cmake_call.split(" "))
+            cmake_call = f"cmake -DCMAKE_BUILD_TYPE={cli_results.build_type} -DUSE_ALTERNATE_LINKER={cli_results.linker} -DSPIRV_CROSS_STATIC=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -B{forgotten_root}/{build_folder_name}/{cli_results.build_type}"
+            configure_call = cmake_call.split(" ")
+            configure_call.append(f"-G{cli_results.generator}")
+            check_call(configure_call.split(" "))
         except CalledProcessError as e:
             log_failure(
                 f"Could not configure Forgotten, reason: \n\t\t{str(e)}")
@@ -147,7 +151,10 @@ def main():
         log_failure(f"Could not build Forgotten, reason: \n\t\t{str(e)}")
         exit(e.returncode)
 
-    try:
+    generator = str(cli_results.generator)
+    if generator.count("Visual Studio") == 0:
+        print("We are not using Visual Studio")
+        try:
         run_call = [
             "./ForgottenApp",
             f"--width={cli_results.width}",
