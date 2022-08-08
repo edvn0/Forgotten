@@ -30,6 +30,7 @@ option(
   "mold")
 
 if(NOT "${USE_ALTERNATE_LINKER}" STREQUAL "")
+  message(STATUS ${USE_ALTERNATE_LINKER})
   set_alternate_linker(${USE_ALTERNATE_LINKER})
 endif()
 
@@ -99,6 +100,7 @@ add_subdirectory(vendor/imgui)
 add_subdirectory(vendor/msdf-atlas-gen)
 add_subdirectory(vendor/spirv-cross)
 add_subdirectory(vendor/yaml-cpp)
+add_subdirectory(vendor/shaderc)
 
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(
@@ -136,9 +138,9 @@ target_link_libraries(
           spirv-cross-glsl
           spirv-cross-msl
           spirv-cross-reflect
-          yaml-cpp)
-target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY
-                                                   SPIRV_CROSS_STATIC=ON)
+          yaml-cpp
+          shaderc)
+target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
                                               -fcolor-diagnostics)
 

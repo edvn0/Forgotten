@@ -77,7 +77,7 @@ public:
 		return Reference<T>(material_textures[slot]);
 	}
 
-	template <typename T> Reference<T> try_get_resouce(const std::string& name)
+	template <typename T> Reference<T> try_get_resource(const std::string& name)
 	{
 		auto decl = find_resource_declaration(name);
 		if (!decl)
@@ -136,12 +136,12 @@ private:
 
 	enum class PendingDescriptorType { None = 0, Texture2D, TextureCube, Image2D };
 	struct PendingDescriptor {
-		PendingDescriptorType Type = PendingDescriptorType::None;
-		VkWriteDescriptorSet WDS;
-		VkDescriptorImageInfo ImageInfo;
-		Reference<Texture> Texture;
-		Reference<Image> Image;
-		VkDescriptorImageInfo SubmittedImageInfo{};
+		PendingDescriptorType type = PendingDescriptorType::None;
+		VkWriteDescriptorSet wds;
+		VkDescriptorImageInfo image_info;
+		Reference<Texture> texture;
+		Reference<Image> image;
+		VkDescriptorImageInfo submitted_image_info{};
 	};
 
 	struct PendingDescriptorArray {

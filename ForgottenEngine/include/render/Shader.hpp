@@ -4,6 +4,8 @@
 #include "Common.hpp"
 
 #include "render/ShaderUniform.hpp"
+#include "serialize/StreamReader.hpp"
+#include "serialize/StreamWriter.hpp"
 
 #include <filesystem>
 #include <glm/glm.hpp>
@@ -46,6 +48,22 @@ public:
 
 	static constexpr std::string_view uniform_type_to_string(ShaderUniformType type);
 
+	static void serialize(StreamWriter* serializer, const ShaderUniform& instance)
+	{
+		serializer->write_string(instance.name);
+		serializer->write_raw(instance.type);
+		serializer->write_raw(instance.size);
+		serializer->write_raw(instance.offset);
+	}
+
+	static void deserialize(StreamReader* deserializer, ShaderUniform& instance)
+	{
+		deserializer->read_string(instance.name);
+		deserializer->read_raw(instance.type);
+		deserializer->read_raw(instance.size);
+		deserializer->read_raw(instance.offset);
+	}
+
 private:
 	std::string name;
 	ShaderUniformType type = ShaderUniformType::None;
@@ -75,6 +93,20 @@ struct ShaderBuffer {
 	std::string Name;
 	uint32_t Size = 0;
 	std::unordered_map<std::string, ShaderUniform> Uniforms;
+
+	static void serialize(StreamWriter* serializer, const ShaderBuffer& instance)
+	{
+		serializer->write_string(instance.Name);
+		serializer->write_raw(instance.Size);
+		serializer->write_map(instance.Uniforms);
+	}
+
+	static void deserialize(StreamReader* deserializer, ShaderBuffer& instance)
+	{
+		deserializer->read_string(instance.Name);
+		deserializer->read_raw(instance.Size);
+		deserializer->read_map(instance.Uniforms);
+	}
 };
 
 class Shader : public ReferenceCounted {

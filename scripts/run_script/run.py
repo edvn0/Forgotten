@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     if did_clean:
         try:
-            cmake_call = f"cmake {forgotten_root} -GNinja -DCMAKE_BUILD_TYPE={cli_results.build_type} -B{forgotten_root}/build/{cli_results.build_type}"
+            cmake_call = f"cmake {forgotten_root} -GNinja -DCMAKE_BUILD_TYPE={cli_results.build_type} -DUSE_ALTERNATE_LINKER={cli_results.linker} -DSPIRV_CROSS_STATIC=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -B{forgotten_root}/build/{cli_results.build_type}"
             check_call(cmake_call.split(" "))
         except CalledProcessError as e:
             print(

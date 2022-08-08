@@ -350,7 +350,7 @@ void VulkanFramebuffer::rt_invalidate()
 		if (image->get_specification().Layers > 1)
 			attachments[i] = image->get_layer_image_view(spec.ExistingImageLayers[i]);
 		else
-			attachments[i] = image->get_image_info().ImageView;
+			attachments[i] = image->get_image_info().image_view;
 		CORE_ASSERT(attachments[i], "");
 	}
 
@@ -360,7 +360,7 @@ void VulkanFramebuffer::rt_invalidate()
 			CORE_ASSERT(spec.ExistingImageLayers.size() == 1, "Depth attachments do not support deinterleaving");
 			attachments.emplace_back(image->get_layer_image_view(spec.ExistingImageLayers[0]));
 		} else
-			attachments.emplace_back(image->get_image_info().ImageView);
+			attachments.emplace_back(image->get_image_info().image_view);
 
 		CORE_ASSERT(attachments.back(), "");
 	}

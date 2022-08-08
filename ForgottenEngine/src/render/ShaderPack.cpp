@@ -2,7 +2,7 @@
 
 #include "render/ShaderPack.hpp"
 
-#include "serialisation/FileStream.hpp"
+#include "serialize/FileStream.hpp"
 
 #include "vulkan/VulkanShader.hpp"
 
@@ -21,9 +21,9 @@ namespace Utils {
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
 		case ShaderStage::Compute:
 			return VK_SHADER_STAGE_COMPUTE_BIT;
+		default:
+			CORE_ERROR("Unexisting type");
 		}
-
-		HZ_CORE_VERIFY(false);
 		return (VkShaderStageFlagBits)0;
 	}
 
@@ -36,54 +36,54 @@ namespace Utils {
 			return ShaderStage::Fragment;
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return ShaderStage::Compute;
+		default:
+			CORE_ERROR("Unexisting type");
 		}
-
-		HZ_CORE_VERIFY(false);
 		return (ShaderStage)0;
 	}
 
 }
 
 ShaderPack::ShaderPack(const std::filesystem::path& path)
-	: m_Path(path)
+	: path(path)
 {
 	// Read index
 	FileStreamReader serializer(path);
 	if (!serializer)
 		return;
 
-	serializer.ReadRaw(m_File.Header);
-	if (memcmp(m_File.Header.HEADER, "HZSP", 4) != 0)
+	serializer.read_raw(file.header);
+	if (memcmp(file.header.HEADER, "FGSP", 4) != 0)
 		return;
 
-	m_Loaded = true;
-	for (uint32_t i = 0; i < m_File.Header.ShaderProgramCount; i++) {
+	loaded = true;
+	for (uint32_t i = 0; i < file.header.ShaderProgramCount; i++) {
 		uint32_t key;
-		serializer.ReadRaw(key);
-		auto& shaderProgramInfo = m_File.Index.ShaderPrograms[key];
-		serializer.ReadRaw(shaderProgramInfo.ReflectionDataOffset);
-		serializer.ReadArray(shaderProgramInfo.ModuleIndices);
+		serializer.read_raw(key);
+		auto& shaderProgramInfo = file.index.shader_programs[key];
+		serializer.read_raw(shaderProgramInfo.ReflectionDataOffset);
+		serializer.read_array(shaderProgramInfo.ModuleIndices);
 	}
 
-	auto sp = serializer.GetStreamPosition();
-	serializer.ReadArray(m_File.Index.ShaderModules, m_File.Header.ShaderModuleCount);
+	auto sp = serializer.get_stream_position();
+	serializer.read_array(file.index.shader_modules, file.header.ShaderModuleCount);
 }
 
-bool ShaderPack::Contains(std::string_view name) const
+bool ShaderPack::contains(std::string_view name) const
 {
-	return m_File.Index.ShaderPrograms.find(Hash::generate_fnv_hash(name)) != m_File.Index.ShaderPrograms.end();
+	return file.index.shader_programs.find(Hash::generate_fnv_hash(name)) != file.index.shader_programs.end();
 }
 
-Reference<Shader> ShaderPack::LoadShader(std::string_view name)
+Reference<Shader> ShaderPack::load_shader(std::string_view name)
 {
 	uint32_t nameHash = Hash::generate_fnv_hash(name);
-	HZ_CORE_VERIFY(Contains(name));
+	CORE_VERIFY(contains(name), "");
 
-	const auto& shaderProgramInfo = m_File.Index.ShaderPrograms.at(nameHash);
+	const auto& shaderProgramInfo = file.index.shader_programs.at(nameHash);
 
-	FileStreamReader serializer(m_Path);
+	FileStreamReader serializer(path);
 
-	serializer.SetStreamPosition(shaderProgramInfo.ReflectionDataOffset);
+	serializer.set_stream_position(shaderProgramInfo.ReflectionDataOffset);
 
 	// Debug only
 	std::string shaderName;
@@ -95,26 +95,26 @@ Reference<Shader> ShaderPack::LoadShader(std::string_view name)
 		shaderName = found != std::string::npos ? shaderName.substr(0, found) : name;
 	}
 
-	Reference<VulkanShader> vulkanShader = Reference<VulkanShader>::Create();
-	vulkanShader->m_Name = shaderName;
-	vulkanShader->m_AssetPath = name;
-	vulkanShader->TryReadReflectionData(&serializer);
+	Reference<VulkanShader> vulkanShader = Reference<VulkanShader>::create();
+	vulkanShader->name = shaderName;
+	vulkanShader->asset_path = name;
+	vulkanShader->try_read_reflection_data(&serializer);
 	// vulkanShader->m_DisableOptimization =
 
-	std::map<VkShaderStageFlagBits, std::vector<uint32_t>> shaderModules;
+	std::map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_modules;
 	for (uint32_t index : shaderProgramInfo.ModuleIndices) {
-		const auto& info = m_File.Index.ShaderModules[index];
-		auto& moduleData = shaderModules[Utils::ShaderStageToVkShaderStage((Utils::ShaderStage)info.Stage)];
+		const auto& info = file.index.shader_modules[index];
+		auto& moduleData = shader_modules[Utils::ShaderStageToVkShaderStage((Utils::ShaderStage)info.Stage)];
 
-		serializer.SetStreamPosition(info.PackedOffset);
-		serializer.ReadArray(moduleData, (uint32_t)info.PackedSize);
+		serializer.set_stream_position(info.PackedOffset);
+		serializer.read_array(moduleData, (uint32_t)info.PackedSize);
 	}
 
-	serializer.SetStreamPosition(shaderProgramInfo.ReflectionDataOffset);
-	vulkanShader->TryReadReflectionData(&serializer);
+	serializer.set_stream_position(shaderProgramInfo.ReflectionDataOffset);
+	vulkanShader->try_read_reflection_data(&serializer);
 
-	vulkanShader->LoadAndCreateShaders(shaderModules);
-	vulkanShader->CreateDescriptors();
+	vulkanShader->load_and_create_shaders(shader_modules);
+	vulkanShader->create_descriptors();
 
 	// Renderer::AcknowledgeParsedGlobalMacros(compiler->GetAcknowledgedMacros(), vulkanShader);
 	// Renderer::OnShaderReloaded(vulkanShader->GetHash());
@@ -124,14 +124,14 @@ Reference<Shader> ShaderPack::LoadShader(std::string_view name)
 Reference<ShaderPack> ShaderPack::create_from_library(
 	Reference<ShaderLibrary> shaderLibrary, const std::filesystem::path& path)
 {
-	Reference<ShaderPack> shaderPack = Reference<ShaderPack>::Create();
+	Reference<ShaderPack> shaderPack = Reference<ShaderPack>::create();
 
-	const auto& shaderMap = shaderLibrary->GetShaders();
-	auto& shaderPackFile = shaderPack->m_File;
+	const auto& shaderMap = shaderLibrary->get_shaders();
+	auto& shaderPackFile = shaderPack->file;
 
-	shaderPackFile.Header.Version = 1;
-	shaderPackFile.Header.ShaderProgramCount = (uint32_t)shaderMap.size();
-	shaderPackFile.Header.ShaderModuleCount = 0;
+	shaderPackFile.header.Version = 1;
+	shaderPackFile.header.ShaderProgramCount = (uint32_t)shaderMap.size();
+	shaderPackFile.header.ShaderModuleCount = 0;
 
 	// Determine number of modules (per shader)
 	// NOTE(Yan): this currently doesn't care about duplicated modules, but it should (eventually, not that
@@ -139,11 +139,11 @@ Reference<ShaderPack> ShaderPack::create_from_library(
 	uint32_t shaderModuleIndex = 0;
 	uint32_t shaderModuleIndexArraySize = 0;
 	for (const auto& [name, shader] : shaderMap) {
-		Reference<VulkanShader> vulkanShader = shader.As<VulkanShader>();
-		const auto& shaderData = vulkanShader->m_ShaderData;
+		Reference<VulkanShader> vulkanShader = shader.as<VulkanShader>();
+		const auto& shaderData = vulkanShader->shader_data;
 
-		shaderPackFile.Header.ShaderModuleCount += (uint32_t)shaderData.size();
-		auto& shaderProgramInfo = shaderPackFile.Index.ShaderPrograms[(uint32_t)vulkanShader->GetHash()];
+		shaderPackFile.header.ShaderModuleCount += (uint32_t)shaderData.size();
+		auto& shaderProgramInfo = shaderPackFile.index.shader_programs[(uint32_t)vulkanShader->get_hash()];
 
 		for (int i = 0; i < (int)shaderData.size(); i++)
 			shaderProgramInfo.ModuleIndices.emplace_back(shaderModuleIndex++);
@@ -152,7 +152,7 @@ Reference<ShaderPack> ShaderPack::create_from_library(
 		shaderModuleIndexArraySize += (uint32_t)shaderData.size() * sizeof(uint32_t); // indices
 	}
 
-	uint32_t shaderProgramIndexSize = shaderPackFile.Header.ShaderProgramCount
+	uint32_t shaderProgramIndexSize = shaderPackFile.header.ShaderProgramCount
 			* (sizeof(std::map<uint32_t, ShaderPackFile::ShaderProgramInfo>::key_type)
 				+ sizeof(ShaderPackFile::ShaderProgramInfo::ReflectionDataOffset))
 		+ shaderModuleIndexArraySize;
@@ -160,52 +160,52 @@ Reference<ShaderPack> ShaderPack::create_from_library(
 	FileStreamWriter serializer(path);
 
 	// Write header
-	serializer.WriteRaw<ShaderPackFile::FileHeader>(shaderPackFile.Header);
+	serializer.write_raw<ShaderPackFile::FileHeader>(shaderPackFile.header);
 
 	// ===============
 	// Write index
 	// ===============
 	// Write dummy data for shader programs
-	uint64_t shaderProgramIndexPos = serializer.GetStreamPosition();
-	serializer.WriteZero(shaderProgramIndexSize);
+	uint64_t shaderProgramIndexPos = serializer.get_stream_position();
+	serializer.write_zero(shaderProgramIndexSize);
 
 	// Write dummy data for shader modules
-	uint64_t shaderModuleIndexPos = serializer.GetStreamPosition();
-	serializer.WriteZero(shaderPackFile.Header.ShaderModuleCount * sizeof(ShaderPackFile::ShaderModuleInfo));
+	uint64_t shaderModuleIndexPos = serializer.get_stream_position();
+	serializer.write_zero(shaderPackFile.header.ShaderModuleCount * sizeof(ShaderPackFile::ShaderModuleInfo));
 	for (const auto& [name, shader] : shaderMap) {
-		Reference<VulkanShader> vulkanShader = shader.As<VulkanShader>();
+		Reference<VulkanShader> vulkanShader = shader.as<VulkanShader>();
 
 		// Serialize reflection data
-		shaderPackFile.Index.ShaderPrograms[(uint32_t)vulkanShader->GetHash()].ReflectionDataOffset
-			= serializer.GetStreamPosition();
-		vulkanShader->SerializeReflectionData(&serializer);
+		shaderPackFile.index.shader_programs[(uint32_t)vulkanShader->get_hash()].ReflectionDataOffset
+			= serializer.get_stream_position();
+		vulkanShader->serialize_reflection_data(&serializer);
 
 		// Serialize SPIR-V data
-		const auto& shaderData = vulkanShader->m_ShaderData;
+		const auto& shaderData = vulkanShader->shader_data;
 		for (const auto& [stage, data] : shaderData) {
-			auto& indexShaderModule = shaderPackFile.Index.ShaderModules.emplace_back();
-			indexShaderModule.PackedOffset = serializer.GetStreamPosition();
+			auto& indexShaderModule = shaderPackFile.index.shader_modules.emplace_back();
+			indexShaderModule.PackedOffset = serializer.get_stream_position();
 			indexShaderModule.PackedSize = data.size();
 			indexShaderModule.Stage = (uint8_t)Utils::ShaderStageFromVkShaderStage(stage);
 
-			serializer.WriteArray(data, false);
+			serializer.write_array(data, false);
 		}
 	}
 
 	// Write program index
-	serializer.SetStreamPosition(shaderProgramIndexPos);
+	serializer.set_stream_position(shaderProgramIndexPos);
 	uint64_t begin = shaderProgramIndexPos;
-	for (const auto& [name, programInfo] : shaderPackFile.Index.ShaderPrograms) {
-		serializer.WriteRaw(name);
-		serializer.WriteRaw(programInfo.ReflectionDataOffset);
-		serializer.WriteArray(programInfo.ModuleIndices);
+	for (const auto& [name, programInfo] : shaderPackFile.index.shader_programs) {
+		serializer.write_raw(name);
+		serializer.write_raw(programInfo.ReflectionDataOffset);
+		serializer.write_array(programInfo.ModuleIndices);
 	}
-	uint64_t end = serializer.GetStreamPosition();
+	uint64_t end = serializer.get_stream_position();
 	uint64_t s = end - begin;
 
 	// Write module index
-	serializer.SetStreamPosition(shaderModuleIndexPos);
-	serializer.WriteArray(shaderPackFile.Index.ShaderModules, false);
+	serializer.set_stream_position(shaderModuleIndexPos);
+	serializer.write_array(shaderPackFile.index.shader_modules, false);
 
 	return shaderPack;
 }

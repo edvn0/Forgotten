@@ -1,9 +1,11 @@
 #include "fg_pch.hpp"
 
-#include "vulkan/compiler/VulkanShaderCompiler.hpp"
+#include "serialize/FileStream.hpp"
+
+#include "utilities/StringUtils.hpp"
 
 #include "vulkan/compiler/VulkanShaderCache.hpp"
-
+#include "vulkan/compiler/VulkanShaderCompiler.hpp"
 #include "vulkan/compiler/preprocessor/GlslIncluder.hpp"
 
 #include <spirv-tools/libspirv.h>
@@ -90,7 +92,7 @@ bool VulkanShaderCompiler::reload(bool forceCompile)
 	spirv_data.clear();
 
 	Utils::create_cache_directory_if_needed();
-	const std::string source = Utils::ReadFileAndSkipBOM(shader_source_path);
+	const std::string source = StringUtils::read_file_and_skip_bom(shader_source_path);
 	CORE_VERIFY(source.size(), "Failed to load shader!");
 
 	CORE_TRACE("Renderer Compiling shader: {}", shader_source_path.string());
@@ -145,7 +147,7 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_g
 		options.AddMacroDefinition("__GLSL__");
 		options.AddMacroDefinition(std::string(ShaderUtils::VKStageToShaderMacro(stage)));
 
-		const auto& globalMacros = Renderer::GetGlobalShaderMacros();
+		const auto& globalMacros = Renderer::get_global_shader_macros();
 		for (const auto& [name, value] : globalMacros)
 			options.AddMacroDefinition(name, value);
 
@@ -153,7 +155,7 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_g
 		GlslIncluder* includer = new GlslIncluder(&fileFinder);
 
 		options.SetIncluder(std::unique_ptr<GlslIncluder>(includer));
-		const auto preProcessingResult = compiler.pre_process_glsl(
+		const auto preProcessingResult = compiler.PreprocessGlsl(
 			shaderSource, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), options);
 		if (preProcessingResult.GetCompilationStatus() != shaderc_compilation_status_success)
 			CORE_ERROR("Renderer",
@@ -223,7 +225,7 @@ Reference<VulkanShader> VulkanShaderCompiler::compile(
 	shader->set_reflection_data(compiler->reflection_data);
 	shader->create_descriptors();
 
-	Renderer::AcknowledgeParsedGlobalMacros(compiler->get_acknowledged_macros(), shader);
+	Renderer::acknowledge_parsed_global_macros(compiler->get_acknowledged_macros(), shader);
 	Renderer::on_shader_reloaded(shader->get_hash());
 	return shader;
 }
@@ -242,7 +244,7 @@ bool VulkanShaderCompiler::try_recompile(Reference<VulkanShader> shader)
 	shader->set_reflection_data(compiler->reflection_data);
 	shader->create_descriptors();
 
-	Renderer::AcknowledgeParsedGlobalMacros(compiler->get_acknowledged_macros(), shader);
+	Renderer::acknowledge_parsed_global_macros(compiler->get_acknowledged_macros(), shader);
 	Renderer::on_shader_reloaded(shader->get_hash());
 
 	return true;
@@ -300,9 +302,8 @@ bool VulkanShaderCompiler::compile_or_get_vulkan_binary(VkShaderStageFlagBits st
 			auto path = cacheDirectory / (shader_source_path.filename().string() + extension);
 			std::string cachedFilePath = path.string();
 
-			FILE* f;
-			errno_t err = fopen_s(&f, cachedFilePath.c_str(), "wb");
-			if (err)
+			FILE* f = fopen(cachedFilePath.c_str(), "wb");
+			if (!f)
 				CORE_ASSERT(false, "Failed to cache shader binary!");
 			fwrite(outputBinary.data(), sizeof(uint32_t), outputBinary.size(), f);
 			fclose(f);
@@ -317,7 +318,7 @@ void VulkanShaderCompiler::clear_reflection_data()
 	reflection_data.shader_descriptor_sets.clear();
 	reflection_data.resources.clear();
 	reflection_data.constant_buffers.clear();
-	reflection_data.push_constant_buffers.clear();
+	reflection_data.push_constant_ranges.clear();
 }
 
 void VulkanShaderCompiler::try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory,
@@ -326,9 +327,8 @@ void VulkanShaderCompiler::try_get_vulkan_cached_binary(const std::filesystem::p
 	const auto path = cacheDirectory / (shader_source_path.filename().string() + extension);
 	const std::string cachedFilePath = path.string();
 
-	FILE* f;
-	errno_t err = fopen_s(&f, cachedFilePath.data(), "rb");
-	if (err)
+	FILE* f = fopen(cachedFilePath.data(), "rb");
+	if (!f)
 		return;
 
 	fseek(f, 0, SEEK_END);
@@ -351,79 +351,77 @@ bool VulkanShaderCompiler::try_read_cached_reflection_data()
 	if (!serializer)
 		return false;
 
-	serializer.ReadRaw(header);
+	serializer.read_raw(header);
 
-	bool validHeader = memcmp(&header, "HZSR", 4) == 0;
+	bool validHeader = memcmp(&header, "FGSR", 4) == 0;
 	CORE_ASSERT(false, validHeader);
 
 	clear_reflection_data();
 
 	uint32_t shaderDescriptorSetCount;
-	serializer.ReadRaw<uint32_t>(shaderDescriptorSetCount);
+	serializer.read_raw<uint32_t>(shaderDescriptorSetCount);
 
 	for (uint32_t i = 0; i < shaderDescriptorSetCount; i++) {
 		auto& descriptorSet = reflection_data.shader_descriptor_sets.emplace_back();
-		serializer.ReadMap(descriptorSet.uniform_buffers);
-		serializer.ReadMap(descriptorSet.storage_buffers);
-		serializer.ReadMap(descriptorSet.image_samplers);
-		serializer.ReadMap(descriptorSet.storage_images);
-		serializer.ReadMap(descriptorSet.separate_textures);
-		serializer.ReadMap(descriptorSet.separate_samplers);
-		serializer.ReadMap(descriptorSet.write_descriptor_sets);
+		serializer.read_map(descriptorSet.uniform_buffers);
+		serializer.read_map(descriptorSet.storage_buffers);
+		serializer.read_map(descriptorSet.image_samplers);
+		serializer.read_map(descriptorSet.storage_images);
+		serializer.read_map(descriptorSet.separate_textures);
+		serializer.read_map(descriptorSet.separate_samplers);
+		serializer.read_map(descriptorSet.write_descriptor_sets);
 	}
 
-	serializer.ReadMap(reflection_data.resources);
-	serializer.ReadMap(reflection_data.constant_buffers);
-	serializer.ReadArray(reflection_data.push_constant_buffers);
+	serializer.read_map(reflection_data.resources);
+	serializer.read_map(reflection_data.constant_buffers);
+	serializer.read_array(reflection_data.push_constant_ranges);
 
 	return true;
 }
 
-void VulkanShaderCompiler::SerializeReflectionData()
+void VulkanShaderCompiler::serialize_reflection_data()
 {
 	struct ReflectionFileHeader {
-		char Header[4] = { 'H', 'Z', 'S', 'R' };
+		char Header[4] = { 'F', 'G', 'S', 'R' };
 	} header;
 
 	std::filesystem::path cacheDirectory = Utils::get_cache_directory();
 	const auto path = cacheDirectory / (shader_source_path.filename().string() + ".cached_vulkan.refl");
 	FileStreamWriter serializer(path);
-	serializer.WriteRaw(header);
-	SerializeReflectionData(&serializer);
+	serializer.write_raw(header);
+	serialize_reflection_data(&serializer);
 }
 
-void VulkanShaderCompiler::SerializeReflectionData(StreamWriter* serializer)
+void VulkanShaderCompiler::serialize_reflection_data(StreamWriter* serializer)
 {
-	serializer->WriteRaw<uint32_t>((uint32_t)reflection_data.shader_descriptor_sets.size());
+	serializer->write_raw<uint32_t>((uint32_t)reflection_data.shader_descriptor_sets.size());
 	for (const auto& descriptorSet : reflection_data.shader_descriptor_sets) {
-		serializer->WriteMap(descriptorSet.uniform_buffers);
-		serializer->WriteMap(descriptorSet.storage_buffers);
-		serializer->WriteMap(descriptorSet.image_samplers);
-		serializer->WriteMap(descriptorSet.storage_images);
-		serializer->WriteMap(descriptorSet.separate_textures);
-		serializer->WriteMap(descriptorSet.separate_samplers);
-		serializer->WriteMap(descriptorSet.write_descriptor_sets);
+		serializer->write_map(descriptorSet.uniform_buffers);
+		serializer->write_map(descriptorSet.storage_buffers);
+		serializer->write_map(descriptorSet.image_samplers);
+		serializer->write_map(descriptorSet.storage_images);
+		serializer->write_map(descriptorSet.separate_textures);
+		serializer->write_map(descriptorSet.separate_samplers);
+		serializer->write_map(descriptorSet.write_descriptor_sets);
 	}
 
-	serializer->WriteMap(reflection_data.resources);
-	serializer->WriteMap(reflection_data.constant_buffers);
-	serializer->WriteArray(reflection_data.push_constant_buffers);
+	serializer->write_map(reflection_data.resources);
+	serializer->write_map(reflection_data.constant_buffers);
+	serializer->write_array(reflection_data.push_constant_ranges);
 }
 
-void VulkanShaderCompiler::ReflectAllShaderStages(
+void VulkanShaderCompiler::reflect_all_shader_stages(
 	const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
 {
 	clear_reflection_data();
 
 	for (auto [stage, data] : shaderData) {
-		Reflect(stage, data);
+		reflect(stage, data);
 	}
 }
 
-void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData)
+void VulkanShaderCompiler::reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData)
 {
-	VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
 	CORE_TRACE("Renderer ===========================");
 	CORE_TRACE("Renderer  Vulkan Shader Reflection");
 	CORE_TRACE("Renderer ===========================");
@@ -519,11 +517,11 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 		auto bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType);
 		uint32_t memberCount = uint32_t(bufferType.member_types.size());
 		uint32_t bufferOffset = 0;
-		if (reflection_data.push_constant_buffers.size())
-			bufferOffset = reflection_data.push_constant_buffers.back().Offset
-				+ reflection_data.push_constant_buffers.back().Size;
+		if (reflection_data.push_constant_ranges.size())
+			bufferOffset = reflection_data.push_constant_ranges.back().Offset
+				+ reflection_data.push_constant_ranges.back().Size;
 
-		auto& pushConstantRange = reflection_data.push_constant_buffers.emplace_back();
+		auto& pushConstantRange = reflection_data.push_constant_ranges.emplace_back();
 		pushConstantRange.ShaderStage = shaderStage;
 		pushConstantRange.Size = bufferSize - bufferOffset;
 		pushConstantRange.Offset = bufferOffset;

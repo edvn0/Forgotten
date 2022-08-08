@@ -352,7 +352,7 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::allocate_descriptor_set(
 		return result;
 
 	// TODO: remove
-	result.Pool = nullptr;
+	result.pool = nullptr;
 
 	VkDescriptorSetAllocateInfo alloc_info = {};
 	alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -380,11 +380,11 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(u
 	descriptorPoolInfo.pPoolSizes = type_counts.at(set).data();
 	descriptorPoolInfo.maxSets = 1;
 
-	VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.Pool));
+	VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.pool));
 
 	VkDescriptorSetAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = result.Pool;
+	allocInfo.descriptorPool = result.pool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &descriptor_set_layouts[set];
 	result.descriptor_sets.emplace_back();
@@ -464,14 +464,14 @@ VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(
 	descriptorPoolInfo.pPoolSizes = poolSizes.at(desc_set).data();
 	descriptorPoolInfo.maxSets = numberOfSets;
 
-	VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.Pool));
+	VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.pool));
 
 	result.descriptor_sets.resize(numberOfSets);
 
 	for (uint32_t i = 0; i < numberOfSets; i++) {
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = result.Pool;
+		allocInfo.descriptorPool = result.pool;
 		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = &descriptor_set_layouts[desc_set];
 		VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, &result.descriptor_sets[i]));
@@ -512,6 +512,47 @@ void VulkanShader::add_shader_reloaded_callback(const ShaderReloadedCallback& ca
 void VulkanShader::set_reflection_data(const ForgottenEngine::VulkanShader::ReflectionData& reflectionData)
 {
 	reflection_data = reflectionData;
+}
+
+bool VulkanShader::try_read_reflection_data(StreamReader* serializer)
+{
+	uint32_t shaderDescriptorSetCount;
+	serializer->read_raw<uint32_t>(shaderDescriptorSetCount);
+
+	for (uint32_t i = 0; i < shaderDescriptorSetCount; i++) {
+		auto& descriptorSet = reflection_data.shader_descriptor_sets.emplace_back();
+		serializer->read_map(descriptorSet.uniform_buffers);
+		serializer->read_map(descriptorSet.storage_buffers);
+		serializer->read_map(descriptorSet.image_samplers);
+		serializer->read_map(descriptorSet.storage_images);
+		serializer->read_map(descriptorSet.separate_textures);
+		serializer->read_map(descriptorSet.separate_samplers);
+		serializer->read_map(descriptorSet.write_descriptor_sets);
+	}
+
+	serializer->read_map(reflection_data.resources);
+	serializer->read_map(reflection_data.constant_buffers);
+	serializer->read_array(reflection_data.push_constant_ranges);
+
+	return true;
+}
+
+void VulkanShader::serialize_reflection_data(StreamWriter* serializer)
+{
+	serializer->write_raw<uint32_t>(static_cast<uint32_t>(reflection_data.shader_descriptor_sets.size()));
+	for (const auto& descriptorSet : reflection_data.shader_descriptor_sets) {
+		serializer->write_map(descriptorSet.uniform_buffers);
+		serializer->write_map(descriptorSet.storage_buffers);
+		serializer->write_map(descriptorSet.image_samplers);
+		serializer->write_map(descriptorSet.storage_images);
+		serializer->write_map(descriptorSet.separate_textures);
+		serializer->write_map(descriptorSet.separate_samplers);
+		serializer->write_map(descriptorSet.write_descriptor_sets);
+	}
+
+	serializer->write_map(reflection_data.resources);
+	serializer->write_map(reflection_data.constant_buffers);
+	serializer->write_array(reflection_data.push_constant_ranges);
 }
 
 }

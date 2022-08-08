@@ -6,6 +6,7 @@
 
 #include "Logger.hpp"
 #include "Reference.hpp"
+#include "serialize/Serialization.hpp"
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>
@@ -16,6 +17,7 @@
 namespace ForgottenEngine {
 
 using RendererID = uint32_t;
+
 typedef unsigned char byte;
 
 #define VK_CHECK(x)                                                                                               \

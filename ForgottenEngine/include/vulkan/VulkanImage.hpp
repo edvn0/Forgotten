@@ -11,10 +11,10 @@
 namespace ForgottenEngine {
 
 struct VulkanImageInfo {
-	VkImage Image = nullptr;
-	VkImageView ImageView = nullptr;
-	VkSampler Sampler = nullptr;
-	VmaAllocation MemoryAlloc = nullptr;
+	VkImage image = nullptr;
+	VkImageView image_view = nullptr;
+	VkSampler sampler = nullptr;
+	VmaAllocation memory_alloc = nullptr;
 };
 
 class VulkanImage2D : public Image2D {
@@ -25,23 +25,20 @@ public:
 	void resize(const glm::uvec2& size) override { resize(size.x, size.y); }
 	void resize(const uint32_t width, const uint32_t height) override
 	{
-		m_Specification.Width = width;
-		m_Specification.Height = height;
+		specification.Width = width;
+		specification.Height = height;
 		invalidate();
 	}
 	void invalidate() override;
 	void release() override;
-	uint32_t get_width() const override { return m_Specification.Width; }
-	uint32_t get_height() const override { return m_Specification.Height; }
-	glm::uvec2 get_size() const override { return { m_Specification.Width, m_Specification.Height }; }
+	uint32_t get_width() const override { return specification.Width; }
+	uint32_t get_height() const override { return specification.Height; }
+	glm::uvec2 get_size() const override { return { specification.Width, specification.Height }; }
 
-	float get_aspect_ratio() const override
-	{
-		return (float)m_Specification.Width / (float)m_Specification.Height;
-	}
+	float get_aspect_ratio() const override { return (float)specification.Width / (float)specification.Height; }
 
-	ImageSpecification& get_specification() override { return m_Specification; }
-	const ImageSpecification& get_specification() const override { return m_Specification; }
+	ImageSpecification& get_specification() override { return specification; }
+	const ImageSpecification& get_specification() const override { return specification; }
 
 	void rt_invalidate();
 
@@ -51,35 +48,35 @@ public:
 
 	VkImageView get_layer_image_view(uint32_t layer)
 	{
-		CORE_ASSERT(layer < m_PerLayerImageViews.size(), "");
-		return m_PerLayerImageViews[layer];
+		CORE_ASSERT(layer < per_layer_image_views.size(), "");
+		return per_layer_image_views[layer];
 	}
 
 	VkImageView get_mip_image_view(uint32_t mip);
 	VkImageView rt_get_mip_image_view(uint32_t mip);
 
-	VulkanImageInfo& get_image_info() { return m_Info; }
-	const VulkanImageInfo& get_image_info() const { return m_Info; }
+	VulkanImageInfo& get_image_info() { return info; }
+	const VulkanImageInfo& get_image_info() const { return info; }
 
-	const VkDescriptorImageInfo& get_descriptor_info() const { return m_DescriptorImageInfo; }
+	const VkDescriptorImageInfo& get_descriptor_info() const { return descriptor_image_info; }
 
-	Buffer get_buffer() const override { return m_ImageData; }
-	Buffer& get_buffer() override { return m_ImageData; }
+	Buffer get_buffer() const override { return image_data; }
+	Buffer& get_buffer() override { return image_data; }
 
-	uint64_t get_hash() const override { return (uint64_t)m_Info.Image; }
+	uint64_t get_hash() const override { return (uint64_t)info.image; }
 
 	void update_descriptor();
 
 private:
-	ImageSpecification m_Specification;
+	ImageSpecification specification;
 
-	Buffer m_ImageData;
+	Buffer image_data;
 
-	VulkanImageInfo m_Info;
+	VulkanImageInfo info;
 
-	std::vector<VkImageView> m_PerLayerImageViews;
-	std::map<uint32_t, VkImageView> m_PerMipImageViews;
-	VkDescriptorImageInfo m_DescriptorImageInfo = {};
+	std::vector<VkImageView> per_layer_image_views;
+	std::map<uint32_t, VkImageView> per_mip_image_views;
+	VkDescriptorImageInfo descriptor_image_info = {};
 };
 
 namespace Utils {

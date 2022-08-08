@@ -32,18 +32,15 @@ protected:
 	void bind_impl(uint32_t slot = 0) const override;
 
 public:
-	Reference<Image2D> get_image() const override { return m_Image; }
+	Reference<Image2D> get_image() const override { return image; }
 	const VkDescriptorImageInfo& GetVulkanDescriptorInfo() const
 	{
-		return m_Image.as<VulkanImage2D>()->get_descriptor_info();
+		return image.as<VulkanImage2D>()->get_descriptor_info();
 	}
 
 	uint32_t get_mip_level_count() const override;
 	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
-	uint64_t get_hash() const override
-	{
-		return (uint64_t)m_Image.as<VulkanImage2D>()->get_image_info().ImageView;
-	}
+	uint64_t get_hash() const override { return (uint64_t)image.as<VulkanImage2D>()->get_image_info().image_view; }
 
 	void generate_mips();
 
@@ -57,9 +54,9 @@ private:
 	uint32_t m_Height;
 	TextureProperties m_Properties;
 
-	Buffer m_ImageData;
+	Buffer imageData;
 
-	Reference<Image2D> m_Image;
+	Reference<Image2D> image;
 
 	ImageFormat m_Format = ImageFormat::None;
 };
@@ -103,7 +100,7 @@ private:
 
 	Buffer m_LocalStorage;
 	VmaAllocation m_MemoryAlloc;
-	VkImage m_Image{ nullptr };
+	VkImage image{ nullptr };
 	VkDescriptorImageInfo m_DescriptorImageInfo = {};
 };
 

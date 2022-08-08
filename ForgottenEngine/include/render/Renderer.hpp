@@ -52,8 +52,20 @@ public:
 	// end submits
 
 	// Registrations
-	static void register_shader_dependency(const Reference<Shader>& shader, Pipeline* pipeline);
+	static void register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline);
+	static void register_shader_dependency(const Reference<Shader>& shader, Reference<Material> material);
+
 	// end Registrations
+
+	// shaders and macros
+	static void on_shader_reloaded(uint64_t hash);
+	static const std::unordered_map<std::string, std::string>& get_global_shader_macros();
+	static void acknowledge_parsed_global_macros(
+		const std::unordered_set<std::string>& macros, Reference<Shader> shader);
+	static void set_macro_in_shader(
+		Reference<Shader> shader, const std::string& name, const std::string& value = "");
+	static void set_global_macro_in_shaders(const std::string& name, const std::string& value = "");
+	// end shaders and macros
 
 	static Reference<Texture2D> get_white_texture();
 

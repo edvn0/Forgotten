@@ -60,6 +60,10 @@ public:
 		return stage_create_infos;
 	}
 
+	bool try_read_reflection_data(StreamReader* serializer);
+
+	void serialize_reflection_data(StreamWriter* serializer);
+
 	VkDescriptorSet get_descriptor_set() { return descriptor_set; }
 
 	VkDescriptorSetLayout get_descriptor_set_layout(uint32_t set) { return descriptor_set_layouts.at(set); }
@@ -93,7 +97,7 @@ public:
 	}
 
 	struct ShaderMaterialDescriptorSet {
-		VkDescriptorPool Pool = nullptr;
+		VkDescriptorPool pool = nullptr;
 		std::vector<VkDescriptorSet> descriptor_sets;
 	};
 
@@ -127,6 +131,10 @@ private:
 	std::unordered_map<uint32_t, std::vector<VkDescriptorPoolSize>> type_counts;
 	ShaderType shader_type;
 
+private:
+	friend class ShaderCache;
+	friend class ShaderPack;
 	friend class VulkanShaderCompiler;
 };
+
 }

@@ -128,10 +128,16 @@ void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
 // End submits
 
 // Start Registrations
-void Renderer::register_shader_dependency(const Reference<Shader>& shader, Pipeline* pipeline)
+void Renderer::register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline)
 {
 	shader_dependencies[shader->get_hash()].pipelines.push_back(pipeline);
 }
+
+void Renderer::register_shader_dependency(const Reference<Shader>& shader, Reference<Material> material)
+{
+	shader_dependencies[shader->get_hash()].materials.push_back(material);
+}
+
 // end Registrations
 
 RenderCommandQueue& Renderer::get_render_resource_free_queue(uint32_t index) { return resource_free_queue[index]; }

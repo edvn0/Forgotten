@@ -60,6 +60,8 @@ private:
 		VkShaderStageFlagBits changedStages, bool forceCompile);
 
 	void clear_reflection_data();
+	void serialize_reflection_data();
+	void serialize_reflection_data(StreamWriter* serializer);
 
 	void try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory, const std::string& extension,
 		std::vector<uint32_t>& outputBinary) const;

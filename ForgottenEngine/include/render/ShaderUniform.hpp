@@ -2,6 +2,9 @@
 
 #include "Common.hpp"
 
+#include "serialize/StreamReader.hpp"
+#include "serialize/StreamWriter.hpp"
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -17,7 +20,7 @@ enum class ShaderDomain {
 class ShaderResourceDeclaration {
 public:
 	ShaderResourceDeclaration() = default;
-	ShaderResourceDeclaration(std::string  name, uint32_t resource_register, uint32_t count)
+	ShaderResourceDeclaration(std::string name, uint32_t resource_register, uint32_t count)
 		: name(std::move(name))
 		, resource_register(resource_register)
 		, count(count)
@@ -27,6 +30,20 @@ public:
 	virtual const std::string& get_name() const { return name; }
 	virtual uint32_t get_register() const { return resource_register; }
 	virtual uint32_t get_count() const { return count; }
+
+	static void serialize(StreamWriter* serializer, const ShaderResourceDeclaration& instance)
+	{
+		serializer->write_string(instance.name);
+		serializer->write_raw(instance.resource_register);
+		serializer->write_raw(instance.count);
+	}
+
+	static void deserialize(StreamReader* deserializer, ShaderResourceDeclaration& instance)
+	{
+		deserializer->read_string(instance.name);
+		deserializer->read_raw(instance.resource_register);
+		deserializer->read_raw(instance.count);
+	}
 
 private:
 	std::string name;

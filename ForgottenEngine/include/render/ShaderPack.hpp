@@ -2,14 +2,14 @@
 
 #include "render/Shader.hpp"
 
-#include "Hazel/Serialization/Serialization.h"
-#include "Hazel/Serialization/ShaderPackFile.h"
+#include "serialize/Serialization.hpp"
+#include "serialize/ShaderPackFile.hpp"
 
 #include <filesystem>
 
 namespace ForgottenEngine {
 
-class ShaderPack : public ReferenceCounter {
+class ShaderPack : public ReferenceCounted {
 public:
 	ShaderPack() = default;
 	ShaderPack(const std::filesystem::path& path);
@@ -24,8 +24,8 @@ public:
 
 private:
 	bool loaded = false;
-	ShaderPackFile m_File;
-	std::filesystem::path m_Path;
+	ShaderPackFile file;
+	std::filesystem::path path;
 };
 
 }
