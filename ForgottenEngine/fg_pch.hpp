@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Assets.hpp"
+#include "Hash.hpp"
 #include "Logger.hpp"
 
 #include <algorithm>

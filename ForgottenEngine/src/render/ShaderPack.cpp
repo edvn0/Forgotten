@@ -71,12 +71,12 @@ ShaderPack::ShaderPack(const std::filesystem::path& path)
 
 bool ShaderPack::Contains(std::string_view name) const
 {
-	return m_File.Index.ShaderPrograms.find(Hash::GenerateFNVHash(name)) != m_File.Index.ShaderPrograms.end();
+	return m_File.Index.ShaderPrograms.find(Hash::generate_fnv_hash(name)) != m_File.Index.ShaderPrograms.end();
 }
 
 Reference<Shader> ShaderPack::LoadShader(std::string_view name)
 {
-	uint32_t nameHash = Hash::GenerateFNVHash(name);
+	uint32_t nameHash = Hash::generate_fnv_hash(name);
 	HZ_CORE_VERIFY(Contains(name));
 
 	const auto& shaderProgramInfo = m_File.Index.ShaderPrograms.at(nameHash);

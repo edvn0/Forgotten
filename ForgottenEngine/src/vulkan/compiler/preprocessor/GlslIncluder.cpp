@@ -27,7 +27,7 @@ shaderc_include_result* GlslIncluder::get_include(const char* requestedPath, con
 		source = Utils::ReadFileAndSkipBOM(requestedFullPath);
 		if (source.empty())
 			HZ_CORE_ERROR("Failed to load included file: {} in {}.", requestedFullPath, requestingPath);
-		sourceHash = Hash::GenerateFNVHash(source.c_str());
+		sourceHash = Hash::generate_fnv_hash(source.c_str());
 
 		// Can clear "source" in case it has already been included in this stage and is guarded.
 		stages = ShaderPreprocessor::PreprocessHeader<ShaderUtils::SourceLang::GLSL>(

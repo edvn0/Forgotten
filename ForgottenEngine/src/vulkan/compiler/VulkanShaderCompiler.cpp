@@ -160,10 +160,10 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_g
 				fmt::format("Failed to pre-process \"{}\"'s {} shader.\nError: {}", shader_source_path.string(),
 					ShaderUtils::ShaderStageToString(stage), preProcessingResult.GetErrorMessage()));
 
-		stages_metadata[stage].HashValue = Hash::GenerateFNVHash(shaderSource);
+		stages_metadata[stage].HashValue = Hash::generate_fnv_hash(shaderSource);
 		stages_metadata[stage].Headers = std::move(includer->get_include_data());
 
-		acknowledged_macros.merge(includer->GetParsedSpecialMacros());
+		acknowledged_macros.merge(includer->get_parsed_special_macros());
 
 		shaderSource = std::string(preProcessingResult.begin(), preProcessingResult.end());
 	}
