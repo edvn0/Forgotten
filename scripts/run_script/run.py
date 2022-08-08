@@ -2,12 +2,13 @@
 
 from datetime import datetime
 import os
-import json
+from subprocess import check_call, CalledProcessError
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from time import time
 from typing import Callable, List
+
+import yaml
 
 
 class Color:
@@ -58,11 +59,11 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
     program_defaults: List = []
 
     try:
-        with open(f"{project_root}/cli_defaults.json", 'r') as f:
-            program_defaults = json.load(f)
+        with open(f"{project_root}/cli_defaults.yml", 'r') as f:
+            program_defaults = yaml.safe_load(f)
     except IOError as e:
-        print(f"IOError: {e.strerror}", file=sys.stderr)
-        exit(0)
+        log_failure(f"IOError: {e.strerror}")
+        exit(1)
 
     parser = ArgumentParser("ForgottenEngine")
 
@@ -98,11 +99,18 @@ def main():
 
     forgotten_root = current_directory.parent.parent
 
+    try:
+        copy_defaults_call = ["cp", f"{forgotten_root}/cli_defaults.yml",
+                              f"{forgotten_root}/ForgottenApp/resources/cli_defaults.yml"]
+        check_call(copy_defaults_call)
+    except CalledProcessError as e:
+        log_failure(
+            f"Could not copy cli_defaults.yml to App resources, reason: \n\t\t{str(e)}")
+        exit(e.returncode)
+
     args = sys.argv[1:]
 
     cli_results = initialize_cli(forgotten_root, args)
-
-    from subprocess import check_call, CalledProcessError
 
     did_clean = bool(cli_results.clean)
 

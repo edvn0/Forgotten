@@ -4,12 +4,13 @@
 
 extern ForgottenEngine::Application* ForgottenEngine::create_application(const ApplicationProperties& props);
 
+#include "yaml-cpp/yaml.h"
+
 #include <any>
 #include <boost/program_options.hpp>
+#include <filesystem>
 #include <memory>
 #include <system_error>
-
-#include <filesystem>
 
 namespace ForgottenEngine {
 using CLIOptions = boost::program_options::options_description;
@@ -23,6 +24,21 @@ int main(int argc, char** argv)
 
 	auto cwd = std::filesystem::current_path();
 	CORE_INFO("{}", cwd);
+
+	std::filesystem::path defaults_path
+		= cwd / std::filesystem::path{ "resources" } / std::filesystem::path{ "cli_defaults.yml" };
+
+	YAML::Node config;
+	try {
+		config = YAML::LoadFile(defaults_path.string());
+	} catch (const YAML::BadFile& bad) {
+		CORE_ERR("Could not load CLI Defaults.");
+		std::exit(1);
+	}
+
+	if (config["width"]) {
+		CORE_TRACE("Found width with value: {}", config["width"].as<uint32_t>());
+	}
 
 	ForgottenEngine::CLIOptions desc("Allowed options");
 	desc.add_options()("help", "Show help message")(

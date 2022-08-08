@@ -109,7 +109,7 @@ add_subdirectory(vendor/shaderc)
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(
   ForgottenEngine
-  PUBLIC include src vendor/imgui
+  PUBLIC include src vendor/imgui vendor/yaml-cpp/include
   PRIVATE /usr/local/include
           /opt/homebrew/include
           /opt/homebrew/Cellar
@@ -126,7 +126,6 @@ target_include_directories(
           vendor/msdf-atlas-gen/msdf-atlas-gen
           vendor/spirv-cross
           vendor/shaderc
-          vendor/yaml-cpp/include
           vendor/shaderc/libshaderc/include
           vendor/shaderc/libshaderc_util/include)
 target_link_libraries(
