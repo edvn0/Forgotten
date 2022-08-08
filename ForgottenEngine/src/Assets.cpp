@@ -23,6 +23,25 @@ OptionalIFStream Assets::load(const Path& path, FileModifier modifier)
 	return {};
 }
 
+OptionalIFStream Assets::load(const Path& path, const std::string& resource_subdirectory, FileModifier modifier)
+{
+	auto const subdir = std::filesystem::path{ resource_subdirectory };
+
+	if (exists(path))
+		return std::ifstream{ path };
+
+	const auto parent_resource_path = path.parent_path() / subdir / path.filename();
+	if (exists(parent_resource_path)) {
+		return std::ifstream{ parent_resource_path };
+	}
+
+	if (exists(subdir / path)) {
+		return std::ifstream{ subdir / path };
+	}
+
+	return {};
+}
+
 bool Assets::exists(const Path& path)
 {
 	struct stat buffer { };

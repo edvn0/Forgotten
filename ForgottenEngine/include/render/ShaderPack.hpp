@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/Shader.hpp"
+#include "Reference.hpp"
 
 #include "serialize/Serialization.hpp"
 #include "serialize/ShaderPackFile.hpp"
@@ -8,6 +8,9 @@
 #include <filesystem>
 
 namespace ForgottenEngine {
+
+class Shader;
+class ShaderLibrary;
 
 class ShaderPack : public ReferenceCounted {
 public:

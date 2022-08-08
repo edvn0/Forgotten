@@ -4,6 +4,8 @@
 
 #include <utility>
 
+#include "vulkan/compiler/VulkanShaderCompiler.hpp"
+
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
 #include "vulkan/VulkanShader.hpp"
@@ -38,15 +40,40 @@ void ShaderLibrary::add(const std::string& name, const Reference<Shader>& shader
 
 void ShaderLibrary::load(std::string_view path, bool force_compile, bool disable_optimizations)
 {
-	CORE_ASSERT(false, "IMPLEMENT!");
+	Reference<Shader> shader;
+	if (!force_compile && shader_pack) {
+		if (shader_pack->contains(path))
+			shader = shader_pack->load_shader(path);
+	} else {
+		// Try compile from source
+		// Unavailable at runtime
+		shader = VulkanShaderCompiler::compile(path, force_compile, disable_optimizations);
+	}
+
+	auto& name = shader->get_name();
+	CORE_ASSERT(shaders.find(name) == shaders.end(), "");
+	shaders[name] = shader;
 }
 
-void ShaderLibrary::load(std::string_view name, const std::string& path) { CORE_ASSERT(false, "IMPLEMENT!"); }
+void ShaderLibrary::load(std::string_view name, const std::string& path)
+{
+	CORE_ASSERT(shaders.find(std::string(name)) == shaders.end(), "");
+	shaders[std::string(name)] = Shader::create(path);
+}
 
 const Reference<Shader>& ShaderLibrary::get(const std::string& name) const
 {
 	CORE_ASSERT(shaders.find(name) != shaders.end(), "");
 	return shaders.at(name);
+}
+
+void ShaderLibrary::load_shader_pack(const std::filesystem::path& path)
+{
+	shader_pack = Reference<ShaderPack>::create(path);
+	if (!shader_pack->is_loaded()) {
+		shader_pack = nullptr;
+		CORE_ERR("Could not load shader pack: {}", path.string());
+	}
 }
 
 ShaderUniform::ShaderUniform(

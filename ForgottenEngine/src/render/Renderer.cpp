@@ -87,14 +87,16 @@ void Renderer::init()
 
 	renderer_data->shader_library = Reference<ShaderLibrary>::create();
 
-	if (!config.shader_pack_path.empty())
-		Renderer::get_shader_library()->load(config.shader_pack_path);
+	//	if (!config.shader_pack_path.empty())
+	//		Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
 
 	// Load 2D Renderer Shaders.
-	Renderer::get_shader_library()->load("shaders/2d_renderer");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_circle");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_line");
-	Renderer::get_shader_library()->load("shaders/2d_renderer_text");
+	Renderer::get_shader_library()->load("Renderer2D.glsl");
+	Renderer::get_shader_library()->load("Renderer2D_Circle.glsl");
+	Renderer::get_shader_library()->load("Renderer2D_Line.glsl");
+	Renderer::get_shader_library()->load("Renderer2D_Text.glsl");
+
+	ShaderPack::create_from_library(Renderer::get_shader_library(), "shader_pack.glsl");
 
 	Renderer::wait_and_render();
 

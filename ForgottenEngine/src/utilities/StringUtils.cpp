@@ -23,7 +23,13 @@ static int skip_bom(std::istream& stream)
 std::string read_file_and_skip_bom(const std::filesystem::path& filepath)
 {
 	std::string result;
-	std::ifstream in(filepath, std::ios::in | std::ios::binary);
+
+	auto path = Assets::load(filepath, "shaders", AssetModifiers::INPUT | AssetModifiers::BINARY);
+	if (!path) {
+		CORE_ERROR("Could not load file at path: {}", filepath.string());
+	}
+
+	std::ifstream& in = *path;
 	if (in) {
 		in.seekg(0, std::ios::end);
 		auto fileSize = in.tellg();

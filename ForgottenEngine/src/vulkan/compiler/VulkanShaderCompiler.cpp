@@ -29,7 +29,7 @@ namespace Utils {
 	static const char* get_cache_directory()
 	{
 		// TODO: make sure the assets directory is valid
-		return "Resources/Cache/Shader/Vulkan";
+		return "resources/cache/shader/vulkan";
 	}
 
 	static void create_cache_directory_if_needed()
@@ -291,12 +291,12 @@ bool VulkanShaderCompiler::compile_or_get_vulkan_binary(VkShaderStageFlagBits st
 		}
 
 		if (std::string error = compile(outputBinary, stage, options); error.size()) {
-			CORE_ERROR("Renderer {}", error);
+			CORE_ERR("Renderer {}", error);
 			try_get_vulkan_cached_binary(cacheDirectory, extension, outputBinary);
 			if (outputBinary.empty()) {
-				CORE_ERROR("Failed to compile shader and couldn't find a cached version.");
+				CORE_ERR("Failed to compile shader and couldn't find a cached version.");
 			} else {
-				CORE_ERROR("Failed to compile {}:{} so a cached version was loaded instead.",
+				CORE_ERR("Failed to compile {}:{} so a cached version was loaded instead.",
 					shader_source_path.string(), ShaderUtils::ShaderStageToString(stage));
 			}
 			return false;
@@ -357,7 +357,7 @@ bool VulkanShaderCompiler::try_read_cached_reflection_data()
 	serializer.read_raw(header);
 
 	bool validHeader = memcmp(&header, "FGSR", 4) == 0;
-	CORE_ASSERT(false, validHeader);
+	CORE_ASSERT(validHeader, "");
 
 	clear_reflection_data();
 

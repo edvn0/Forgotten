@@ -37,6 +37,8 @@ class Assets {
 public:
 	static OptionalIFStream load(const Path&,
 		FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
+	static OptionalIFStream load(const Path&, const std::string& resource_subdirectory,
+		FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
 	static bool exists(const Path&);
 	static OptionalPath find_resources_by_path(const Path&);
 	static std::vector<OptionalPath> load_from_directory(const std::filesystem::path& path, bool recurse = false);

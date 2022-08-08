@@ -3,6 +3,7 @@
 #include "Buffer.hpp"
 #include "Common.hpp"
 
+#include "ShaderPack.hpp"
 #include "render/ShaderUniform.hpp"
 #include "serialize/StreamReader.hpp"
 #include "serialize/StreamWriter.hpp"
@@ -143,6 +144,8 @@ public:
 	void load(std::string_view path, bool force_compile = false, bool disable_optimisations = false);
 	void load(std::string_view name, const std::string& path);
 
+	void load_shader_pack(const std::filesystem::path& path);
+
 	const Reference<Shader>& get(const std::string& name) const;
 	size_t get_size() const { return shaders.size(); }
 
@@ -151,6 +154,7 @@ public:
 
 private:
 	std::unordered_map<std::string, Reference<Shader>> shaders;
+	Reference<ShaderPack> shader_pack;
 };
 
 }

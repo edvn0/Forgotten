@@ -53,7 +53,7 @@ ShaderPack::ShaderPack(const std::filesystem::path& path)
 		return;
 
 	serializer.read_raw(file.header);
-	if (memcmp(file.header.HEADER, "FGSP", 4) != 0)
+	if (memcmp(file.header.HEADER, "HZSP", 4) != 0)
 		return;
 
 	loaded = true;
@@ -71,7 +71,8 @@ ShaderPack::ShaderPack(const std::filesystem::path& path)
 
 bool ShaderPack::contains(std::string_view name) const
 {
-	return file.index.shader_programs.find(Hash::generate_fnv_hash(name)) != file.index.shader_programs.end();
+	auto hash = Hash::generate_fnv_hash(name);
+	return file.index.shader_programs.find(hash) != file.index.shader_programs.end();
 }
 
 Reference<Shader> ShaderPack::load_shader(std::string_view name)

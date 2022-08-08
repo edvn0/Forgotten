@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StreamReader.hpp"
+#include "StreamWriter.hpp"
 #include "serialize/Serialization.hpp"
 
 namespace ForgottenEngine {
