@@ -4,11 +4,17 @@
 
 extern ForgottenEngine::Application* ForgottenEngine::create_application(const ApplicationProperties& props);
 
-#include <argparse/argparse.hpp>
+#include <any>
+#include <boost/program_options.hpp>
 #include <memory>
 #include <system_error>
 
 #include <filesystem>
+
+namespace ForgottenEngine {
+using CLIOptions = boost::program_options::options_description;
+using ArgumentMap = boost::program_options::variables_map;
+}
 
 int main(int argc, char** argv)
 {
@@ -18,26 +24,61 @@ int main(int argc, char** argv)
 	auto cwd = std::filesystem::current_path();
 	CORE_INFO("{}", cwd);
 
-	argparse::ArgumentParser program("main");
+	ForgottenEngine::CLIOptions desc("Allowed options");
+	desc.add_options()("help", "Show help message")(
+		"width", boost::program_options::value<uint32_t>()->default_value(1280), "Width of window")(
+		"height", boost::program_options::value<uint32_t>()->default_value(1080), "Height of window")("name",
+		boost::program_options::value<std::string>()->default_value(std::string{ "ForgottenEngine" }),
+		"Title of window")("vsync", boost::program_options::value<bool>()->default_value(false), "Window vsync");
 
-	program.add_argument("--width").default_value(uint32_t(1280));
-	program.add_argument("--height").default_value(uint32_t(720));
-	program.add_argument("--name").default_value(std::string{ "ForgottenEngine" });
-	// program.add_argument("--vsync").default_value(true);
-
+	ForgottenEngine::ArgumentMap vm;
 	try {
-		program.parse_args(argc, argv);
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+		boost::program_options::notify(vm);
 	} catch (const std::runtime_error& err) {
-		CORE_ERR("{}", err.what());
-		CORE_ERR("{}", program);
+		CORE_ERR("EntryPoint Error: {}", err.what());
 		std::exit(1);
 	}
 
 	ForgottenEngine::ApplicationProperties props;
-	props.title = program.get<std::string>("--name");
-	props.width = program.get<uint32_t>("--width");
-	props.height = program.get<uint32_t>("--height");
-	props.v_sync = true;
+
+	props.title = [vm]() {
+		try {
+			return vm["name"].as<std::string>();
+		} catch (const std::bad_any_cast& bad_any_cast) {
+			CORE_ERR("Bad cast, Name: {}", bad_any_cast.what());
+			std::exit(1);
+		}
+	}();
+
+	props.width = [vm]() {
+		try {
+			return vm["width"].as<uint32_t>();
+		} catch (const std::bad_any_cast& bad_any_cast) {
+			CORE_ERR("Bad cast, Width: {}", bad_any_cast.what());
+			std::exit(1);
+		}
+	}();
+
+	props.height = [vm]() {
+		try {
+			return vm["height"].as<uint32_t>();
+		} catch (const std::bad_any_cast& bad_any_cast) {
+			CORE_ERR("Bad cast, Height: {}", bad_any_cast.what());
+			std::exit(1);
+		}
+	}();
+
+	props.v_sync = [vm]() {
+		try {
+			return vm["vsync"].as<bool>();
+		} catch (const std::bad_any_cast& bad_any_cast) {
+			CORE_ERR("Bad cast, Height: {}", bad_any_cast.what());
+			std::exit(1);
+		}
+	}();
+
+	CORE_TRACE("{}, {}, {}, {}", props.width, props.height, props.title, props.v_sync);
 
 	try {
 		app = ForgottenEngine::create_application(props);

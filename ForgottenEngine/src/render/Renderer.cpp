@@ -20,13 +20,29 @@
 
 #include "render/RenderCommandQueue.hpp"
 
+namespace std {
+template <> struct hash<ForgottenEngine::WeakReference<ForgottenEngine::Shader>> {
+	size_t operator()(const ForgottenEngine::WeakReference<ForgottenEngine::Shader>& shader) const noexcept
+	{
+		return shader->get_hash();
+	}
+};
+}
+
 namespace ForgottenEngine {
+
+struct GlobalShaderInfo {
+	std::unordered_map<std::string, std::unordered_map<size_t, WeakReference<Shader>>> shader_global_macros_map;
+	std::unordered_set<WeakReference<Shader>> dirty_shaders;
+};
+static GlobalShaderInfo global_shaders;
 
 struct RendererData {
 public:
 	size_t* temp{ nullptr };
 	Reference<ShaderLibrary> shader_library;
 	Reference<Texture2D> white_texture;
+	std::unordered_map<std::string, std::string> global_shader_macros;
 };
 
 static RendererData* renderer_data;
@@ -70,6 +86,9 @@ void Renderer::init()
 	// Much stuff
 
 	renderer_data->shader_library = Reference<ShaderLibrary>::create();
+
+	if (!config.shader_pack_path.empty())
+		Renderer::get_shader_library()->load(config.shader_pack_path);
 
 	// Load 2D Renderer Shaders.
 	Renderer::get_shader_library()->load("shaders/2d_renderer");
@@ -116,7 +135,6 @@ void Renderer::end_render_pass(const Reference<RenderCommandBuffer>& command_buf
 void Renderer::end_frame() { }
 
 // Submits
-
 void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
 	const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& ubs,
 	const Reference<StorageBufferSet>& sbs, const Reference<Material>& material, const Reference<VertexBuffer>& vb,
@@ -124,10 +142,9 @@ void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
 {
 	return renderer_api->render_geometry(cmd_buffer, pipeline, ubs, sbs, material, vb, ib, transform, index_count);
 }
-
 // End submits
 
-// Start Registrations
+// Start Registrations and shaders
 void Renderer::register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline)
 {
 	shader_dependencies[shader->get_hash()].pipelines.push_back(pipeline);
@@ -138,6 +155,73 @@ void Renderer::register_shader_dependency(const Reference<Shader>& shader, Refer
 	shader_dependencies[shader->get_hash()].materials.push_back(material);
 }
 
+void Renderer::on_shader_reloaded(size_t hash)
+{
+	if (shader_dependencies.find(hash) != shader_dependencies.end()) {
+		auto& dependencies = shader_dependencies.at(hash);
+		for (auto& pipeline : dependencies.pipelines) {
+			pipeline->invalidate();
+		}
+
+		for (auto& material : dependencies.materials) {
+			material->on_shader_reloaded();
+		}
+	}
+}
+
+void Renderer::acknowledge_parsed_global_macros(
+	const std::unordered_set<std::string>& macros, Reference<Shader> shader)
+{
+	for (const std::string& macro : macros) {
+		global_shaders.shader_global_macros_map[macro][shader->get_hash()] = shader;
+	}
+}
+
+void Renderer::set_macro_in_shader(Reference<Shader> shader, const std::string& name, const std::string& value)
+{
+	shader->set_macro(name, value);
+	global_shaders.dirty_shaders.emplace(shader.raw());
+}
+
+void Renderer::set_global_macro_in_shaders(const std::string& name, const std::string& value)
+{
+	if (renderer_data->global_shader_macros.find(name) != renderer_data->global_shader_macros.end()) {
+		if (renderer_data->global_shader_macros.at(name) == value)
+			return;
+	}
+
+	renderer_data->global_shader_macros[name] = value;
+
+	if (global_shaders.shader_global_macros_map.find(name) == global_shaders.shader_global_macros_map.end()) {
+		CORE_WARN("No shaders with {} macro found", name);
+		return;
+	}
+
+	CORE_ASSERT(
+		global_shaders.shader_global_macros_map.find(name) != global_shaders.shader_global_macros_map.end(),
+		"Macro has not been passed from any shader!");
+	for (auto& [hash, shader] : global_shaders.shader_global_macros_map.at(name)) {
+		CORE_ASSERT(shader.is_valid(), "Shader is deleted!");
+		global_shaders.dirty_shaders.emplace(shader);
+	}
+}
+
+bool Renderer::update_dirty_shaders()
+{
+	const bool updatedAnyShaders = global_shaders.dirty_shaders.size();
+	for (auto shader : global_shaders.dirty_shaders) {
+		CORE_ASSERT(shader.is_valid(), "Shader is deleted!");
+		shader->rt_reload(true);
+	}
+	global_shaders.dirty_shaders.clear();
+
+	return updatedAnyShaders;
+}
+
+const std::unordered_map<std::string, std::string>& Renderer::get_global_shader_macros()
+{
+	return renderer_data->global_shader_macros;
+}
 // end Registrations
 
 RenderCommandQueue& Renderer::get_render_resource_free_queue(uint32_t index) { return resource_free_queue[index]; }

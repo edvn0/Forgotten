@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.21)
 project(ForgottenEngine)
 
 find_package(Vulkan REQUIRED)
+find_package(
+  Boost 1.79
+  COMPONENTS program_options
+  REQUIRED)
 
 # --------------------------------------
 # Linker
@@ -108,6 +112,7 @@ target_include_directories(
   PUBLIC include src vendor/imgui
   PRIVATE /usr/local/include
           /opt/homebrew/include
+          /opt/homebrew/Cellar
           ${Vulkan_INCLUDE_DIRS}
           vendor/VulkanMemoryAllocator/include
           .
@@ -139,7 +144,8 @@ target_link_libraries(
           spirv-cross-msl
           spirv-cross-reflect
           yaml-cpp
-          shaderc)
+          shaderc
+          Boost::program_options)
 target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY)
 target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
                                               -fcolor-diagnostics)

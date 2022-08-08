@@ -6,6 +6,8 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "utilities/StringUtils.hpp"
+
 #include "render/Shader.hpp"
 
 #include "vulkan/VulkanShaderUtils.hpp"
@@ -14,28 +16,13 @@ enum VkShaderStageFlagBits;
 
 namespace ForgottenEngine {
 
-std::vector<std::string> split_string_keep_delims(std::string str)
-{
-	const static std::regex re(R"((^\W|^\w+)|(\w+)|[:()])", std::regex_constants::optimize);
-
-	std::regex_iterator<std::string::iterator> rit(str.begin(), str.end(), re);
-	std::regex_iterator<std::string::iterator> rend;
-	std::vector<std::string> result;
-
-	while (rit != rend) {
-		result.emplace_back(rit->str());
-		++rit;
-	}
-	return result;
-}
-
 namespace PreprocessUtils {
 	template <bool RemoveHeaderGuard = false> bool ContainsHeaderGuard(std::string& header)
 	{
 		size_t pos = header.find('#');
 		while (pos != std::string::npos) {
 			const size_t endOfLine = header.find_first_of("\r\n", pos) + 1;
-			auto tokens = split_string_keep_delims(header.substr(pos, endOfLine - pos));
+			auto tokens = StringUtils::split_string_keep_delims(header.substr(pos, endOfLine - pos));
 			auto it = tokens.begin();
 
 			if (*(++it) == "pragma") {
@@ -166,8 +153,8 @@ VkShaderStageFlagBits ShaderPreprocessor::PreprocessHeader(std::string& contents
 	while (startOfShaderStage != std::string::npos) {
 		const size_t endOfLine = contents.find_first_of("\r\n", startOfShaderStage) + 1;
 		// Parse stage. example: #pragma stage:vert
-		auto tokens
-			= split_string_keep_delims(contents.substr(startOfShaderStage, endOfLine - startOfShaderStage));
+		auto tokens = StringUtils::split_string_keep_delims(
+			contents.substr(startOfShaderStage, endOfLine - startOfShaderStage));
 
 		uint32_t index = 0;
 		// Pre-processor directives
@@ -264,7 +251,8 @@ std::map<VkShaderStageFlagBits, std::string> ShaderPreprocessor::PreprocessShade
 	// Check first #version
 	if constexpr (Lang == ShaderUtils::SourceLang::GLSL) {
 		const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
-		const std::vector<std::string> tokens = split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
+		const std::vector<std::string> tokens
+			= StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
 		CORE_VERIFY(tokens.size() >= 3 && tokens[1] == "version",
 			"Invalid #version encountered or #version is NOT encounted first.");
 		pos = newSource.find('#', pos + 1);
@@ -273,7 +261,8 @@ std::map<VkShaderStageFlagBits, std::string> ShaderPreprocessor::PreprocessShade
 	while (pos != std::string::npos) {
 
 		const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
-		std::vector<std::string> tokens = split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
+		std::vector<std::string> tokens
+			= StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
 
 		size_t index = 1; // Skip #
 

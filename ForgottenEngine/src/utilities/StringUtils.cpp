@@ -1,5 +1,7 @@
 #include "fg_pch.hpp"
 
+#include <regex>
+
 #include "utilities/StringUtils.hpp"
 
 namespace ForgottenEngine::StringUtils {
@@ -34,6 +36,22 @@ std::string read_file_and_skip_bom(const std::filesystem::path& filepath)
 		result[0] = '\t';
 	}
 	in.close();
+	return result;
+}
+
+std::vector<std::string> split_string_keep_delims(std::string str)
+{
+
+	const static std::regex re(R"((^\W|^\w+)|(\w+)|[:()])", std::regex_constants::optimize);
+
+	std::regex_iterator<std::string::iterator> rit(str.begin(), str.end(), re);
+	std::regex_iterator<std::string::iterator> rend;
+	std::vector<std::string> result;
+
+	while (rit != rend) {
+		result.emplace_back(rit->str());
+		++rit;
+	}
 	return result;
 }
 

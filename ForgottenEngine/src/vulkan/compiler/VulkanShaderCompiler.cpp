@@ -71,8 +71,11 @@ namespace Utils {
 			if (type.vecsize == 4)
 				return ShaderUniformType::Vec4;
 			break;
+
+		default:
+			CORE_ASSERT(false, "Unknown type!");
 		}
-		CORE_ASSERT(false, "Unknown type!");
+
 		return ShaderUniformType::None;
 	}
 }

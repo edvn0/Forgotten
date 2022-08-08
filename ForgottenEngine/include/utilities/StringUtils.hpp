@@ -8,6 +8,8 @@ namespace ForgottenEngine::StringUtils {
 std::string read_file_and_skip_bom(const std::filesystem::path& path);
 std::string read_file_and_skip_bom(const std::string& path);
 
+std::vector<std::string> split_string_keep_delims(std::string str);
+
 // ------ Constexpr ---------------
 
 constexpr bool starts_with(std::string_view t, std::string_view s)
