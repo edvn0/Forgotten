@@ -1,10 +1,23 @@
 #!/usr/bin/env python3
 
+import os
 import json
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import List
+from typing import Callable, List
+
+
+def in_directory_call_process(directory: str, process_func: Callable[[None], bool]):
+    wd = os.getcwd()
+    os.chdir(directory)
+    try:
+        process_func()
+    except Exception as e:
+        return False
+    os.chdir(wd)
+
+    return True
 
 
 def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
@@ -59,7 +72,10 @@ if __name__ == "__main__":
     cli_results = initialize_cli(forgotten_root, args)
 
     from subprocess import check_call, CalledProcessError
-    if cli_results.clean:
+
+    did_clean = bool(cli_results.clean)
+
+    if did_clean:
         try:
             cmake_call = f"rm -rf {forgotten_root}/build/{cli_results.build_type}"
             check_call(cmake_call.split(" "))
@@ -68,20 +84,31 @@ if __name__ == "__main__":
                 f"Could not clean folder, reason: \n\t\t{str(e)}", file=sys.stderr)
             exit(e.returncode)
 
+    if did_clean:
+        try:
+            cmake_call = f"cmake {forgotten_root} -GNinja -DCMAKE_BUILD_TYPE={cli_results.build_type} -B{forgotten_root}/build/{cli_results.build_type}"
+            check_call(cmake_call.split(" "))
+        except CalledProcessError as e:
+            print(
+                f"Could not configure Forgotten, reason: \n\t\t{str(e)}", file=sys.stderr)
+            exit(e.returncode)
+
     try:
-        cmake_call = f"cmake {forgotten_root} -GNinja -B{forgotten_root}/build/{cli_results.build_type} -DCMAKE_BUILD_TYPE={cli_results.build_type}"
-        check_call(cmake_call.split(" "))
+        build_call = "ninja -j8"
+        build_folder = f"{forgotten_root}/build/{cli_results.build_type}"
+        if in_directory_call_process(
+                build_folder, lambda: check_call(build_call.split(" "))):
+            print("Built Forgotten.")
+
     except CalledProcessError as e:
         print(
-            f"Could not continue building Forgotten, reason: \n\t\t{str(e)}", file=sys.stderr)
+            f"Could not build Forgotten, reason: \n\t\t{str(e)}", file=sys.stderr)
         exit(e.returncode)
 
     try:
         run_call = [
-            "cd",
-            f"{forgotten_root}/build/{cli_results.build_type}/ForgottenApp",
-            "&&",
-            "./ForgottenApp"
+            "exec"
+            "./ForgottenApp",
             "--width",
             f"{cli_results.width}",
             "--name",
@@ -89,8 +116,10 @@ if __name__ == "__main__":
             "--height",
             f"{cli_results.height}",
         ]
+        run_folder = f"{forgotten_root}/build/{cli_results.build_type}/ForgottenApp"
 
-        check_call(run_call)
+        if in_directory_call_process(run_folder, lambda: check_call(run_call)):
+            print("Running Forgotten...")
     except CalledProcessError as e:
         print(
             f"Could not run Forgotten, reason: \n\t\t{str(e)}", file=sys.stderr)

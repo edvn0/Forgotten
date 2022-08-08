@@ -161,7 +161,7 @@ std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_g
 					ShaderUtils::ShaderStageToString(stage), preProcessingResult.GetErrorMessage()));
 
 		stages_metadata[stage].HashValue = Hash::GenerateFNVHash(shaderSource);
-		stages_metadata[stage].Headers = std::move(includer->GetIncludeData());
+		stages_metadata[stage].Headers = std::move(includer->get_include_data());
 
 		acknowledged_macros.merge(includer->GetParsedSpecialMacros());
 
@@ -271,7 +271,7 @@ bool VulkanShaderCompiler::compile_or_get_vulkan_binary(VkShaderStageFlagBits st
 	const auto extension = ShaderUtils::ShaderStageCachedFileExtension(stage, debug);
 	if (!forceCompile && stage & ~changedStages) // Per-stage cache is found and is unchanged
 	{
-		TryGetVulkanCachedBinary(cacheDirectory, extension, outputBinary);
+		try_get_vulkan_cached_binary(cacheDirectory, extension, outputBinary);
 	}
 
 	if (outputBinary.empty()) {
@@ -303,7 +303,7 @@ bool VulkanShaderCompiler::compile_or_get_vulkan_binary(VkShaderStageFlagBits st
 			FILE* f;
 			errno_t err = fopen_s(&f, cachedFilePath.c_str(), "wb");
 			if (err)
-				CORE_E("Failed to cache shader binary!");
+				CORE_ASSERT(false, "Failed to cache shader binary!");
 			fwrite(outputBinary.data(), sizeof(uint32_t), outputBinary.size(), f);
 			fclose(f);
 		}
@@ -312,7 +312,7 @@ bool VulkanShaderCompiler::compile_or_get_vulkan_binary(VkShaderStageFlagBits st
 	return true;
 }
 
-void VulkanShaderCompiler::ClearReflectionData()
+void VulkanShaderCompiler::clear_reflection_data()
 {
 	reflection_data.shader_descriptor_sets.clear();
 	reflection_data.resources.clear();
@@ -320,7 +320,7 @@ void VulkanShaderCompiler::ClearReflectionData()
 	reflection_data.push_constant_buffers.clear();
 }
 
-void VulkanShaderCompiler::TryGetVulkanCachedBinary(const std::filesystem::path& cacheDirectory,
+void VulkanShaderCompiler::try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory,
 	const std::string& extension, std::vector<uint32_t>& outputBinary) const
 {
 	const auto path = cacheDirectory / (shader_source_path.filename().string() + extension);
@@ -339,7 +339,7 @@ void VulkanShaderCompiler::TryGetVulkanCachedBinary(const std::filesystem::path&
 	fclose(f);
 }
 
-bool VulkanShaderCompiler::TryReadCachedReflectionData()
+bool VulkanShaderCompiler::try_read_cached_reflection_data()
 {
 	struct ReflectionFileHeader {
 		char Header[4] = { 'H', 'Z', 'S', 'R' };
@@ -354,24 +354,22 @@ bool VulkanShaderCompiler::TryReadCachedReflectionData()
 	serializer.ReadRaw(header);
 
 	bool validHeader = memcmp(&header, "HZSR", 4) == 0;
-	CORE_VE(validHeader);
-	if (!validHeader)
-		return false;
+	CORE_ASSERT(false, validHeader);
 
-	ClearReflectionData();
+	clear_reflection_data();
 
 	uint32_t shaderDescriptorSetCount;
 	serializer.ReadRaw<uint32_t>(shaderDescriptorSetCount);
 
 	for (uint32_t i = 0; i < shaderDescriptorSetCount; i++) {
 		auto& descriptorSet = reflection_data.shader_descriptor_sets.emplace_back();
-		serializer.ReadMap(descriptorSet.UniformBuffers);
-		serializer.ReadMap(descriptorSet.StorageBuffers);
-		serializer.ReadMap(descriptorSet.ImageSamplers);
-		serializer.ReadMap(descriptorSet.StorageImages);
-		serializer.ReadMap(descriptorSet.SeparateTextures);
-		serializer.ReadMap(descriptorSet.SeparateSamplers);
-		serializer.ReadMap(descriptorSet.WriteDescriptorSets);
+		serializer.ReadMap(descriptorSet.uniform_buffers);
+		serializer.ReadMap(descriptorSet.storage_buffers);
+		serializer.ReadMap(descriptorSet.image_samplers);
+		serializer.ReadMap(descriptorSet.storage_images);
+		serializer.ReadMap(descriptorSet.separate_textures);
+		serializer.ReadMap(descriptorSet.separate_samplers);
+		serializer.ReadMap(descriptorSet.write_descriptor_sets);
 	}
 
 	serializer.ReadMap(reflection_data.resources);
@@ -398,13 +396,13 @@ void VulkanShaderCompiler::SerializeReflectionData(StreamWriter* serializer)
 {
 	serializer->WriteRaw<uint32_t>((uint32_t)reflection_data.shader_descriptor_sets.size());
 	for (const auto& descriptorSet : reflection_data.shader_descriptor_sets) {
-		serializer->WriteMap(descriptorSet.UniformBuffers);
-		serializer->WriteMap(descriptorSet.StorageBuffers);
-		serializer->WriteMap(descriptorSet.ImageSamplers);
-		serializer->WriteMap(descriptorSet.StorageImages);
-		serializer->WriteMap(descriptorSet.SeparateTextures);
-		serializer->WriteMap(descriptorSet.SeparateSamplers);
-		serializer->WriteMap(descriptorSet.WriteDescriptorSets);
+		serializer->WriteMap(descriptorSet.uniform_buffers);
+		serializer->WriteMap(descriptorSet.storage_buffers);
+		serializer->WriteMap(descriptorSet.image_samplers);
+		serializer->WriteMap(descriptorSet.storage_images);
+		serializer->WriteMap(descriptorSet.separate_textures);
+		serializer->WriteMap(descriptorSet.separate_samplers);
+		serializer->WriteMap(descriptorSet.write_descriptor_sets);
 	}
 
 	serializer->WriteMap(reflection_data.resources);
@@ -415,7 +413,7 @@ void VulkanShaderCompiler::SerializeReflectionData(StreamWriter* serializer)
 void VulkanShaderCompiler::ReflectAllShaderStages(
 	const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
 {
-	ClearReflectionData();
+	clear_reflection_data();
 
 	for (auto [stage, data] : shaderData) {
 		Reflect(stage, data);
@@ -464,7 +462,7 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 				if (size > uniformBuffer.Size)
 					uniformBuffer.Size = size;
 			}
-			shaderDescriptorSet.UniformBuffers[binding] = compiler_uniform_buffers.at(descriptorSet).at(binding);
+			shaderDescriptorSet.uniform_buffers[binding] = compiler_uniform_buffers.at(descriptorSet).at(binding);
 
 			CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
 			CORE_TRACE("Renderer   Member Count: {0}", memberCount);
@@ -505,7 +503,7 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 					storageBuffer.Size = size;
 			}
 
-			shaderDescriptorSet.StorageBuffers[binding] = compiler_storage_buffers.at(descriptorSet).at(binding);
+			shaderDescriptorSet.storage_buffers[binding] = compiler_storage_buffers.at(descriptorSet).at(binding);
 
 			CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
 			CORE_TRACE("Renderer   Member Count: {0}", memberCount);
@@ -570,7 +568,7 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 
 		ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
 			= reflection_data.shader_descriptor_sets[descriptorSet];
-		auto& imageSampler = shaderDescriptorSet.ImageSamplers[binding];
+		auto& imageSampler = shaderDescriptorSet.image_samplers[binding];
 		imageSampler.BindingPoint = binding;
 		imageSampler.DescriptorSet = descriptorSet;
 		imageSampler.Name = name;
@@ -598,7 +596,7 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 
 		ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
 			= reflection_data.shader_descriptor_sets[descriptorSet];
-		auto& imageSampler = shaderDescriptorSet.SeparateTextures[binding];
+		auto& imageSampler = shaderDescriptorSet.separate_textures[binding];
 		imageSampler.BindingPoint = binding;
 		imageSampler.DescriptorSet = descriptorSet;
 		imageSampler.Name = name;
@@ -625,7 +623,7 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 
 		ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
 			= reflection_data.shader_descriptor_sets[descriptorSet];
-		auto& imageSampler = shaderDescriptorSet.SeparateSamplers[binding];
+		auto& imageSampler = shaderDescriptorSet.separate_samplers[binding];
 		imageSampler.BindingPoint = binding;
 		imageSampler.DescriptorSet = descriptorSet;
 		imageSampler.Name = name;
@@ -652,7 +650,7 @@ void VulkanShaderCompiler::Reflect(VkShaderStageFlagBits shaderStage, const std:
 
 		ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
 			= reflection_data.shader_descriptor_sets[descriptorSet];
-		auto& imageSampler = shaderDescriptorSet.StorageImages[binding];
+		auto& imageSampler = shaderDescriptorSet.storage_images[binding];
 		imageSampler.BindingPoint = binding;
 		imageSampler.DescriptorSet = descriptorSet;
 		imageSampler.Name = name;

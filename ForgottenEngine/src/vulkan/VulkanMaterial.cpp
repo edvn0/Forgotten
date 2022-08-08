@@ -249,33 +249,33 @@ void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Refere
 	invalidate_descriptor_sets();
 }
 
-void VulkanMaterial::Set(const std::string& name, float value) { Set<float>(name, value); }
+void VulkanMaterial::Set(const std::string& name, float value) { set<float>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, int value) { Set<int>(name, value); }
+void VulkanMaterial::Set(const std::string& name, int value) { set<int>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, uint32_t value) { Set<uint32_t>(name, value); }
+void VulkanMaterial::Set(const std::string& name, uint32_t value) { set<uint32_t>(name, value); }
 
 void VulkanMaterial::Set(const std::string& name, bool value)
 {
 	// Bools are 4-byte ints
-	Set<int>(name, (int)value);
+	set<int>(name, (int)value);
 }
 
-void VulkanMaterial::Set(const std::string& name, const glm::ivec2& value) { Set<glm::ivec2>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::ivec2& value) { set<glm::ivec2>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::ivec3& value) { Set<glm::ivec3>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::ivec3& value) { set<glm::ivec3>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::ivec4& value) { Set<glm::ivec4>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::ivec4& value) { set<glm::ivec4>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::vec2& value) { Set<glm::vec2>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::vec2& value) { set<glm::vec2>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::vec3& value) { Set<glm::vec3>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::vec3& value) { set<glm::vec3>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::vec4& value) { Set<glm::vec4>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::vec4& value) { set<glm::vec4>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::mat3& value) { Set<glm::mat3>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::mat3& value) { set<glm::mat3>(name, value); }
 
-void VulkanMaterial::Set(const std::string& name, const glm::mat4& value) { Set<glm::mat4>(name, value); }
+void VulkanMaterial::Set(const std::string& name, const glm::mat4& value) { set<glm::mat4>(name, value); }
 
 void VulkanMaterial::Set(const std::string& name, const Reference<Texture2D>& texture)
 {
