@@ -11,7 +11,7 @@ class Texture : public Asset {
 public:
 	~Texture() override = default;
 
-	void bind(uint32_t slot = 0) const { return bind_impl(slot); }
+	virtual void bind(uint32_t slot = 0) const = 0;
 
 	virtual ImageFormat get_format() const = 0;
 	virtual uint32_t get_width() const = 0;
@@ -24,9 +24,6 @@ public:
 	virtual uint64_t get_hash() const = 0;
 
 	virtual TextureType get_type() const = 0;
-
-protected:
-	virtual void bind_impl(uint32_t slot) const = 0;
 };
 
 class Texture2D : public Texture {

@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 3.21)
 project(ForgottenApp)
 
-# ---------------------------------------
-# SPIRV Shader Compilation
-# ---------------------------------------
+include(../cmake_utils/common/common.cmake)
+
 find_program(
   glslc_executable
   NAMES glslc
   HINTS Vulkan::glslc)
+find_package(Vulkan REQUIRED)
+find_package(
+  Boost 1.79
+  COMPONENTS program_options
+  REQUIRED)
 
 set(SHADER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders)
 set(SHADER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders)
@@ -60,6 +64,7 @@ target_include_directories(
          /usr/local/include
          /opt/homebrew/include
          ${Vulkan_INCLUDE_DIRS}
+         ${Boost_INCLUDE_DIRS}
          ../ForgottenEngine/include
          ../ForgottenEngine/src
          ../ForgottenEngine/
@@ -71,9 +76,15 @@ target_include_directories(
          ../ForgottenEngine/vendor/tinyobjloader
          ../ForgottenEngine/vendor/stb
          ../ForgottenEngine/vendor/imgui
-         ../ForgottenEngine/vendor/argparse/include)
+         ../ForgottenEngine/vendor/argparse/include
+         ../ForgottenEngine/vendor/yaml-cpp/include
+         ../ForgottenEngine/vendor/msdf-atlas-gen/msdf-atlas-gen
+         ../ForgottenEngine/vendor/msdf-atlas-gen/msdfgen/include)
 target_link_libraries(ForgottenApp PUBLIC ForgottenEngine)
-target_compile_options(ForgottenApp PUBLIC -Wno-nullability-completeness)
+
+if(APPLE)
+  target_compile_options(ForgottenApp PUBLIC -Wno-nullability-completeness)
+endif()
 
 message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
 

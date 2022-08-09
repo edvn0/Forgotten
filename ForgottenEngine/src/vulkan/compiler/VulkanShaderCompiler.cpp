@@ -29,7 +29,7 @@ namespace Utils {
 	static const char* get_cache_directory()
 	{
 		// TODO: make sure the assets directory is valid
-		return "resources/cache/shader/vulkan";
+		return "shaders/cache/vulkan";
 	}
 
 	static void create_cache_directory_if_needed()
@@ -183,7 +183,7 @@ std::string VulkanShaderCompiler::compile(
 	if (language == ShaderUtils::SourceLang::GLSL) {
 		static shaderc::Compiler compiler;
 		shaderc::CompileOptions shaderCOptions;
-		shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+		shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
 		shaderCOptions.SetWarningsAsErrors();
 		if (options.GenerateDebugInfo)
 			shaderCOptions.SetGenerateDebugInfo();
@@ -345,7 +345,7 @@ void VulkanShaderCompiler::try_get_vulkan_cached_binary(const std::filesystem::p
 bool VulkanShaderCompiler::try_read_cached_reflection_data()
 {
 	struct ReflectionFileHeader {
-		char Header[4] = { 'H', 'Z', 'S', 'R' };
+		char Header[4] = { 'F', 'G', 'S', 'R' };
 	} header;
 
 	std::filesystem::path cacheDirectory = Utils::get_cache_directory();
@@ -436,7 +436,7 @@ void VulkanShaderCompiler::reflect(VkShaderStageFlagBits shaderStage, const std:
 	for (const auto& resource : resources.uniform_buffers) {
 		auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
 		// Discard unused buffers from headers
-		if (activeBuffers.size()) {
+		if (!activeBuffers.empty()) {
 			const auto& name = resource.name;
 			auto& bufferType = compiler.get_type(resource.base_type_id);
 			int memberCount = (uint32_t)bufferType.member_types.size();
@@ -476,7 +476,7 @@ void VulkanShaderCompiler::reflect(VkShaderStageFlagBits shaderStage, const std:
 	for (const auto& resource : resources.storage_buffers) {
 		auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
 		// Discard unused buffers from headers
-		if (activeBuffers.size()) {
+		if (!activeBuffers.empty()) {
 			const auto& name = resource.name;
 			auto& bufferType = compiler.get_type(resource.base_type_id);
 			uint32_t memberCount = (uint32_t)bufferType.member_types.size();
@@ -520,7 +520,7 @@ void VulkanShaderCompiler::reflect(VkShaderStageFlagBits shaderStage, const std:
 		auto bufferSize = (uint32_t)compiler.get_declared_struct_size(bufferType);
 		uint32_t memberCount = uint32_t(bufferType.member_types.size());
 		uint32_t bufferOffset = 0;
-		if (reflection_data.push_constant_ranges.size())
+		if (!reflection_data.push_constant_ranges.empty())
 			bufferOffset = reflection_data.push_constant_ranges.back().Offset
 				+ reflection_data.push_constant_ranges.back().Size;
 
@@ -542,7 +542,7 @@ void VulkanShaderCompiler::reflect(VkShaderStageFlagBits shaderStage, const std:
 		CORE_TRACE("Renderer   Size: {0}", bufferSize);
 
 		for (uint32_t i = 0; i < memberCount; i++) {
-			auto type = compiler.get_type(bufferType.member_types[i]);
+			const auto& type = compiler.get_type(bufferType.member_types[i]);
 			const auto& memberName = compiler.get_member_name(bufferType.self, i);
 			auto size = (uint32_t)compiler.get_declared_struct_member_size(bufferType, i);
 			auto offset = compiler.type_struct_member_offset(bufferType, i) - bufferOffset;

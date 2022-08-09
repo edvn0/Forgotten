@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(ForgottenEngine)
 
+include(../cmake_utils/common/common.cmake)
+
 find_package(Vulkan REQUIRED)
 find_package(
   Boost 1.79
@@ -95,6 +97,18 @@ file(
   test/*.hpp
   test/*.cpp)
 
+if(WIN32)
+  list(FILTER sources EXCLUDE REGEX "MacOS")
+  list(FILTER sources EXCLUDE REGEX "Linux")
+endif()
+
+if(APPLE)
+  list(FILTER sources EXCLUDE REGEX "Windows")
+  list(FILTER sources EXCLUDE REGEX "Linux")
+endif()
+
+set(MSDF_ATLAS_GEN_MSDFGEN_EXTERNAL 0)
+
 add_subdirectory(vendor/VulkanMemoryAllocator)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glfw)
@@ -109,7 +123,13 @@ add_subdirectory(vendor/shaderc)
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(
   ForgottenEngine
-  PUBLIC include src vendor/imgui vendor/yaml-cpp/include
+  PUBLIC include
+         src
+         vendor/imgui
+         vendor/yaml-cpp/include
+         vendor/msdf-atlas-gen/msdf-atlas-gen
+         vendor/msdf-atlas-gen/msdfgen
+         ${Boost_INCLUDE_DIRS}
   PRIVATE /usr/local/include
           /opt/homebrew/include
           /opt/homebrew/Cellar
@@ -123,11 +143,13 @@ target_include_directories(
           vendor/tinyobjloader
           vendor/stb
           vendor/argparse/include
-          vendor/msdf-atlas-gen/msdf-atlas-gen
           vendor/spirv-cross
           vendor/shaderc
           vendor/shaderc/libshaderc/include
           vendor/shaderc/libshaderc_util/include)
+
+message(STATUS ${Vulkan_LIBRARIES})
+
 target_link_libraries(
   ForgottenEngine
   PRIVATE ${Vulkan_LIBRARIES}
@@ -146,8 +168,11 @@ target_link_libraries(
           shaderc
           Boost::program_options)
 target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY)
-target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
-                                              -fcolor-diagnostics)
+
+if(APPLE)
+  target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
+                                                -fcolor-diagnostics)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_definitions(ForgottenEngine PUBLIC -fcolor-diagnostics)

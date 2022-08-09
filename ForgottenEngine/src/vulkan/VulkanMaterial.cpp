@@ -370,11 +370,11 @@ void VulkanMaterial::rt_update_for_rendering(
 		for (auto&& [binding, pd] : resident_descriptors) {
 			if (pd->type == PendingDescriptorType::Texture2D) {
 				Reference<VulkanTexture2D> texture = pd->texture.as<VulkanTexture2D>();
-				pd->image_info = texture->GetVulkanDescriptorInfo();
+				pd->image_info = texture->get_vulkan_descriptor_info();
 				pd->wds.pImageInfo = &pd->image_info;
 			} else if (pd->type == PendingDescriptorType::TextureCube) {
 				Reference<VulkanTextureCube> texture = pd->texture.as<VulkanTextureCube>();
-				pd->image_info = texture->GetVulkanDescriptorInfo();
+				pd->image_info = texture->get_vulkan_descriptor_info();
 				pd->wds.pImageInfo = &pd->image_info;
 			} else if (pd->type == PendingDescriptorType::Image2D) {
 				Reference<VulkanImage2D> image = pd->image.as<VulkanImage2D>();
@@ -387,9 +387,9 @@ void VulkanMaterial::rt_update_for_rendering(
 
 		for (auto&& [binding, pd] : resident_descriptors_array) {
 			if (pd->type == PendingDescriptorType::Texture2D) {
-				for (auto tex : pd->textures) {
+				for (const auto& tex : pd->textures) {
 					Reference<VulkanTexture2D> texture = tex.as<VulkanTexture2D>();
-					arrayImageInfos.emplace_back(texture->GetVulkanDescriptorInfo());
+					arrayImageInfos.emplace_back(texture->get_vulkan_descriptor_info());
 				}
 			}
 			pd->wds.pImageInfo = arrayImageInfos.data();

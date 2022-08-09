@@ -27,9 +27,9 @@ public:
 	{
 	}
 
-	virtual const std::string& get_name() const { return name; }
-	virtual uint32_t get_register() const { return resource_register; }
-	virtual uint32_t get_count() const { return count; }
+	const std::string& get_name() const { return name; }
+	uint32_t get_register() const { return resource_register; }
+	uint32_t get_count() const { return count; }
 
 	static void serialize(StreamWriter* serializer, const ShaderResourceDeclaration& instance)
 	{

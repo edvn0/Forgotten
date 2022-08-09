@@ -36,6 +36,7 @@ public:
 	static void shut_down();
 
 	static void wait_and_render();
+	static inline void compile_shaders() { wait_and_render(); };
 
 	static void begin_frame();
 
@@ -49,12 +50,19 @@ public:
 		const Reference<UniformBufferSet>&, const Reference<StorageBufferSet>&, const Reference<Material>&,
 		const Reference<VertexBuffer>&, const Reference<IndexBuffer>&, const glm::mat4& transform,
 		uint32_t index_count);
+
+	static void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
+		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
+		const Reference<Material>& material);
+
+	void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
+		const Reference<Pipeline>& pipeline_in, const Reference<UniformBufferSet>& ub,
+		const Reference<StorageBufferSet>& sb, const Reference<Material>& material);
 	// end submits
 
 	// Registrations
 	static void register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline);
 	static void register_shader_dependency(const Reference<Shader>& shader, Reference<Material> material);
-
 	// end Registrations
 
 	// shaders and macros

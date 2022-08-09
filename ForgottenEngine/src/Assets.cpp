@@ -42,12 +42,6 @@ OptionalIFStream Assets::load(const Path& path, const std::string& resource_subd
 	return {};
 }
 
-bool Assets::exists(const Path& path)
-{
-	struct stat buffer { };
-	return (stat(path.c_str(), &buffer) == 0);
-}
-
 OptionalPath Assets::find_resources_by_path(const Path& path)
 {
 	if (exists(path))
@@ -122,14 +116,14 @@ std::string Assets::path_without_extensions(const std::string& input, const std:
 		}
 	}
 
-	return path;
+	return path.string();
 }
 
 std::string Assets::extract_extension(const std::string& input)
 {
 	Path path = input;
 
-	return path.extension();
+	return path.extension().string();
 }
 
 }

@@ -4,6 +4,7 @@
 #include "Clock.hpp"
 #include "Input.hpp"
 
+#include "render/Font.hpp"
 #include "render/Renderer.hpp"
 
 namespace ForgottenEngine {
@@ -24,10 +25,17 @@ Application::Application(const ApplicationProperties& props)
 	Renderer::init();
 	Renderer::wait_and_render();
 	add_overlay(std::make_unique<ImGuiLayer>());
+
+	Font::init();
 };
 
 Application::~Application()
 {
+	for (auto& layer : stack) {
+		layer->on_detach();
+		layer->~Layer();
+	}
+
 	Renderer::wait_and_render();
 	Renderer::shut_down();
 };

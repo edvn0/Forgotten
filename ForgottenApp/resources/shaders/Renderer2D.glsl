@@ -53,7 +53,7 @@ struct VertexOutput
 layout (location = 0) in VertexOutput Input;
 layout (location = 5) in flat float TexIndex;
 
-layout (binding = 1) uniform sampler2D u_Textures[32];
+layout (binding = 1) uniform sampler2D u_Textures[16];
 
 void main()
 {

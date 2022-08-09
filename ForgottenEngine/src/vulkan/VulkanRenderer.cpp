@@ -25,6 +25,7 @@
 #include "vulkan/VulkanRenderCommandBuffer.hpp"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanVertexBuffer.hpp"
+#include "vulkan/compiler/VulkanShaderCompiler.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -227,12 +228,6 @@ struct VulkanRendererData {
 
 static VulkanRendererData* renderer_data = nullptr;
 
-static inline VulkanRendererData& the()
-{
-	CORE_ASSERT(renderer_data, "");
-	return *renderer_data;
-}
-
 static RenderCommandQueue* command_queue = nullptr;
 
 static const std::vector<std::vector<VkWriteDescriptorSet>>&
@@ -394,6 +389,8 @@ void VulkanRenderer::shut_down()
 {
 	auto device = VulkanContext::get_current_device()->get_vulkan_device();
 	vkDeviceWaitIdle(device);
+
+	VulkanShaderCompiler::clear_uniform_buffers();
 
 	delete renderer_data;
 };
@@ -580,6 +577,51 @@ void VulkanRenderer::render_geometry(Reference<RenderCommandBuffer> command_buff
 	});
 }
 
+void VulkanRenderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
+	const Reference<Pipeline>& pipeline_in, const Reference<UniformBufferSet>& ub,
+	const Reference<StorageBufferSet>& sb, const Reference<Material>& material)
+{
+
+	Reference<VulkanMaterial> vulkanMaterial = material.as<VulkanMaterial>();
+	Renderer::submit([this, command_buffer, pipe = pipeline_in, uniformBufferSet = ub, storageBufferSet = sb,
+						 vulkanMaterial]() mutable {
+		uint32_t frameIndex = Renderer::get_current_frame_index();
+		VkCommandBuffer commandBuffer
+			= command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
+
+		Reference<VulkanPipeline> vulkanPipeline = pipe.as<VulkanPipeline>();
+
+		VkPipelineLayout layout = vulkanPipeline->get_vulkan_pipeline_layout();
+
+		auto vulkanMeshVB = renderer_data->QuadVertexBuffer.as<VulkanVertexBuffer>();
+		VkBuffer vbMeshBuffer = vulkanMeshVB->get_vulkan_buffer();
+		VkDeviceSize offsets[1] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+
+		auto vulkanMeshIB = renderer_data->QuadIndexBuffer.as<VulkanIndexBuffer>();
+		VkBuffer ibBuffer = vulkanMeshIB->get_vulkan_buffer();
+		vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+		VkPipeline pipeline = vulkanPipeline->get_vulkan_pipeline();
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+		this->rt_update_material_for_rendering(vulkanMaterial, uniformBufferSet, storageBufferSet);
+
+		uint32_t bufferIndex = Renderer::get_current_frame_index();
+		VkDescriptorSet descriptorSet = vulkanMaterial->get_descriptor_set(bufferIndex);
+		if (descriptorSet)
+			vkCmdBindDescriptorSets(
+				commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+
+		Buffer uniformStorageBuffer = vulkanMaterial->get_uniform_storage_buffer();
+		if (uniformStorageBuffer.size)
+			vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.size,
+				uniformStorageBuffer.data);
+
+		vkCmdDrawIndexed(commandBuffer, renderer_data->QuadIndexBuffer->get_count(), 1, 0, 0, 0);
+	});
+}
+
 void VulkanRenderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer)
 {
 	Renderer::submit([command_buffer]() {
@@ -617,12 +659,18 @@ void VulkanRenderer::rt_update_material_for_rendering(Reference<VulkanMaterial> 
 VkDescriptorSet VulkanRenderer::rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo alloc_info)
 {
 	uint32_t buffer_index = Renderer::get_current_frame_index();
-	alloc_info.descriptorPool = the().descriptor_pools[buffer_index];
+	alloc_info.descriptorPool = renderer_data->descriptor_pools[buffer_index];
 	VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 	VkDescriptorSet result;
 	VK_CHECK(vkAllocateDescriptorSets(device, &alloc_info, &result));
-	the().descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
+	renderer_data->descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
 	return result;
+}
+void VulkanRenderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
+	const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
+	const Reference<Material>& material)
+{
+	submit_fullscreen_quad(command_buffer, pipeline, uniformBufferSet, nullptr, material);
 }
 
 };

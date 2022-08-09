@@ -57,7 +57,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Quad";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D");
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.BackfaceCulling = false;
 		pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" },
@@ -105,7 +105,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Line";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer_line");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Line");
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.Topology = PrimitiveTopology::Lines;
 		pipelineSpecification.LineWidth = 2.0f;
@@ -134,7 +134,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Text";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer_text");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Text");
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.BackfaceCulling = false;
 		pipelineSpecification.Layout
@@ -174,7 +174,7 @@ void Renderer2D::init()
 	{
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.DebugName = "Renderer2D-Circle";
-		pipelineSpecification.Shader = Renderer::get_shader_library()->get("shaders/2d_renderer_circle");
+		pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
 		pipelineSpecification.BackfaceCulling = false;
 		pipelineSpecification.RenderPass = renderPass;
 		pipelineSpecification.Layout
@@ -345,7 +345,7 @@ Reference<RenderPass> Renderer2D::get_target_render_pass()
 	return quad_pipeline->get_specification().RenderPass;
 }
 
-void Renderer2D::set_target_render_pass(Reference<RenderPass> renderPass)
+void Renderer2D::set_target_render_pass(const Reference<RenderPass>& renderPass)
 {
 	if (renderPass != quad_pipeline->get_specification().RenderPass) {
 		{

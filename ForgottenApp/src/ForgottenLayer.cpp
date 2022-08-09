@@ -10,18 +10,102 @@ ForgottenLayer::ForgottenLayer()
 {
 }
 
-void ForgottenLayer::on_attach() { renderer = Reference<Renderer2D>::create(); }
+void ForgottenLayer::on_attach()
+{
+	renderer = Reference<Renderer2D>::create();
+	const auto [width, height] = Application::the().get_window().get_size<float>();
+
+	FramebufferSpecification compFramebufferSpec;
+	compFramebufferSpec.DebugName = "SceneComposite";
+	compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
+	compFramebufferSpec.SwapChainTarget = true;
+	compFramebufferSpec.Attachments = { ImageFormat::RGBA };
+
+	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
+
+	PipelineSpecification pipelineSpecification;
+	pipelineSpecification.Layout
+		= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
+	pipelineSpecification.BackfaceCulling = false;
+	pipelineSpecification.Shader = Renderer::get_shader_library()->get("TexturePass");
+
+	RenderPassSpecification renderPassSpec;
+	renderPassSpec.TargetFramebuffer = framebuffer;
+	renderPassSpec.DebugName = "SceneComposite";
+	pipelineSpecification.RenderPass = RenderPass::create(renderPassSpec);
+	pipelineSpecification.DebugName = "SceneComposite";
+	pipelineSpecification.DepthWrite = false;
+	swapchain_pipeline = Pipeline::create(pipelineSpecification);
+	swapchain_material = Material::create(pipelineSpecification.Shader);
+	command_buffer = RenderCommandBuffer::create_from_swapchain();
+	projection_matrix = glm::ortho(0.0f, width, 0.0f, height);
+}
 
 void ForgottenLayer::on_detach() { }
 
-void ForgottenLayer::on_update(const TimeStep& ts) { Renderer::wait_and_render(); }
+void ForgottenLayer::on_update(const TimeStep& ts)
+{
+	Renderer::wait_and_render();
+	const auto [width, height] = Application::the().get_window().get_size<float>();
+	projection_matrix = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
+
+	update_fps_timer -= ts;
+	if (update_fps_timer <= 0.0f) {
+		update_fps_stats();
+		update_fps_timer = 1.0f;
+	}
+
+	update_performance_timer -= ts;
+	if (update_performance_timer <= 0.0f) {
+		update_performance_timers();
+		update_performance_timer = 0.2f;
+	}
+
+	draw_debug_stats();
+
+	if (m_Width != width || m_Height != height) {
+		m_Width = width;
+		m_Height = height;
+		renderer->on_recreate_swapchain();
+
+		// Retrieve new main command buffer
+		command_buffer = RenderCommandBuffer::create_from_swapchain();
+	}
+
+	// Render final image to swapchain
+	Reference<Image2D> final_image
+		= renderer->get_target_render_pass()->get_specification().TargetFramebuffer->get_image();
+	if (final_image) {
+		swapchain_material->set("u_Texture", final_image);
+
+		command_buffer->begin();
+		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().RenderPass, false);
+		Renderer::submit_fullscreen_quad(command_buffer, swapchain_pipeline, nullptr, swapchain_material);
+		Renderer::end_render_pass(command_buffer);
+		command_buffer->end();
+	} else {
+		// Clear render pass if no image is present
+		command_buffer->begin();
+		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().RenderPass, false);
+		Renderer::end_render_pass(command_buffer);
+		command_buffer->end();
+	}
+}
+
+void ForgottenLayer::update_fps_stats()
+{
+	auto& app = Application::the();
+	frames_per_second = 1.0f / (float)app.get_frametime();
+}
+
+void ForgottenLayer::update_performance_timers()
+{
+	auto& app = Application::the();
+	frame_time = (float)app.get_frametime();
+}
 
 void ForgottenLayer::on_ui_render(const TimeStep& ts)
 {
-	renderer->begin_scene(glm::mat4{ 1 }, glm::mat4{ 1 }, false);
-
-	renderer->draw_rotated_rect(glm::vec2{ 0, 0 }, glm::vec2{ 10, 10 }, 3.14159 / 4, { 0.1, 0.9, 0.9, 1.0 });
-
 	static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -118,16 +202,6 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 				// ImTextureID texture_id = 0;
 				// ImGui::Image(
 				//	texture_id, ImVec2{ viewport_size.x, viewport_size.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-				if (ImGui::BeginDragDropTarget()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {
-						static const std::filesystem::path assets("assets");
-						const auto* path = (const char*)payload->Data;
-						const auto fp = assets / std::filesystem::path{ path };
-					}
-					ImGui::EndDragDropTarget();
-				}
-
 				ImGui::End();
 			}
 		}
@@ -135,8 +209,6 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 		ui_toolbar();
 	}
-	renderer->end_scene();
-
 	ImGui::End();
 }
 
@@ -213,4 +285,27 @@ void ForgottenLayer::on_event(Event& event)
 
 		return false;
 	});
+}
+
+void ForgottenLayer::draw_debug_stats()
+{
+	renderer->begin_scene(projection_matrix, glm::mat4(1.0f));
+
+	// Add font size to this after each line
+	float y = 30.0f;
+
+	auto fps = 1.0f / (float)Application::the().get_frametime();
+
+	draw_string(fmt::format("{:.2f} ms ({}ms FPS)", frame_time, frames_per_second), { 30.0f, y });
+	y += 50.0f;
+	draw_string(fmt::format("{} fps", (uint32_t)fps), { 30.0f, y });
+	y += 50.0f;
+}
+
+void ForgottenLayer::draw_string(
+	const std::string& string, const glm::vec2& position, const glm::vec4& color, float size)
+{
+	glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(size));
+	glm::mat4 transform = glm::translate(glm::mat4(1.0f), { position.x, position.y, -0.2f }) * scale;
+	renderer->draw_string(string, Font::get_default_font(), transform, 1000.0f);
 }

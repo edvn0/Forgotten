@@ -113,7 +113,10 @@
             "span": "cpp",
             "unordered_set": "cpp",
             "queue": "cpp",
-            "codecvt": "cpp"
+            "codecvt": "cpp",
+            "xlocale": "cpp",
+            "xlocinfo": "cpp",
+            "xstring": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,
