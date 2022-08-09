@@ -1,6 +1,6 @@
 #include "fg_pch.hpp"
 
-#include "implementations/MacOSWindow.hpp"
+#include "implementations/MacOS/MacOSWindow.hpp"
 
 #include "events/ApplicationEvent.hpp"
 #include "events/KeyEvent.hpp"

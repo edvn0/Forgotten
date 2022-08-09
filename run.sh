@@ -1,4 +1,4 @@
 #!/bin/bash
 
-/usr/bin/env python ./scripts/run_script/run.py "$@"
+/usr/bin/env python3 ./scripts/run_script/run.py "$@"
 

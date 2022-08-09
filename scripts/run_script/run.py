@@ -138,6 +138,8 @@ def main():
                 f"Could not configure Forgotten, reason: \n\t\t{str(e)}")
             exit(e.returncode)
 
+    build_project(f"{build_folder}/{cli_results.build_type}", cli_results.generator)
+
     try:
         build_call = "ninja -j8"
         build_folder = f"{forgotten_root}/build/{cli_results.build_type}"
