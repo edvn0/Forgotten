@@ -93,7 +93,7 @@ VulkanTexture2D::VulkanTexture2D(const std::string& path, const TexturePropertie
 	imageSpec.DebugName = properties.DebugName;
 	image = Image2D::create(imageSpec);
 
-	CORE_ASSERT(format != ImageFormat::None);
+	CORE_ASSERT(format != ImageFormat::None, "");
 
 	Reference<VulkanTexture2D> instance = this;
 	Renderer::submit([instance]() mutable { instance->invalidate(); });
@@ -181,10 +181,10 @@ void VulkanTexture2D::invalidate()
 	imageSpec.Width = width;
 	imageSpec.Height = height;
 	imageSpec.Mips = mipCount;
-	if (!image_data) // TODO(Yan): better management for this, probably from texture spec
+	if (!image_data)
 		imageSpec.Usage = ImageUsage::Storage;
 
-	Reference<VulkanImage2D> image = image.as<VulkanImage2D>();
+	Reference<VulkanImage2D> image = this->image.as<VulkanImage2D>();
 	image->rt_invalidate();
 
 	auto& info = image->get_image_info();
@@ -209,7 +209,7 @@ void VulkanTexture2D::invalidate()
 
 		// Copy data to staging buffer
 		uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
-		CORE_ASSERT(image_data.data);
+		CORE_ASSERT(image_data.data, "");
 		memcpy(destData, image_data.data, size);
 		allocator.unmap_memory(stagingBufferAllocation);
 
@@ -308,16 +308,14 @@ void VulkanTexture2D::invalidate()
 	// Enable anisotropic filtering
 	// This feature is optional, so we must check if it's supported on the device
 	auto& props = VulkanContext::get_current_device()->get_physical_device()->get_properties();
-	// TODO:
 	if (props.limits.maxSamplerAnisotropy) {
-			// Use max. level of anisotropy for this example
-			sampler.maxAnisotropy = 1.0f;// vulkanDevice->properties.limits.maxSamplerAnisotropy;
-			sampler.anisotropyEnable = VK_TRUE;
-	}
-	else {
-			// The device does not support anisotropic filtering
-			sampler.maxAnisotropy = 1.0;
-			sampler.anisotropyEnable = VK_FALSE;
+		// Use max. level of anisotropy for this example
+		sampler.maxAnisotropy = 1.0f; // vulkanDevice->properties.limits.maxSamplerAnisotropy;
+		sampler.anisotropyEnable = VK_TRUE;
+	} else {
+		// The device does not support anisotropic filtering
+		sampler.maxAnisotropy = 1.0;
+		sampler.anisotropyEnable = VK_FALSE;
 	}
 	sampler.maxAnisotropy = 1.0;
 	sampler.anisotropyEnable = VK_FALSE;
@@ -349,7 +347,6 @@ void VulkanTexture2D::invalidate()
 	if (image_data && properties.GenerateMips && mipCount > 1)
 		generate_mips();
 
-	// TODO(Yan): option for local storage
 	stbi_image_free(image_data.data);
 	image_data = Buffer();
 }
@@ -382,7 +379,7 @@ void VulkanTexture2D::generate_mips()
 	auto device = VulkanContext::get_current_device();
 	auto vulkanDevice = device->get_vulkan_device();
 
-	Reference<VulkanImage2D> image = image.as<VulkanImage2D>();
+	Reference<VulkanImage2D> image = this->image.as<VulkanImage2D>();
 	const auto& info = image->get_image_info();
 
 	const VkCommandBuffer blitCmd = VulkanContext::get_current_device()->get_command_buffer(true);
@@ -702,7 +699,7 @@ VkImageView VulkanTextureCube::create_image_view_single_mip(uint32_t mip)
 
 	VkImageView result;
 	VK_CHECK(vkCreateImageView(vulkanDevice, &view, nullptr, &result));
-	
+
 	return result;
 }
 
@@ -711,7 +708,7 @@ void VulkanTextureCube::generate_mips(bool readonly)
 	auto device = VulkanContext::get_current_device();
 	auto vulkanDevice = device->get_vulkan_device();
 
-	VkCommandBuffer blitCmd =device->get_command_buffer(true);
+	VkCommandBuffer blitCmd = device->get_command_buffer(true);
 
 	uint32_t mipLevels = get_mip_level_count();
 	for (uint32_t face = 0; face < 6; face++) {
@@ -723,9 +720,9 @@ void VulkanTextureCube::generate_mips(bool readonly)
 		mipSubRange.layerCount = 1;
 
 		// Prepare current mip level as image blit destination
-		Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_GENERAL,
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-			mipSubRange);
+		Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
+			VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
 	}
 
 	for (uint32_t i = 1; i < mipLevels; i++) {

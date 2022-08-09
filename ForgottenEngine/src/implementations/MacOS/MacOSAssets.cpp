@@ -1,5 +1,7 @@
 #include "fg_pch.hpp"
 
+#include <sys/stat.h>
+
 #include "Assets.hpp"
 
 namespace ForgottenEngine {

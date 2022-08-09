@@ -162,7 +162,8 @@ def main():
                 f"Could not configure Forgotten, reason: \n\t\t{str(e)}")
             exit(e.returncode)
 
-    build_project(build_folder, cli_results.generator)
+    build_project(
+        f"{forgotten_root}/{build_folder}//{cli_results.build_type}", cli_results.generator)
 
     try:
         run_call = [
