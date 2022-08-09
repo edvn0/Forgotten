@@ -36,7 +36,7 @@ public:
 	void end_scene();
 
 	Reference<RenderPass> get_target_render_pass();
-	void set_target_render_pass(Reference<RenderPass> renderPass);
+	void set_target_render_pass(const Reference<RenderPass>& renderPass);
 
 	void on_recreate_swapchain();
 

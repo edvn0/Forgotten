@@ -49,7 +49,7 @@ struct VertexOutput
 layout (location = 0) in VertexOutput Input;
 layout (location = 5) in flat float TexIndex;
 
-layout (binding = 1) uniform sampler2D u_FontAtlases[32];
+layout (binding = 1) uniform sampler2D u_FontAtlases[16];
 
 float median(float r, float g, float b)
 {

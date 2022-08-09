@@ -11,6 +11,8 @@
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
 
+#include "utilities/Casts.hpp"
+
 #include <GLFW/glfw3.h>
 
 #include <utility>
@@ -145,7 +147,7 @@ void MacOSWindow::setup_events()
 		(void)scancode;
 		(void)modes;
 
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData, void*>(glfwGetWindowUserPointer(window));
 
 		switch (action) {
 		case GLFW_PRESS: {

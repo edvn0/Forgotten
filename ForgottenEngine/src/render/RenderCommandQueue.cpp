@@ -19,8 +19,7 @@ RenderCommandQueue::~RenderCommandQueue() { delete[] command_buffer; }
 
 void* RenderCommandQueue::allocate(RenderCommandFunction fn, uint32_t size)
 {
-	*reinterpret_cast<RenderCommandFunction*>(command_buffer_ptr) = fn;
-	// *(RenderCommandFunction*)command_buffer_ptr = fn;
+	*(RenderCommandFunction*)command_buffer_ptr = fn;
 	command_buffer_ptr += sizeof(RenderCommandFunction);
 
 	*(uint32_t*)command_buffer_ptr = size;

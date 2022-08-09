@@ -56,6 +56,13 @@ public:
 		Reference<UniformBufferSet> ubs, Reference<StorageBufferSet> sbs, Reference<Material> material,
 		Reference<VertexBuffer> vb, Reference<IndexBuffer> ib, const glm::mat4& transform,
 		uint32_t index_count) override;
+
+	void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
+		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
+		const Reference<Material>& material) override;
+	void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
+		const Reference<Pipeline>& pipeline_in, const Reference<UniformBufferSet>& ub,
+		const Reference<StorageBufferSet>& sb, const Reference<Material>& material) override;
 	// END SUBMITS
 public:
 	static VkDescriptorSet rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo info);

@@ -13,6 +13,9 @@ namespace ForgottenEngine {
 class VulkanSwapchain;
 class RendererContext;
 
+template <typename T>
+concept arithmetic = std::integral<T> or std::floating_point<T>;
+
 class Window {
 public:
 	using EventCallback = std::function<void(Event&)>;
@@ -21,6 +24,13 @@ public:
 
 	[[nodiscard]] virtual size_t get_width() const = 0;
 	[[nodiscard]] virtual size_t get_height() const = 0;
+
+	template <typename T>
+	requires arithmetic<T>
+	[[nodiscard]] std::pair<T, T> get_size() const
+	{
+		return { static_cast<T>(get_width()), static_cast<T>(get_height()) };
+	};
 
 	virtual void on_update() = 0;
 
