@@ -142,7 +142,7 @@ private:
 	static constexpr uint32_t MaxQuads = 10000;
 	static constexpr uint32_t MaxVertices = MaxQuads * 4;
 	static constexpr uint32_t MaxIndices = MaxQuads * 6;
-	static constexpr uint32_t MaxTextureSlots = 32; // TODO: RenderCaps
+	static constexpr uint32_t MaxTextureSlots = 16; // TODO: RenderCaps
 
 	static constexpr uint32_t MaxLines = 2000;
 	static constexpr uint32_t MaxLineVertices = MaxLines * 2;

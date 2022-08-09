@@ -352,7 +352,7 @@ Font::~Font() { delete m_MSDFData; }
 
 Reference<Font> Font::s_DefaultFont;
 
-void Font::init() { s_DefaultFont = Reference<Font>::create("fonts/Olive Days.ttf"); }
+void Font::init() { s_DefaultFont = Reference<Font>::create("fonts/OpenSans-Regular.ttf"); }
 
 void Font::shutdown() { s_DefaultFont.reset(); }
 

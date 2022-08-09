@@ -447,6 +447,7 @@ void VulkanSwapchain::present()
 		presentInfo.pWaitSemaphores = &semaphores.render_complete_semaphore;
 		presentInfo.waitSemaphoreCount = 1;
 		result = vkQueuePresentKHR(VulkanContext::get_current_device()->get_graphics_queue(), &presentInfo);
+		CORE_INFO("{}", result);
 	}
 
 	if (result != VK_SUCCESS) {

@@ -184,10 +184,10 @@ void VulkanTexture2D::invalidate()
 	if (!image_data)
 		imageSpec.Usage = ImageUsage::Storage;
 
-	Reference<VulkanImage2D> image = this->image.as<VulkanImage2D>();
-	image->rt_invalidate();
+	Reference<VulkanImage2D> reference = this->image.as<VulkanImage2D>();
+	reference->rt_invalidate();
 
-	auto& info = image->get_image_info();
+	auto& info = reference->get_image_info();
 
 	if (image_data) {
 		VkDeviceSize size = image_data.size;
@@ -215,9 +215,9 @@ void VulkanTexture2D::invalidate()
 
 		VkCommandBuffer copyCmd = device->get_command_buffer(true);
 
-		// Image memory barriers for the texture image
+		// Image memory barriers for the texture reference
 
-		// The sub resource range describes the regions of the image that will be transitioned using the memory
+		// The sub resource range describes the regions of the reference that will be transitioned using the memory
 		// barriers below
 		VkImageSubresourceRange subresourceRange = {};
 		// Image only contains color data
@@ -227,7 +227,7 @@ void VulkanTexture2D::invalidate()
 		subresourceRange.levelCount = 1;
 		subresourceRange.layerCount = 1;
 
-		// Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
+		// Transition the texture reference layout to transfer target, so we can safely copy our buffer data to it.
 		VkImageMemoryBarrier imageMemoryBarrier{};
 		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -239,9 +239,9 @@ void VulkanTexture2D::invalidate()
 		imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
-		// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
-		// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
+		// Insert a memory dependency at the proper pipeline stages that will execute the reference layout
+		// transition Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT) Destination
+		// pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
 			nullptr, 1, &imageMemoryBarrier);
 
@@ -268,7 +268,7 @@ void VulkanTexture2D::invalidate()
 		} else {
 			Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_READ_BIT,
 				VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				image->get_descriptor_info().imageLayout, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				reference->get_descriptor_info().imageLayout, VK_PIPELINE_STAGE_TRANSFER_BIT,
 				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
 		}
 
@@ -283,7 +283,7 @@ void VulkanTexture2D::invalidate()
 		subresourceRange.layerCount = 1;
 		subresourceRange.levelCount = get_mip_level_count();
 		Utils::set_image_layout(transitionCommandBuffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED,
-			image->get_descriptor_info().imageLayout, subresourceRange);
+			reference->get_descriptor_info().imageLayout, subresourceRange);
 		device->flush_command_buffer(transitionCommandBuffer);
 	}
 
@@ -331,8 +331,8 @@ void VulkanTexture2D::invalidate()
 		view.components
 			= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through
-		// this image view It's possible to create multiple image views for a single image referring to different
-		// (and/or overlapping) ranges of the image
+		// this reference view It's possible to create multiple reference views for a single reference referring to
+		// different (and/or overlapping) ranges of the reference
 		view.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		view.subresourceRange.baseMipLevel = 0;
 		view.subresourceRange.baseArrayLayer = 0;
@@ -341,7 +341,7 @@ void VulkanTexture2D::invalidate()
 		view.image = info.image;
 		VK_CHECK(vkCreateImageView(vulkanDevice, &view, nullptr, &info.image_view));
 
-		image->update_descriptor();
+		reference->update_descriptor();
 	}
 
 	if (image_data && properties.GenerateMips && mipCount > 1)

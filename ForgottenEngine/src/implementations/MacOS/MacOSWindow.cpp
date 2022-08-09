@@ -120,7 +120,7 @@ void MacOSWindow::shutdown()
 void MacOSWindow::setup_events()
 {
 	glfwSetFramebufferSizeCallback(glfw_window, [](GLFWwindow* window, int w, int h) {
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 
 		WindowFramebufferEvent event(w, h);
 		user_ptr.width = w;
@@ -129,7 +129,7 @@ void MacOSWindow::setup_events()
 	});
 
 	glfwSetWindowSizeCallback(glfw_window, [](GLFWwindow* window, int width, int height) {
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 
 		WindowResizeEvent event((float)width, (float)height);
 		user_ptr.width = width;
@@ -138,7 +138,7 @@ void MacOSWindow::setup_events()
 	});
 
 	glfwSetWindowCloseCallback(glfw_window, [](GLFWwindow* window) {
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 		WindowCloseEvent closed;
 		user_ptr.callback(closed);
 	});
@@ -147,7 +147,7 @@ void MacOSWindow::setup_events()
 		(void)scancode;
 		(void)modes;
 
-		auto user_ptr = Cast::as<WindowData, void*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 
 		switch (action) {
 		case GLFW_PRESS: {
@@ -172,7 +172,7 @@ void MacOSWindow::setup_events()
 	glfwSetMouseButtonCallback(glfw_window, [](GLFWwindow* window, int button, int action, int mods) {
 		(void)mods;
 
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 
@@ -191,20 +191,20 @@ void MacOSWindow::setup_events()
 	});
 
 	glfwSetCharCallback(glfw_window, [](GLFWwindow* window, unsigned int c) {
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 		auto key_code = KeyCode(c);
 		KeyTypedEvent event(key_code);
 		user_ptr.callback(event);
 	});
 
 	glfwSetScrollCallback(glfw_window, [](GLFWwindow* window, double xo, double yo) {
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 		MouseScrolledEvent event((float)xo, (float)yo);
 		user_ptr.callback(event);
 	});
 
 	glfwSetCursorPosCallback(glfw_window, [](GLFWwindow* window, double xpos, double ypos) {
-		auto user_ptr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		auto user_ptr = Cast::as<WindowData>(window);
 		MouseMovedEvent event((float)xpos, (float)ypos);
 		user_ptr.callback(event);
 	});

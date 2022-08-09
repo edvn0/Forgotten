@@ -300,6 +300,8 @@ void ForgottenLayer::draw_debug_stats()
 	y += 50.0f;
 	draw_string(fmt::format("{} fps", (uint32_t)fps), { 30.0f, y });
 	y += 50.0f;
+
+	renderer->end_scene();
 }
 
 void ForgottenLayer::draw_string(

@@ -388,8 +388,10 @@ void VulkanMaterial::rt_update_for_rendering(
 		for (auto&& [binding, pd] : resident_descriptors_array) {
 			if (pd->type == PendingDescriptorType::Texture2D) {
 				for (const auto& tex : pd->textures) {
-					Reference<VulkanTexture2D> texture = tex.as<VulkanTexture2D>();
-					arrayImageInfos.emplace_back(texture->get_vulkan_descriptor_info());
+					if (tex) {
+						Reference<VulkanTexture2D> texture = tex.as<VulkanTexture2D>();
+						arrayImageInfos.emplace_back(texture->get_vulkan_descriptor_info());
+					}
 				}
 			}
 			pd->wds.pImageInfo = arrayImageInfos.data();
