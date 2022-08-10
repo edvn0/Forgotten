@@ -2,8 +2,6 @@
 
 #include "render/RenderCommandQueue.hpp"
 
-#define HZ_RENDER_TRACE(...) HZ_CORE_TRACE(__VA_ARGS__)
-
 namespace ForgottenEngine {
 
 	static constexpr auto COMMAND_QUEUE_SIZE = 10 * 1024 * 1024;

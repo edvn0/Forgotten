@@ -4,90 +4,12 @@ project(ForgottenEngine)
 include(../cmake_utils/common/common.cmake)
 
 find_package(Vulkan REQUIRED)
+
 find_package(
   Boost 1.79
   COMPONENTS program_options
   REQUIRED)
 
-# --------------------------------------
-# Linker
-# --------------------------------------
-macro(set_alternate_linker linker)
-  find_program(LINKER_EXECUTABLE ld.${USE_ALTERNATE_LINKER}
-               ${USE_ALTERNATE_LINKER})
-
-  if(LINKER_EXECUTABLE)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-       AND "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 12.0.0)
-      add_link_options("-ld-path=${USE_ALTERNATE_LINKER}")
-    else()
-      add_link_options("-fuse-ld=${USE_ALTERNATE_LINKER}")
-    endif()
-  else()
-    set(USE_ALTERNATE_LINKER
-        ""
-        CACHE STRING "Use alternate linker" FORCE)
-  endif()
-endmacro()
-
-option(
-  USE_ALTERNATE_LINKER
-  "Use alternate linker. Leave empty for system default; alternatives are 'gold', 'lld', 'bfd', 'mold'"
-  "mold")
-
-if(NOT "${USE_ALTERNATE_LINKER}" STREQUAL "")
-  message(STATUS ${USE_ALTERNATE_LINKER})
-  set_alternate_linker(${USE_ALTERNATE_LINKER})
-endif()
-
-# ---------------------------------------
-# SPIRV Shader Compilation
-# ---------------------------------------
-find_program(
-  glslc_executable
-  NAMES glslc
-  HINTS Vulkan::glslc)
-
-set(SHADER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders)
-set(SHADER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/resources/shaders)
-
-file(
-  GLOB
-  SHADERS
-  ${SHADER_SOURCE_DIR}/*.vert
-  ${SHADER_SOURCE_DIR}/*.frag
-  ${SHADER_SOURCE_DIR}/*.comp
-  ${SHADER_SOURCE_DIR}/*.geom
-  ${SHADER_SOURCE_DIR}/*.tesc
-  ${SHADER_SOURCE_DIR}/*.tese
-  ${SHADER_SOURCE_DIR}/*.mesh
-  ${SHADER_SOURCE_DIR}/*.task
-  ${SHADER_SOURCE_DIR}/*.rgen
-  ${SHADER_SOURCE_DIR}/*.rchit
-  ${SHADER_SOURCE_DIR}/*.rmiss)
-
-add_custom_command(
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_BINARY_DIR}
-  OUTPUT ${SHADER_BINARY_DIR}
-  COMMENT "Creating ${SHADER_BINARY_DIR}")
-
-foreach(shader_file IN LISTS SHADERS)
-  get_filename_component(FILENAME ${shader_file} NAME)
-  message(STATUS ${shader_file})
-  add_custom_command(
-    COMMAND ${glslc_executable} -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
-            ${shader_file}
-    OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
-    DEPENDS ${shader_file} ${SHADER_BINARY_DIR}
-    COMMENT "Compiling ${FILENAME}")
-  list(APPEND SPV_SHADERS ${SHADER_BINARY_DIR}/${FILENAME}.spv)
-endforeach()
-
-add_custom_target(CompileEngineShaders ALL DEPENDS ${SPV_SHADERS})
-
-# ----------------------------------------------
-# End
-# ----------------------------------------------
 file(
   GLOB_RECURSE
   sources
@@ -95,7 +17,13 @@ file(
   include/**.hpp
   src/**.cpp
   test/*.hpp
-  test/*.cpp)
+  test/*.cpp
+  vendor/yaml-cpp/src/**.cpp
+  vendor/yaml-cpp/src/**.h,
+  vendor/yaml-cpp/include/**.h,
+  vendor/VulkanMemoryAllocator/include/vk_mem_alloc.h,
+  vendor/VulkanMemoryAllocator/src/VmaUsage.h,
+  vendor/VulkanMemoryAllocator/src/VmaUsage.cpp,)
 
 if(WIN32)
   list(FILTER sources EXCLUDE REGEX "MacOS")
@@ -109,74 +37,68 @@ endif()
 
 set(MSDF_ATLAS_GEN_MSDFGEN_EXTERNAL 0)
 
-add_subdirectory(vendor/VulkanMemoryAllocator)
-add_subdirectory(vendor/spdlog)
-add_subdirectory(vendor/glfw)
-add_subdirectory(vendor/tinyobjloader)
-add_subdirectory(vendor/argparse)
-add_subdirectory(vendor/imgui)
-add_subdirectory(vendor/msdf-atlas-gen)
-add_subdirectory(vendor/spirv-cross)
-add_subdirectory(vendor/yaml-cpp)
-add_subdirectory(vendor/shaderc)
+set_directory_properties(PROPERTIES COMPILE_DEFINITIONS SHOW_MESSAGE=1)
+add_subdirectory(vendor)
 
 find_program(CLANG_FORMAT "clang-format")
 
 if(CLANG_FORMAT)
-  add_custom_target(clang-format COMMAND /opt/homebrew/bin/clang-format -i
-                                         -style=file ${sources})
+  set(formattable_files ${sources})
+
+  list(FILTER formattable_files EXCLUDE REGEX "yaml-cpp")
+
+  add_custom_target(clang-format COMMAND ${CLANG_FORMAT} -i -style=file
+                                         ${formattable_files})
 endif()
 
 add_library(ForgottenEngine STATIC ${sources})
-target_include_directories(
-  ForgottenEngine
-  PUBLIC include
-         src
-         vendor/imgui
-         vendor/yaml-cpp/include
-         vendor/msdf-atlas-gen/msdf-atlas-gen
-         vendor/msdf-atlas-gen/msdfgen
-         ${Boost_INCLUDE_DIRS}
-  PRIVATE /usr/local/include
-          /opt/homebrew/include
-          /opt/homebrew/Cellar
-          ${Vulkan_INCLUDE_DIRS}
-          vendor/VulkanMemoryAllocator/include
-          .
-          vendor/glm
-          vendor/spdlog/include
-          vendor/vk_init
-          vendor/glfw/include
-          vendor/tinyobjloader
-          vendor/stb
-          vendor/argparse/include
-          vendor/spirv-cross
-          vendor/shaderc
-          vendor/shaderc/libshaderc/include
-          vendor/shaderc/libshaderc_util/include)
-target_link_libraries(
-  ForgottenEngine
-  PRIVATE ${Vulkan_LIBRARIES}
-          VulkanMemoryAllocator
-          glfw
-          spdlog
-          tinyobjloader
-          imgui
-          argparse
-          msdf-atlas-gen
-          spirv-cross-core
-          spirv-cross-glsl
-          spirv-cross-msl
-          spirv-cross-reflect
-          yaml-cpp
-          shaderc
-          Boost::program_options)
+
 target_compile_definitions(ForgottenEngine PRIVATE FORGOTTEN_TRACK_MEMORY)
 
 if(APPLE)
   target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
                                                 -fcolor-diagnostics)
 endif()
+
+target_include_directories(
+  ForgottenEngine
+  PUBLIC . ${Boost_INCLUDE_DIRS}
+  PRIVATE include
+          src
+          vendor/assimp/include
+          vendor/imgui
+          vendor/yaml-cpp/include
+          vendor/msdf-atlas-gen/msdf-atlas-gen
+          vendor/msdf-atlas-gen/msdfgen
+          /usr/local/include
+          /opt/homebrew/include
+          /opt/homebrew/Cellar
+          vendor/VulkanMemoryAllocator/include
+          vendor/glm
+          vendor/spdlog/include
+          vendor/vk_init
+          vendor/glfw/include
+          vendor/tinyobjloader
+          vendor/stb
+          vendor/spirv-cross
+          vendor/shaderc
+          vendor/shaderc/libshaderc/include
+          vendor/shaderc/libshaderc_util/include
+          ${Vulkan_INCLUDE_DIRS})
+
+target_link_libraries(
+  ForgottenEngine
+  PRIVATE ${Vulkan_LIBRARIES}
+          glfw
+          tinyobjloader
+          imgui
+          msdf-atlas-gen
+          assimp
+          shaderc
+          spirv-cross-glsl
+          spirv-cross-core
+          ${minizip}
+          Boost::program_options)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_definitions(ForgottenEngine PUBLIC -fcolor-diagnostics)
@@ -190,8 +112,7 @@ add_custom_command(
   TARGET ForgottenEngine
   POST_BUILD
   COMMAND
-    ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_BINARY_DIR}/resources
+    ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
     $<TARGET_FILE_DIR:ForgottenEngine>/resources)
 
-add_dependencies(ForgottenEngine CompileEngineShaders)
 add_dependencies(ForgottenEngine clang-format)

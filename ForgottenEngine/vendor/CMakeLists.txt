@@ -1,0 +1,7 @@
+add_subdirectory(assimp)
+add_subdirectory(shaderc)
+add_subdirectory(spirv-cross)
+add_subdirectory(glfw)
+add_subdirectory(tinyobjloader)
+add_subdirectory(imgui)
+add_subdirectory(msdf-atlas-gen)

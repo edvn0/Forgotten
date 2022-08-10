@@ -4,6 +4,7 @@
 
 #include "render/Font.hpp"
 #include "render/IndexBuffer.hpp"
+#include "render/MSDFData.hpp"
 #include "render/Material.hpp"
 #include "render/Mesh.hpp"
 #include "render/Pipeline.hpp"
@@ -38,10 +39,10 @@ namespace ForgottenEngine {
 		else
 			render_command_buffer = RenderCommandBuffer::create(0);
 
-		uint32_t framesInFlight = Renderer::get_config().frames_in_flight;
+		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 
 		FramebufferSpecification framebufferSpec;
-		framebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+		framebufferSpec.Attachments = { FramebufferTextureSpecification { ImageFormat::RGBA32F }, FramebufferTextureSpecification { ImageFormat::Depth } };
 		framebufferSpec.Samples = 1;
 		framebufferSpec.ClearColorOnLoad = true;
 		framebufferSpec.ClearColor = { 0.1f, 0.9f, 0.5f, 1.0f };
@@ -65,9 +66,9 @@ namespace ForgottenEngine {
 				{ ShaderDataType::Float, "a_TextureIndex" }, { ShaderDataType::Float, "a_TilingFactor" } };
 			quad_pipeline = Pipeline::create(pipelineSpecification);
 
-			quad_vertex_buffer.resize(framesInFlight);
-			quad_vertex_buffer_base.resize(framesInFlight);
-			for (uint32_t i = 0; i < framesInFlight; i++) {
+			quad_vertex_buffer.resize(frames_in_flight);
+			quad_vertex_buffer_base.resize(frames_in_flight);
+			for (uint32_t i = 0; i < frames_in_flight; i++) {
 				quad_vertex_buffer[i] = VertexBuffer::create(MaxVertices * sizeof(QuadVertex));
 				quad_vertex_buffer_base[i] = new QuadVertex[MaxVertices];
 			}
@@ -115,9 +116,9 @@ namespace ForgottenEngine {
 			pipelineSpecification.DepthTest = false;
 			line_on_top_pipeline = Pipeline::create(pipelineSpecification);
 
-			line_vertex_buffer.resize(framesInFlight);
-			line_vertex_buffer_base.resize(framesInFlight);
-			for (uint32_t i = 0; i < framesInFlight; i++) {
+			line_vertex_buffer.resize(frames_in_flight);
+			line_vertex_buffer_base.resize(frames_in_flight);
+			for (uint32_t i = 0; i < frames_in_flight; i++) {
 				line_vertex_buffer[i] = VertexBuffer::create(MaxLineVertices * sizeof(LineVertex));
 				line_vertex_buffer_base[i] = new LineVertex[MaxLineVertices];
 			}
@@ -144,30 +145,30 @@ namespace ForgottenEngine {
 			text_pipeline = Pipeline::create(pipelineSpecification);
 			text_material = Material::create(pipelineSpecification.Shader);
 
-			text_vertex_buffer.resize(framesInFlight);
-			text_vertex_buffer_base.resize(framesInFlight);
-			for (uint32_t i = 0; i < framesInFlight; i++) {
+			text_vertex_buffer.resize(frames_in_flight);
+			text_vertex_buffer_base.resize(frames_in_flight);
+			for (uint32_t i = 0; i < frames_in_flight; i++) {
 				text_vertex_buffer[i] = VertexBuffer::create(MaxVertices * sizeof(TextVertex));
 				text_vertex_buffer_base[i] = new TextVertex[MaxVertices];
 			}
 
-			auto* textQuadIndices = new uint32_t[MaxIndices];
+			auto* text_indices = new uint32_t[MaxIndices];
 
 			uint32_t offset = 0;
 			for (uint32_t i = 0; i < MaxIndices; i += 6) {
-				textQuadIndices[i + 0] = offset + 0;
-				textQuadIndices[i + 1] = offset + 1;
-				textQuadIndices[i + 2] = offset + 2;
+				text_indices[i + 0] = offset + 0;
+				text_indices[i + 1] = offset + 1;
+				text_indices[i + 2] = offset + 2;
 
-				textQuadIndices[i + 3] = offset + 2;
-				textQuadIndices[i + 4] = offset + 3;
-				textQuadIndices[i + 5] = offset + 0;
+				text_indices[i + 3] = offset + 2;
+				text_indices[i + 4] = offset + 3;
+				text_indices[i + 5] = offset + 0;
 
 				offset += 4;
 			}
 
-			text_index_buffer = IndexBuffer::create(textQuadIndices, MaxIndices);
-			delete[] textQuadIndices;
+			text_index_buffer = IndexBuffer::create(text_indices, MaxIndices);
+			delete[] text_indices;
 		}
 
 		// Circles
@@ -183,15 +184,15 @@ namespace ForgottenEngine {
 			circle_pipeline = Pipeline::create(pipelineSpecification);
 			circle_material = Material::create(pipelineSpecification.Shader);
 
-			circle_vertex_buffer.resize(framesInFlight);
-			circle_vertex_buffer_base.resize(framesInFlight);
-			for (uint32_t i = 0; i < framesInFlight; i++) {
+			circle_vertex_buffer.resize(frames_in_flight);
+			circle_vertex_buffer_base.resize(frames_in_flight);
+			for (uint32_t i = 0; i < frames_in_flight; i++) {
 				circle_vertex_buffer[i] = VertexBuffer::create(MaxVertices * sizeof(QuadVertex));
 				circle_vertex_buffer_base[i] = new CircleVertex[MaxVertices];
 			}
 		}
 
-		uniform_buffer_set = UniformBufferSet::create(framesInFlight);
+		uniform_buffer_set = UniformBufferSet::create(frames_in_flight);
 		uniform_buffer_set->create(sizeof(UBCamera), 0);
 
 		quad_material = Material::create(quad_pipeline->get_specification().Shader, "QuadMaterial");
@@ -329,15 +330,6 @@ namespace ForgottenEngine {
 
 	void Renderer2D::Flush()
 	{
-#if OLD
-		// Bind textures
-		for (uint32_t i = 0; i < texture_slot_index; i++)
-			texture_slots[i]->Bind(i);
-
-		m_QuadVertexArray->Bind();
-		Renderer::DrawIndexed(quad_index_count, false);
-		stats.draw_calls++;
-#endif
 	}
 
 	Reference<RenderPass> Renderer2D::get_target_render_pass()

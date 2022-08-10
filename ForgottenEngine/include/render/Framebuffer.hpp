@@ -18,12 +18,12 @@ namespace ForgottenEngine {
 
 	struct FramebufferTextureSpecification {
 		FramebufferTextureSpecification() = default;
-		FramebufferTextureSpecification(ImageFormat format)
+		explicit FramebufferTextureSpecification(ImageFormat format)
 			: Format(format)
 		{
 		}
 
-		ImageFormat Format;
+		ImageFormat Format { ImageFormat::None };
 		bool Blend = true;
 		FramebufferBlendMode BlendMode = FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha;
 		// TODO: filtering/wrap
@@ -83,17 +83,17 @@ namespace ForgottenEngine {
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 
-		virtual void resize(uint32_t width, uint32_t height, bool forceRecreate = false) = 0;
+		virtual void resize(uint32_t width, uint32_t height, bool forceRecreate) = 0;
 		virtual void add_resize_callback(const std::function<void(Reference<Framebuffer>)>& func) = 0;
 
-		virtual void bind_texture(uint32_t attachmentIndex = 0, uint32_t slot = 0) const = 0;
+		virtual void bind_texture(uint32_t attachmentIndex, uint32_t slot) const = 0;
 
 		virtual uint32_t get_width() const = 0;
 		virtual uint32_t get_height() const = 0;
 
 		virtual RendererID get_renderer_id() const = 0;
 
-		virtual Reference<Image2D> get_image(uint32_t attachmentIndex = 0) const = 0;
+		virtual Reference<Image2D> get_image(uint32_t attachmentIndex) const = 0;
 		virtual Reference<Image2D> get_depth_image() const = 0;
 
 		virtual const FramebufferSpecification& get_specification() const = 0;

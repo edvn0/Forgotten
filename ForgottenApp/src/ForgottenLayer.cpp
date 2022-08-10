@@ -7,6 +7,7 @@ static auto is_dockspace_open = true;
 
 ForgottenLayer::ForgottenLayer()
 	: Layer("Sandbox 2D")
+	, user_camera(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f)
 {
 }
 
@@ -19,7 +20,7 @@ void ForgottenLayer::on_attach()
 	compFramebufferSpec.DebugName = "SceneComposite";
 	compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
 	compFramebufferSpec.SwapChainTarget = true;
-	compFramebufferSpec.Attachments = { ImageFormat::RGBA };
+	compFramebufferSpec.Attachments = { FramebufferTextureSpecification { ImageFormat::RGBA } };
 
 	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
 
@@ -45,7 +46,6 @@ void ForgottenLayer::on_detach() { }
 
 void ForgottenLayer::on_update(const TimeStep& ts)
 {
-	Renderer::wait_and_render();
 	const auto [width, height] = Application::the().get_window().get_size<float>();
 	projection_matrix = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
 
@@ -61,7 +61,8 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 		update_performance_timer = 0.2f;
 	}
 
-	draw_debug_stats();
+	user_camera.set_viewport_size(width, height);
+	projection_matrix = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
 
 	if (m_Width != width || m_Height != height) {
 		m_Width = width;
@@ -72,9 +73,12 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 		command_buffer = RenderCommandBuffer::create_from_swapchain();
 	}
 
+	user_camera.on_update(ts);
+
+	draw_debug_stats();
+
 	// Render final image to swapchain
-	Reference<Image2D> final_image
-		= renderer->get_target_render_pass()->get_specification().TargetFramebuffer->get_image();
+	Reference<Image2D> final_image = swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
 	if (final_image) {
 		swapchain_material->set("u_Texture", final_image);
 

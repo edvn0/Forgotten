@@ -18,6 +18,9 @@ namespace ForgottenEngine {
 			Button6 = 6,
 			Button7 = 7,
 
+			Left = Button0,
+			Right = Button1,
+			Middle = Button2,
 			ButtonLast = Button7,
 			ButtonLeft = Button0,
 			ButtonRight = Button1,

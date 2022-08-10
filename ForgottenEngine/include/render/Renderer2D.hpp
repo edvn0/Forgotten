@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Common.hpp"
-#include "render/IndexBuffer.hpp"
-#include "render/RenderCommandBuffer.hpp"
-#include "render/VertexBuffer.hpp"
 
 #include <glm/glm.hpp>
 
@@ -18,6 +15,9 @@ namespace ForgottenEngine {
 	class AABB;
 	class Mesh;
 	class Font;
+	class IndexBuffer;
+	class RenderCommandBuffer;
+	class VertexBuffer;
 
 	struct Renderer2DSpecification {
 		bool swap_chain_target = false;
@@ -31,7 +31,7 @@ namespace ForgottenEngine {
 		void init();
 		void shut_down();
 
-		void begin_scene(const glm::mat4& viewProj, const glm::mat4& view, bool depthTest = true);
+		void begin_scene(const glm::mat4& view_proj, const glm::mat4& view, bool depthTest = true);
 		void end_scene();
 
 		Reference<RenderPass> get_target_render_pass();
@@ -41,30 +41,30 @@ namespace ForgottenEngine {
 
 		// Primitives
 		void draw_quad(const glm::mat4& transform, const glm::vec4& color);
-		void draw_quad(const glm::mat4& transform, const Reference<Texture2D>& texture, float tilingFactor = 1.0f,
-			const glm::vec4& tintColor = glm::vec4(1.0f));
+		void draw_quad(const glm::mat4& transform, const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
+			const glm::vec4& tint_color = glm::vec4(1.0f));
 
 		void draw_quad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		void draw_quad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 		void draw_quad(const glm::vec2& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-			float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
 		void draw_quad(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-			float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
 
 		void draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 		void draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-			float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
 
 		void draw_rotated_quad(
 			const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		void draw_rotated_quad(
 			const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		void draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation,
-			const Reference<Texture2D>& texture, float tilingFactor = 1.0f,
-			const glm::vec4& tintColor = glm::vec4(1.0f));
+			const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
+			const glm::vec4& tint_color = glm::vec4(1.0f));
 		void draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation,
-			const Reference<Texture2D>& texture, float tilingFactor = 1.0f,
-			const glm::vec4& tintColor = glm::vec4(1.0f));
+			const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
+			const glm::vec4& tint_color = glm::vec4(1.0f));
 
 		void draw_rotated_rect(
 			const glm::vec2& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);

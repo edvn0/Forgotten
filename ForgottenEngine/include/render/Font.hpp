@@ -1,11 +1,12 @@
 #pragma once
 
-#include "render/MSDFData.hpp"
 #include "render/Texture.hpp"
 
 #include <filesystem>
 
 namespace ForgottenEngine {
+
+	struct MSDFData;
 
 	class Font : public Asset {
 	public:

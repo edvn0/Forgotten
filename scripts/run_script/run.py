@@ -3,6 +3,7 @@
 from datetime import datetime
 import multiprocessing
 import os
+import signal
 from subprocess import check_call, CalledProcessError
 import sys
 from argparse import ArgumentParser, Namespace
@@ -72,13 +73,13 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
 
     parser = ArgumentParser("ForgottenEngine")
 
-    for default in program_defaults:
-        as_argument_type = default['name'] if default[
-            'type'] == 'Optional' else f"--{default['name']}"
+    for program_option in program_defaults:
+        as_argument_type = program_option['name'] if program_option[
+            'type'] == 'Optional' else f"--{program_option['name']}"
 
-        if 'default' in default:
+        if 'default' in program_option:
 
-            default_value = default['default']
+            default_value = program_option['default']
 
             if default_value['type'] == "bool":
                 parser.add_argument(as_argument_type, action='store_true')
@@ -153,7 +154,8 @@ def main():
 
     if did_clean or not build_dir_exists or cli_results.force_regenerate:
         try:
-            cmake_call = f"cmake -S. -DCMAKE_BUILD_TYPE={cli_results.build_type} -DUSE_ALTERNATE_LINKER={cli_results.linker} -DSPIRV_CROSS_STATIC=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -B{forgotten_root}/{build_folder}/{cli_results.build_type}"
+            cmake_call = f"cmake -S. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE={cli_results.build_type} -DBUILD_SHARED_LIBS=OFF -DUSE_ALTERNATE_LINKER={cli_results.linker} -DASSIMP_BUILD_ZLIB=TRUE -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=OFF -DSPIRV_CROSS_ENABLE_UTIL=OFF -DSPIRV_CROSS_SKIP_INSTALL=ON -DSHADERC_ENABLE_WGSL_OUTPUT=OFF -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_WERROR_COMPILE=OFF -B{forgotten_root}/{build_folder}/{cli_results.build_type}"
+
             configure_call = cmake_call.split(" ")
             configure_call.append(f"-G{cli_results.generator}")
             check_call(configure_call)
@@ -163,7 +165,13 @@ def main():
             exit(e.returncode)
 
     build_project(
-        f"{forgotten_root}/{build_folder}//{cli_results.build_type}", cli_results.generator)
+        f"{forgotten_root}/{build_folder}/{cli_results.build_type}", cli_results.generator)
+
+    try:
+        symlink_call = f"cmake -E create_symlink {forgotten_root}/{build_folder}/{cli_results.build_type}/compile_commands.json {forgotten_root}/compile_commands.json"
+        check_call(symlink_call.split(" "))
+    except CalledProcessError as e:
+        log_info(f"Could not symlink compile_commmands from build to root.")
 
     try:
         run_call = [

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fg.hpp"
+#include "user/UserCamera.hpp"
 
 using namespace ForgottenEngine;
 
@@ -44,4 +45,5 @@ private:
 	TimeStep update_fps_timer { 0.0f };
 	TimeStep update_performance_timer { 0.0f };
 	TimeStep frames_per_second { 0.0f };
+	UserCamera user_camera;
 };

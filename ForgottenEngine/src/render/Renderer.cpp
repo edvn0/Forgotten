@@ -58,7 +58,6 @@ namespace ForgottenEngine {
 		default:
 			CORE_ASSERT(false, "Unknown RendererAPI");
 		}
-		return nullptr;
 	}
 
 	struct ShaderDependencies {
@@ -225,14 +224,14 @@ namespace ForgottenEngine {
 
 	bool Renderer::update_dirty_shaders()
 	{
-		const bool updatedAnyShaders = global_shaders.dirty_shaders.size();
+		const bool updated_any_shader = global_shaders.dirty_shaders.size();
 		for (auto shader : global_shaders.dirty_shaders) {
 			CORE_ASSERT(shader.is_valid(), "Shader is deleted!");
 			shader->rt_reload(true);
 		}
 		global_shaders.dirty_shaders.clear();
 
-		return updatedAnyShaders;
+		return updated_any_shader;
 	}
 
 	const std::unordered_map<std::string, std::string>& Renderer::get_global_shader_macros()
