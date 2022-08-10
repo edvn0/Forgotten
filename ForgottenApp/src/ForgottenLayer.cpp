@@ -179,7 +179,7 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 		}
 		ImGui::End();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 { 0, 0 });
 		{
 			ImGui::Begin("Viewport");
 			{
@@ -233,7 +233,7 @@ void ForgottenLayer::ui_toolbar()
 	ImGui::End();
 }
 
-void ForgottenLayer::on_overlay_render(){};
+void ForgottenLayer::on_overlay_render() {};
 
 void ForgottenLayer::on_event(Event& event)
 {

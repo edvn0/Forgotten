@@ -1,206 +1,205 @@
 #include "fg_pch.hpp"
-#include "utilities/FileSystem.hpp"
 
 #include "Application.hpp"
+#include "utilities/FileSystem.hpp"
 
 #include <GLFW/glfw3.h>
 
 #define GLFW_EXPOSE_NATIVE_COCOA
 
 #include <GLFW/glfw3native.h>
-
 #include <filesystem>
 
 namespace ForgottenEngine {
 
-FileSystem::FileSystemChangedCallbackFn FileSystem::s_Callback;
+	FileSystem::FileSystemChangedCallbackFn FileSystem::s_Callback;
 
-static bool s_Watching = false;
-static bool s_IgnoreNextChange = false;
+	static bool s_Watching = false;
+	static bool s_IgnoreNextChange = false;
 
-void FileSystem::set_change_callback(const FileSystemChangedCallbackFn& callback) { s_Callback = callback; }
+	void FileSystem::set_change_callback(const FileSystemChangedCallbackFn& callback) { s_Callback = callback; }
 
-void FileSystem::start_watching() { s_Watching = true; }
+	void FileSystem::start_watching() { s_Watching = true; }
 
-void FileSystem::stop_watching()
-{
-	if (!s_Watching)
-		return;
-
-	s_Watching = false;
-}
-
-void FileSystem::skip_next_fs_change() { s_IgnoreNextChange = true; }
-
-unsigned long FileSystem::watch(void* param)
-{
-	/*
-	auto assetDirectory = Project::GetActive()->GetAssetDirectory();
-	std::wstring dirStr = assetDirectory.wstring();
-
-	char buf[2048];
-	DWORD bytesReturned;
-	std::filesystem::path filepath;
-	BOOL result = TRUE;
-
-	HANDLE directoryHandle = CreateFile(
-		dirStr.c_str(),
-		GENERIC_READ | FILE_LIST_DIRECTORY,
-		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		NULL,
-		OPEN_EXISTING,
-		FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
-		NULL
-	);
-
-	if (directoryHandle == INVALID_HANDLE_VALUE)
+	void FileSystem::stop_watching()
 	{
-		HZ_CORE_VERIFY(false, "Failed to open directory!");
-		return 0;
+		if (!s_Watching)
+			return;
+
+		s_Watching = false;
 	}
 
-	OVERLAPPED pollingOverlap;
-	pollingOverlap.OffsetHigh = 0;
-	pollingOverlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	void FileSystem::skip_next_fs_change() { s_IgnoreNextChange = true; }
 
-	std::vector<FileSystemChangedEvent> eventBatch;
-	eventBatch.reserve(10);
-
-	while (s_Watching && result)
+	unsigned long FileSystem::watch(void* param)
 	{
-		result = ReadDirectoryChangesW(
-			directoryHandle,
-			&buf,
-			sizeof(buf),
-			TRUE,
-			FILE_NOTIFY_CHANGE_FILE_NAME |
-				FILE_NOTIFY_CHANGE_DIR_NAME |
-				FILE_NOTIFY_CHANGE_SIZE,
-			&bytesReturned,
-			&pollingOverlap,
+		/*
+		auto assetDirectory = Project::GetActive()->GetAssetDirectory();
+		std::wstring dirStr = assetDirectory.wstring();
+
+		char buf[2048];
+		DWORD bytesReturned;
+		std::filesystem::path filepath;
+		BOOL result = TRUE;
+
+		HANDLE directoryHandle = CreateFile(
+			dirStr.c_str(),
+			GENERIC_READ | FILE_LIST_DIRECTORY,
+			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+			NULL,
+			OPEN_EXISTING,
+			FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
 			NULL
 		);
 
-		WaitForSingleObject(pollingOverlap.hEvent, INFINITE);
-
-		if (s_IgnoreNextChange)
+		if (directoryHandle == INVALID_HANDLE_VALUE)
 		{
-			s_IgnoreNextChange = false;
-			eventBatch.clear();
-			continue;
+			HZ_CORE_VERIFY(false, "Failed to open directory!");
+			return 0;
 		}
 
-		FILE_NOTIFY_INFORMATION* pNotify;
-		int offset = 0;
-		std::wstring oldName;
+		OVERLAPPED pollingOverlap;
+		pollingOverlap.OffsetHigh = 0;
+		pollingOverlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-		do
+		std::vector<FileSystemChangedEvent> eventBatch;
+		eventBatch.reserve(10);
+
+		while (s_Watching && result)
 		{
-			pNotify = (FILE_NOTIFY_INFORMATION*)((char*)buf + offset);
-			size_t filenameLength = pNotify->FileNameLength / sizeof(wchar_t);
+			result = ReadDirectoryChangesW(
+				directoryHandle,
+				&buf,
+				sizeof(buf),
+				TRUE,
+				FILE_NOTIFY_CHANGE_FILE_NAME |
+					FILE_NOTIFY_CHANGE_DIR_NAME |
+					FILE_NOTIFY_CHANGE_SIZE,
+				&bytesReturned,
+				&pollingOverlap,
+				NULL
+			);
 
-			FileSystemChangedEvent e;
-			e.FilePath = std::filesystem::path(std::wstring(pNotify->FileName, filenameLength));
-			e.IsDirectory = IsDirectory(e.FilePath);
+			WaitForSingleObject(pollingOverlap.hEvent, INFINITE);
 
-			switch (pNotify->Action)
+			if (s_IgnoreNextChange)
 			{
-			case FILE_ACTION_ADDED:
-			{
-				e.Action = FileSystemAction::Added;
-				break;
-			}
-			case FILE_ACTION_REMOVED:
-			{
-				e.Action = FileSystemAction::Delete;
-				break;
-			}
-			case FILE_ACTION_MODIFIED:
-			{
-				e.Action = FileSystemAction::Modified;
-				break;
-			}
-			case FILE_ACTION_RENAMED_OLD_NAME:
-			{
-				oldName = e.FilePath.filename();
-				break;
-			}
-			case FILE_ACTION_RENAMED_NEW_NAME:
-			{
-				e.OldName = oldName;
-				e.Action = FileSystemAction::Rename;
-				break;
-			}
+				s_IgnoreNextChange = false;
+				eventBatch.clear();
+				continue;
 			}
 
-			// NOTE(Peter): Fix for https://gitlab.com/chernoprojects/Hazel-dev/-/issues/143
-			bool hasAddedEvent = false;
-			if (e.Action == FileSystemAction::Modified)
+			FILE_NOTIFY_INFORMATION* pNotify;
+			int offset = 0;
+			std::wstring oldName;
+
+			do
 			{
-				for (const auto& event : eventBatch)
+				pNotify = (FILE_NOTIFY_INFORMATION*)((char*)buf + offset);
+				size_t filenameLength = pNotify->FileNameLength / sizeof(wchar_t);
+
+				FileSystemChangedEvent e;
+				e.FilePath = std::filesystem::path(std::wstring(pNotify->FileName, filenameLength));
+				e.IsDirectory = IsDirectory(e.FilePath);
+
+				switch (pNotify->Action)
 				{
-					if (event.FilePath == e.FilePath && event.Action == FileSystemAction::Added)
-						hasAddedEvent = true;
+				case FILE_ACTION_ADDED:
+				{
+					e.Action = FileSystemAction::Added;
+					break;
 				}
+				case FILE_ACTION_REMOVED:
+				{
+					e.Action = FileSystemAction::Delete;
+					break;
+				}
+				case FILE_ACTION_MODIFIED:
+				{
+					e.Action = FileSystemAction::Modified;
+					break;
+				}
+				case FILE_ACTION_RENAMED_OLD_NAME:
+				{
+					oldName = e.FilePath.filename();
+					break;
+				}
+				case FILE_ACTION_RENAMED_NEW_NAME:
+				{
+					e.OldName = oldName;
+					e.Action = FileSystemAction::Rename;
+					break;
+				}
+				}
+
+				// NOTE(Peter): Fix for https://gitlab.com/chernoprojects/Hazel-dev/-/issues/143
+				bool hasAddedEvent = false;
+				if (e.Action == FileSystemAction::Modified)
+				{
+					for (const auto& event : eventBatch)
+					{
+						if (event.FilePath == e.FilePath && event.Action == FileSystemAction::Added)
+							hasAddedEvent = true;
+					}
+				}
+
+				if (pNotify->Action != FILE_ACTION_RENAMED_OLD_NAME && !hasAddedEvent)
+					eventBatch.push_back(e);
+
+				offset += pNotify->NextEntryOffset;
+			} while (pNotify->NextEntryOffset);
+
+			if (eventBatch.size() > 0)
+			{
+				s_Callback(eventBatch);
+				eventBatch.clear();
 			}
-
-			if (pNotify->Action != FILE_ACTION_RENAMED_OLD_NAME && !hasAddedEvent)
-				eventBatch.push_back(e);
-
-			offset += pNotify->NextEntryOffset;
-		} while (pNotify->NextEntryOffset);
-
-		if (eventBatch.size() > 0)
-		{
-			s_Callback(eventBatch);
-			eventBatch.clear();
 		}
+
+		CloseHandle(directoryHandle);
+		return 0;*/
+
+		return 0;
 	}
 
-	CloseHandle(directoryHandle);
-	return 0;*/
+	bool FileSystem::write_bytes(const std::filesystem::path& filepath, const Buffer& buffer)
+	{
+		std::ofstream stream(filepath, std::ios::binary | std::ios::trunc);
 
-	return 0;
-}
+		if (!stream) {
+			stream.close();
+			return false;
+		}
 
-bool FileSystem::write_bytes(const std::filesystem::path& filepath, const Buffer& buffer)
-{
-	std::ofstream stream(filepath, std::ios::binary | std::ios::trunc);
-
-	if (!stream) {
+		stream.write((char*)buffer.data, buffer.size);
 		stream.close();
-		return false;
+
+		return true;
 	}
 
-	stream.write((char*)buffer.data, buffer.size);
-	stream.close();
+	Buffer FileSystem::read_bytes(const std::filesystem::path& filepath)
+	{
+		Buffer buffer;
 
-	return true;
-}
+		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
+		CORE_ASSERT(stream, "");
 
-Buffer FileSystem::read_bytes(const std::filesystem::path& filepath)
-{
-	Buffer buffer;
+		std::streampos end = stream.tellg();
+		stream.seekg(0, std::ios::beg);
+		uint32_t size = end - stream.tellg();
+		CORE_ASSERT(size != 0, "");
 
-	std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-	CORE_ASSERT(stream, "");
+		buffer.allocate(size);
+		stream.read((char*)buffer.data, buffer.size);
+		stream.close();
 
-	std::streampos end = stream.tellg();
-	stream.seekg(0, std::ios::beg);
-	uint32_t size = end - stream.tellg();
-	CORE_ASSERT(size != 0, "");
+		return buffer;
+	}
 
-	buffer.allocate(size);
-	stream.read((char*)buffer.data, buffer.size);
-	stream.close();
+	bool FileSystem::has_env_variable(const std::string& key) { return false; }
 
-	return buffer;
-}
+	bool FileSystem::set_env_variable(const std::string& key, const std::string& value) { return false; }
 
-bool FileSystem::has_env_variable(const std::string& key) { return false; }
+	std::string FileSystem::get_env_variable(const std::string& key) { return std::string {}; }
 
-bool FileSystem::set_env_variable(const std::string& key, const std::string& value) { return false; }
-
-std::string FileSystem::get_env_variable(const std::string& key) { return std::string{}; }
-
-}
+} // namespace ForgottenEngine

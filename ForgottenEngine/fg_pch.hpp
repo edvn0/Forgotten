@@ -7,9 +7,14 @@
 #include "Assets.hpp"
 #include "Hash.hpp"
 #include "Logger.hpp"
+#include "vulkan/vulkan.h"
 
+#include <Common.hpp>
+#include <Logger.hpp>
+#include <Memory.hpp>
 #include <algorithm>
 #include <array>
+#include <events/Event.hpp>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -23,10 +28,3 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <Common.hpp>
-#include <Logger.hpp>
-#include <Memory.hpp>
-#include <events/Event.hpp>
-
-#include "vulkan/vulkan.h"

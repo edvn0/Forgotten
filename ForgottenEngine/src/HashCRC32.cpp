@@ -8,7 +8,7 @@ constexpr auto gen_crc32_table()
 	constexpr int num_iterations = 8;
 	constexpr uint32_t polynomial = 0xEDB88320;
 
-	std::array<uint32_t, num_bytes> crc32_table{};
+	std::array<uint32_t, num_bytes> crc32_table {};
 
 	for (int byte = 0; byte < num_bytes; ++byte) {
 		uint32_t crc = (uint32_t)byte;
@@ -29,17 +29,17 @@ static_assert(crc32_table.size() == 256 && crc32_table[1] == 0x77073096 && crc32
 
 namespace ForgottenEngine {
 
-uint32_t Hash::crc_32(const char* str)
-{
-	auto crc = 0xFFFFFFFFu;
+	uint32_t Hash::crc_32(const char* str)
+	{
+		auto crc = 0xFFFFFFFFu;
 
-	for (auto i = 0u; auto c = str[i]; ++i) {
-		crc = crc32_table[(crc ^ c) & 0xFF] ^ (crc >> 8);
+		for (auto i = 0u; auto c = str[i]; ++i) {
+			crc = crc32_table[(crc ^ c) & 0xFF] ^ (crc >> 8);
+		}
+
+		return ~crc;
 	}
 
-	return ~crc;
-}
+	uint32_t Hash::crc_32(const std::string& string) { return crc_32(string.c_str()); }
 
-uint32_t Hash::crc_32(const std::string& string) { return crc_32(string.c_str()); }
-
-}
+} // namespace ForgottenEngine

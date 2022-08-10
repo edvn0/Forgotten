@@ -8,10 +8,10 @@
 
 namespace ForgottenEngine {
 
-VulkanRenderPass::VulkanRenderPass(const RenderPassSpecification& spec)
-	: spec(spec)
-{
-}
-RenderPassSpecification& VulkanRenderPass::get_specification() { return spec; }
-const RenderPassSpecification& VulkanRenderPass::get_specification() const { return spec; }
-}
+	VulkanRenderPass::VulkanRenderPass(const RenderPassSpecification& spec)
+		: spec(spec)
+	{
+	}
+	RenderPassSpecification& VulkanRenderPass::get_specification() { return spec; }
+	const RenderPassSpecification& VulkanRenderPass::get_specification() const { return spec; }
+} // namespace ForgottenEngine

@@ -4,23 +4,23 @@
 
 #include "fg_pch.hpp"
 
+#include "render/RenderPass.hpp"
+
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
-
-#include "render/RenderPass.hpp"
 #include "vulkan/VulkanRenderPass.hpp"
 
 namespace ForgottenEngine {
 
-Reference<RenderPass> RenderPass::create(const RenderPassSpecification& spec)
-{
-	switch (RendererAPI::current()) {
-	case RendererAPIType::None:
-		return nullptr;
-	case RendererAPIType::Vulkan:
-		return Reference<VulkanRenderPass>::create(spec);
+	Reference<RenderPass> RenderPass::create(const RenderPassSpecification& spec)
+	{
+		switch (RendererAPI::current()) {
+		case RendererAPIType::None:
+			return nullptr;
+		case RendererAPIType::Vulkan:
+			return Reference<VulkanRenderPass>::create(spec);
+		}
+		CORE_ASSERT(false, "Unknown RendererAPI");
 	}
-	CORE_ASSERT(false, "Unknown RendererAPI");
-}
 
-}
+} // namespace ForgottenEngine

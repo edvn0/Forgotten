@@ -1,110 +1,106 @@
 #pragma once
 
 #include "render/Texture.hpp"
+#include "vulkan/VulkanImage.hpp"
 
 #include <vulkan/vulkan.h>
 
-#include "vulkan/VulkanImage.hpp"
-
 namespace ForgottenEngine {
 
-class VulkanTexture2D : public Texture2D {
-public:
-	VulkanTexture2D(const std::string& path, TextureProperties properties);
-	VulkanTexture2D(
-		ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
-	~VulkanTexture2D() override;
-	void resize(const glm::uvec2& size) override;
-	void resize(uint32_t width, uint32_t height) override;
+	class VulkanTexture2D : public Texture2D {
+	public:
+		VulkanTexture2D(const std::string& path, TextureProperties properties);
+		VulkanTexture2D(
+			ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
+		~VulkanTexture2D() override;
+		void resize(const glm::uvec2& size) override;
+		void resize(uint32_t width, uint32_t height) override;
 
-	void invalidate();
+		void invalidate();
 
-	void bind(uint32_t slot) const override{};
-	void lock() override;
-	void unlock() override;
-	Buffer get_writeable_buffer() override;
-	bool is_loaded() const override { return image_data; };
-	const std::string& get_path() const override;
+		void bind(uint32_t slot) const override {};
+		void lock() override;
+		void unlock() override;
+		Buffer get_writeable_buffer() override;
+		bool is_loaded() const override { return image_data; };
+		const std::string& get_path() const override;
 
-	const VkDescriptorImageInfo& get_vulkan_descriptor_info() const
-	{
-		return image.as<VulkanImage2D>()->get_descriptor_info();
-	}
+		const VkDescriptorImageInfo& get_vulkan_descriptor_info() const
+		{
+			return image.as<VulkanImage2D>()->get_descriptor_info();
+		}
 
+		ImageFormat get_format() const override { return format; }
+		uint32_t get_width() const override { return width; }
+		uint32_t get_height() const override { return height; }
+		glm::uvec2 get_size() const override { return { width, height }; }
 
+	public:
+		Reference<Image2D> get_image() const override { return image; }
+		uint32_t get_mip_level_count() const override;
+		std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
+		uint64_t get_hash() const override { return (uint64_t)image.as<VulkanImage2D>()->get_image_info().image_view; }
 
-	ImageFormat get_format() const override { return format; }
-	uint32_t get_width() const override { return width; }
-	uint32_t get_height() const override { return height; }
-	glm::uvec2 get_size() const override { return { width, height }; }
+		void generate_mips();
 
-public:
-	Reference<Image2D> get_image() const override { return image; }
-	uint32_t get_mip_level_count() const override;
-	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
-	uint64_t get_hash() const override { return (uint64_t)image.as<VulkanImage2D>()->get_image_info().image_view; }
+	private:
+		bool load_image(const std::string& path);
+		bool load_image(const void* data, uint32_t size);
 
-	void generate_mips();
+	private:
+		std::string path;
+		uint32_t width;
+		uint32_t height;
+		TextureProperties properties;
 
-private:
-	bool load_image(const std::string& path);
-	bool load_image(const void* data, uint32_t size);
+		Buffer image_data;
 
-private:
-	std::string path;
-	uint32_t width;
-	uint32_t height;
-	TextureProperties properties;
+		Reference<Image2D> image;
 
-	Buffer image_data;
+		ImageFormat format = ImageFormat::None;
+	};
 
-	Reference<Image2D> image;
+	class VulkanTextureCube : public TextureCube {
+	public:
+		VulkanTextureCube(
+			ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
+		VulkanTextureCube(const std::string& path, TextureProperties properties);
+		void release();
+		~VulkanTextureCube() override;
 
-	ImageFormat format = ImageFormat::None;
-};
+		void bind(uint32_t slot) const override {};
 
-class VulkanTextureCube : public TextureCube {
-public:
-	VulkanTextureCube(
-		ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
-	VulkanTextureCube(const std::string& path, TextureProperties properties);
-	void release();
-	~VulkanTextureCube() override;
+	public:
+		ImageFormat get_format() const override { return format; }
 
-	void bind(uint32_t slot) const override{};
+		uint32_t get_width() const override { return width; }
+		uint32_t get_height() const override { return height; }
+		glm::uvec2 get_size() const override { return { width, height }; }
 
-public:
-	ImageFormat get_format() const override { return format; }
+		std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
+		uint32_t get_mip_level_count() const override;
 
-	uint32_t get_width() const override { return width; }
-	uint32_t get_height() const override { return height; }
-	glm::uvec2 get_size() const override { return { width, height }; }
+		uint64_t get_hash() const override { return (uint64_t)image; }
 
-	std::pair<uint32_t, uint32_t> get_mip_size(uint32_t mip) const override;
-	uint32_t get_mip_level_count() const override;
+		const VkDescriptorImageInfo& get_vulkan_descriptor_info() const { return descriptor_image_info; }
+		VkImageView create_image_view_single_mip(uint32_t mip);
 
+		void generate_mips(bool readonly = false);
 
-	uint64_t get_hash() const override { return (uint64_t)image; }
+	private:
+		void invalidate();
 
-	const VkDescriptorImageInfo& get_vulkan_descriptor_info() const { return descriptor_image_info; }
-	VkImageView create_image_view_single_mip(uint32_t mip);
+	private:
+		ImageFormat format = ImageFormat::None;
+		uint32_t width = 0, height = 0;
+		TextureProperties properties;
 
-	void generate_mips(bool readonly = false);
+		bool mips_generated = false;
 
-private:
-	void invalidate();
+		Buffer local_storage;
+		VmaAllocation memory_alloc;
+		VkImage image { nullptr };
+		VkDescriptorImageInfo descriptor_image_info = {};
+	};
 
-private:
-	ImageFormat format = ImageFormat::None;
-	uint32_t width = 0, height = 0;
-	TextureProperties properties;
-
-	bool mips_generated = false;
-
-	Buffer local_storage;
-	VmaAllocation memory_alloc;
-	VkImage image{ nullptr };
-	VkDescriptorImageInfo descriptor_image_info = {};
-};
-
-}
+} // namespace ForgottenEngine

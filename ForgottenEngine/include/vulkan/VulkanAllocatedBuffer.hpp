@@ -8,14 +8,14 @@
 
 namespace ForgottenEngine {
 
-struct AllocatedBuffer {
-	VkBuffer buffer;
-	VmaAllocation allocation;
-};
+	struct AllocatedBuffer {
+		VkBuffer buffer;
+		VmaAllocation allocation;
+	};
 
-struct AllocatedImage {
-	VkImage image;
-	VmaAllocation allocation;
-};
+	struct AllocatedImage {
+		VkImage image;
+		VmaAllocation allocation;
+	};
 
-}
+} // namespace ForgottenEngine

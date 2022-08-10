@@ -8,26 +8,26 @@
 
 namespace ForgottenEngine {
 
-VulkanUniformBufferSet::VulkanUniformBufferSet(uint32_t size)
-	: frames(size)
-{
-}
-
-void VulkanUniformBufferSet::create(uint32_t size, uint32_t binding)
-{
-	for (uint32_t frame = 0; frame < frames; frame++) {
-		Reference<UniformBuffer> uniformBuffer = UniformBuffer::create(size, binding);
-		set(uniformBuffer, 0, frame);
+	VulkanUniformBufferSet::VulkanUniformBufferSet(uint32_t size)
+		: frames(size)
+	{
 	}
-}
 
-Reference<UniformBuffer> VulkanUniformBufferSet::get(uint32_t binding, uint32_t set, uint32_t frame)
-{
-	return frame_ubs.at(frame).at(set).at(binding);
-}
+	void VulkanUniformBufferSet::create(uint32_t size, uint32_t binding)
+	{
+		for (uint32_t frame = 0; frame < frames; frame++) {
+			Reference<UniformBuffer> uniformBuffer = UniformBuffer::create(size, binding);
+			set(uniformBuffer, 0, frame);
+		}
+	}
 
-void VulkanUniformBufferSet::set(const Reference<UniformBuffer>& buffer, uint32_t set, uint32_t frame)
-{
-	frame_ubs[frame][set][buffer->get_binding()] = buffer;
-}
-}
+	Reference<UniformBuffer> VulkanUniformBufferSet::get(uint32_t binding, uint32_t set, uint32_t frame)
+	{
+		return frame_ubs.at(frame).at(set).at(binding);
+	}
+
+	void VulkanUniformBufferSet::set(const Reference<UniformBuffer>& buffer, uint32_t set, uint32_t frame)
+	{
+		frame_ubs[frame][set][buffer->get_binding()] = buffer;
+	}
+} // namespace ForgottenEngine

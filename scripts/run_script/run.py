@@ -138,15 +138,15 @@ def main():
 
     did_clean = bool(cli_results.clean)
 
+    build_folder = f"build-{cli_results.generator}".replace(" ", "")
+
     if did_clean:
         try:
-            cmake_call = f"rm -rf {forgotten_root}/build/{cli_results.build_type}"
+            cmake_call = f"rm -rf {forgotten_root}/{build_folder}/{cli_results.build_type}"
             check_call(cmake_call.split(" "))
         except CalledProcessError as e:
             log_failure(f"Could not clean folder, reason: \n\t\t{str(e)}")
             exit(e.returncode)
-
-    build_folder = f"build-{cli_results.generator}".replace(" ", "")
 
     build_dir_exists = os.path.isdir(
         f"{forgotten_root}/{build_folder}/{cli_results.build_type}")

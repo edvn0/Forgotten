@@ -5,18 +5,19 @@
 #pragma once
 
 #include "Common.hpp"
+
 #include <string>
 
 namespace ForgottenEngine {
 
-class VertexBuffer {
-public:
-	virtual ~VertexBuffer() = default;
+	class VertexBuffer {
+	public:
+		virtual ~VertexBuffer() = default;
 
-	virtual std::string to_string() = 0;
+		virtual std::string to_string() = 0;
 
-public:
-	static std::shared_ptr<VertexBuffer> create(size_t size);
-};
+	public:
+		static std::shared_ptr<VertexBuffer> create(size_t size);
+	};
 
-}
+} // namespace ForgottenEngine

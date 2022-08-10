@@ -13,20 +13,20 @@ extern ForgottenEngine::Application* ForgottenEngine::create_application(const A
 #include <system_error>
 
 namespace ForgottenEngine {
-using CLIOptions = boost::program_options::options_description;
-using ArgumentMap = boost::program_options::variables_map;
-}
+	using CLIOptions = boost::program_options::options_description;
+	using ArgumentMap = boost::program_options::variables_map;
+} // namespace ForgottenEngine
 
 int main(int argc, char** argv)
 {
-	ForgottenEngine::Application* app{ nullptr };
+	ForgottenEngine::Application* app { nullptr };
 	ForgottenEngine::Logger::init();
 
 	auto cwd = std::filesystem::current_path();
 	CORE_INFO("{}", cwd);
 
 	std::filesystem::path defaults_path
-		= cwd / std::filesystem::path{ "resources" } / std::filesystem::path{ "cli_defaults.yml" };
+		= cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
 	YAML::Node config;
 	try {
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 	desc.add_options()("help", "Show help message")(
 		"width", boost::program_options::value<uint32_t>()->default_value(1280), "Width of window")(
 		"height", boost::program_options::value<uint32_t>()->default_value(1080), "Height of window")("name",
-		boost::program_options::value<std::string>()->default_value(std::string{ "ForgottenEngine" }),
+		boost::program_options::value<std::string>()->default_value(std::string { "ForgottenEngine" }),
 		"Title of window")("vsync", boost::program_options::value<bool>()->default_value(false), "Window vsync");
 
 	ForgottenEngine::ArgumentMap vm;

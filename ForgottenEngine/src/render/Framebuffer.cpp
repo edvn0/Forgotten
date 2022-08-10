@@ -4,23 +4,23 @@
 
 #include "fg_pch.hpp"
 
+#include "render/Framebuffer.hpp"
+
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
-
-#include "render/Framebuffer.hpp"
 #include "vulkan/VulkanFramebuffer.hpp"
 
 namespace ForgottenEngine {
 
-Reference<Framebuffer> Framebuffer::create(const FramebufferSpecification& spec)
-{
-	switch (RendererAPI::current()) {
-	case RendererAPIType::None:
-		return nullptr;
-	case RendererAPIType::Vulkan:
-		return Reference<VulkanFramebuffer>::create(spec);
+	Reference<Framebuffer> Framebuffer::create(const FramebufferSpecification& spec)
+	{
+		switch (RendererAPI::current()) {
+		case RendererAPIType::None:
+			return nullptr;
+		case RendererAPIType::Vulkan:
+			return Reference<VulkanFramebuffer>::create(spec);
+		}
+		CORE_ASSERT(false, "Unknown RendererAPI");
 	}
-	CORE_ASSERT(false, "Unknown RendererAPI");
-}
 
-}
+} // namespace ForgottenEngine

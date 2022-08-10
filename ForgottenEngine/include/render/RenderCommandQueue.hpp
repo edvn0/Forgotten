@@ -4,21 +4,21 @@
 
 namespace ForgottenEngine {
 
-class RenderCommandQueue {
-public:
-	typedef void (*RenderCommandFunction)(void*);
+	class RenderCommandQueue {
+	public:
+		typedef void (*RenderCommandFunction)(void*);
 
-	RenderCommandQueue();
-	~RenderCommandQueue();
+		RenderCommandQueue();
+		~RenderCommandQueue();
 
-	void* allocate(RenderCommandFunction func, uint32_t size);
+		void* allocate(RenderCommandFunction func, uint32_t size);
 
-	void execute();
+		void execute();
 
-private:
-	uint8_t* command_buffer;
-	uint8_t* command_buffer_ptr;
-	uint32_t command_count = 0;
-};
+	private:
+		uint8_t* command_buffer;
+		uint8_t* command_buffer_ptr;
+		uint32_t command_count = 0;
+	};
 
-}
+} // namespace ForgottenEngine

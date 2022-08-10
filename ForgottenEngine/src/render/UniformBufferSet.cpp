@@ -4,23 +4,23 @@
 
 #include "fg_pch.hpp"
 
+#include "render/UniformBufferSet.hpp"
+
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
-
-#include "render/UniformBufferSet.hpp"
 #include "vulkan/VulkanUniformBufferSet.hpp"
 
 namespace ForgottenEngine {
 
-Reference<UniformBufferSet> UniformBufferSet::create(uint32_t size)
-{
-	switch (RendererAPI::current()) {
-	case RendererAPIType::None:
-		return nullptr;
-	case RendererAPIType::Vulkan:
-		return Reference<VulkanUniformBufferSet>::create(size);
+	Reference<UniformBufferSet> UniformBufferSet::create(uint32_t size)
+	{
+		switch (RendererAPI::current()) {
+		case RendererAPIType::None:
+			return nullptr;
+		case RendererAPIType::Vulkan:
+			return Reference<VulkanUniformBufferSet>::create(size);
+		}
+		CORE_ASSERT(false, "Unknown RendererAPI");
 	}
-	CORE_ASSERT(false, "Unknown RendererAPI");
-}
 
-}
+} // namespace ForgottenEngine

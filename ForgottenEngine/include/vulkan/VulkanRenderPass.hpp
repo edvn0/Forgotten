@@ -8,14 +8,14 @@
 
 namespace ForgottenEngine {
 
-class VulkanRenderPass : public RenderPass {
-public:
-	explicit VulkanRenderPass(const RenderPassSpecification& spec);
-	RenderPassSpecification& get_specification() override;
-	const RenderPassSpecification& get_specification() const override;
+	class VulkanRenderPass : public RenderPass {
+	public:
+		explicit VulkanRenderPass(const RenderPassSpecification& spec);
+		RenderPassSpecification& get_specification() override;
+		const RenderPassSpecification& get_specification() const override;
 
-private:
-	RenderPassSpecification spec;
-};
+	private:
+		RenderPassSpecification spec;
+	};
 
-}
+} // namespace ForgottenEngine

@@ -8,6 +8,6 @@
 
 namespace ForgottenEngine {
 
-Reference<RendererContext> RendererContext::create() { return Reference<VulkanContext>::create(); }
+	Reference<RendererContext> RendererContext::create() { return Reference<VulkanContext>::create(); }
 
-}
+} // namespace ForgottenEngine

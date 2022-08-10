@@ -1,38 +1,38 @@
 #pragma once
 
-#include <utility>
-
 #include "VulkanShader.hpp"
 #include "render/Pipeline.hpp"
 
+#include <utility>
+
 namespace ForgottenEngine {
 
-class VulkanPipeline : public Pipeline {
-public:
-	explicit VulkanPipeline(const PipelineSpecification& spec);
+	class VulkanPipeline : public Pipeline {
+	public:
+		explicit VulkanPipeline(const PipelineSpecification& spec);
 
-	~VulkanPipeline() override;
+		~VulkanPipeline() override;
 
-	void bind() override;
-	void invalidate() override;
+		void bind() override;
+		void invalidate() override;
 
-	PipelineSpecification& get_specification() override { return spec; }
-	const PipelineSpecification& get_specification() const override { return spec; }
+		PipelineSpecification& get_specification() override { return spec; }
+		const PipelineSpecification& get_specification() const override { return spec; }
 
-	VkPipelineLayout get_vulkan_pipeline_layout() const { return pipeline_layout; }
-	VkPipeline get_vulkan_pipeline() const { return pipeline; }
+		VkPipelineLayout get_vulkan_pipeline_layout() const { return pipeline_layout; }
+		VkPipeline get_vulkan_pipeline() const { return pipeline; }
 
-	auto get_descriptor_set(uint32_t set) { return descriptor_sets.descriptor_sets[set]; }
+		auto get_descriptor_set(uint32_t set) { return descriptor_sets.descriptor_sets[set]; }
 
-	void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set) override;
-	void rt_set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set = 0);
+		void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set) override;
+		void rt_set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set = 0);
 
-private:
-	PipelineSpecification spec;
-	VkPipelineLayout pipeline_layout{};
-	VkPipeline pipeline{};
-	VkPipelineCache pipeline_cache = nullptr;
-	VulkanShader::ShaderMaterialDescriptorSet descriptor_sets;
-};
+	private:
+		PipelineSpecification spec;
+		VkPipelineLayout pipeline_layout {};
+		VkPipeline pipeline {};
+		VkPipelineCache pipeline_cache = nullptr;
+		VulkanShader::ShaderMaterialDescriptorSet descriptor_sets;
+	};
 
-}
+} // namespace ForgottenEngine

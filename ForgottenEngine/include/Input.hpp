@@ -5,10 +5,10 @@
 
 namespace ForgottenEngine {
 
-class Input {
-public:
-	static bool key(KeyCode key);
-	static bool mouse(MouseCode key);
-};
+	class Input {
+	public:
+		static bool key(KeyCode key);
+		static bool mouse(MouseCode key);
+	};
 
-}
+} // namespace ForgottenEngine

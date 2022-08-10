@@ -1,12 +1,10 @@
 #pragma once
 
-#include "vulkan/vulkan.h"
-
+#include "preprocessor/ShaderPreprocessor.hpp"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanShaderResource.hpp"
 #include "vulkan/VulkanShaderUtils.hpp"
-
-#include "preprocessor/ShaderPreprocessor.hpp"
+#include "vulkan/vulkan.h"
 
 #include <filesystem>
 #include <map>
@@ -15,81 +13,81 @@
 
 namespace ForgottenEngine {
 
-struct StageData {
-	std::unordered_set<IncludeData> Headers;
-	uint32_t HashValue = 0;
-	bool operator==(const StageData& other) const noexcept
-	{
-		return this->Headers == other.Headers && this->HashValue == other.HashValue;
-	}
-	bool operator!=(const StageData& other) const noexcept { return !(*this == other); }
-};
-
-class VulkanShaderCompiler : public ReferenceCounted {
-public:
-	VulkanShaderCompiler(const std::filesystem::path& shader_source_path, bool disableOptimization = false);
-
-	bool reload(bool forceCompile = false);
-
-	const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& get_spirv_data() const { return spirv_data; }
-	const std::unordered_set<std::string>& get_acknowledged_macros() const { return acknowledged_macros; }
-
-	static void clear_uniform_buffers();
-
-	static Reference<VulkanShader> compile(const std::filesystem::path& shader_source_path,
-		bool forceCompile = false, bool disableOptimization = false);
-	static bool try_recompile(Reference<VulkanShader> shader);
-
-private:
-	std::map<VkShaderStageFlagBits, std::string> pre_process(const std::string& source);
-	std::map<VkShaderStageFlagBits, std::string> pre_process_glsl(const std::string& source);
-
-	struct CompilationOptions {
-		bool GenerateDebugInfo = false;
-		bool Optimize = true;
+	struct StageData {
+		std::unordered_set<IncludeData> Headers;
+		uint32_t HashValue = 0;
+		bool operator==(const StageData& other) const noexcept
+		{
+			return this->Headers == other.Headers && this->HashValue == other.HashValue;
+		}
+		bool operator!=(const StageData& other) const noexcept { return !(*this == other); }
 	};
 
-	std::string compile(
-		std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
+	class VulkanShaderCompiler : public ReferenceCounted {
+	public:
+		VulkanShaderCompiler(const std::filesystem::path& shader_source_path, bool disableOptimization = false);
 
-	bool compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
-		const VkShaderStageFlagBits changedStages, const bool forceCompile);
+		bool reload(bool forceCompile = false);
 
-	bool compile_or_get_vulkan_binary(VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug,
-		VkShaderStageFlagBits changedStages, bool forceCompile);
+		const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& get_spirv_data() const { return spirv_data; }
+		const std::unordered_set<std::string>& get_acknowledged_macros() const { return acknowledged_macros; }
 
-	void clear_reflection_data();
-	void serialize_reflection_data();
-	void serialize_reflection_data(StreamWriter* serializer);
+		static void clear_uniform_buffers();
 
-	void try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory, const std::string& extension,
-		std::vector<uint32_t>& outputBinary) const;
+		static Reference<VulkanShader> compile(const std::filesystem::path& shader_source_path,
+			bool forceCompile = false, bool disableOptimization = false);
+		static bool try_recompile(Reference<VulkanShader> shader);
 
-	bool try_read_cached_reflection_data();
+	private:
+		std::map<VkShaderStageFlagBits, std::string> pre_process(const std::string& source);
+		std::map<VkShaderStageFlagBits, std::string> pre_process_glsl(const std::string& source);
 
-	void reflect_all_shader_stages(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData);
+		struct CompilationOptions {
+			bool GenerateDebugInfo = false;
+			bool Optimize = true;
+		};
 
-	void reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData);
+		std::string compile(
+			std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
 
-private:
-	std::filesystem::path shader_source_path;
-	bool disable_optimization = false;
+		bool compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
+			std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
+			const VkShaderStageFlagBits changedStages, const bool forceCompile);
 
-	std::map<VkShaderStageFlagBits, std::string> shader_source;
-	std::map<VkShaderStageFlagBits, std::vector<uint32_t>> spirv_debug_data, spirv_data;
+		bool compile_or_get_vulkan_binary(VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug,
+			VkShaderStageFlagBits changedStages, bool forceCompile);
 
-	// Reflection info
-	VulkanShader::ReflectionData reflection_data;
+		void clear_reflection_data();
+		void serialize_reflection_data();
+		void serialize_reflection_data(StreamWriter* serializer);
 
-	std::map<VkShaderStageFlagBits, StageData> stages_metadata;
+		void try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory, const std::string& extension,
+			std::vector<uint32_t>& outputBinary) const;
 
-	std::unordered_set<std::string> acknowledged_macros;
+		bool try_read_cached_reflection_data();
 
-	ShaderUtils::SourceLang language;
+		void reflect_all_shader_stages(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData);
 
-	friend class VulkanShader;
-	friend class VulkanShaderCache;
-};
+		void reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData);
 
-}
+	private:
+		std::filesystem::path shader_source_path;
+		bool disable_optimization = false;
+
+		std::map<VkShaderStageFlagBits, std::string> shader_source;
+		std::map<VkShaderStageFlagBits, std::vector<uint32_t>> spirv_debug_data, spirv_data;
+
+		// Reflection info
+		VulkanShader::ReflectionData reflection_data;
+
+		std::map<VkShaderStageFlagBits, StageData> stages_metadata;
+
+		std::unordered_set<std::string> acknowledged_macros;
+
+		ShaderUtils::SourceLang language;
+
+		friend class VulkanShader;
+		friend class VulkanShaderCache;
+	};
+
+} // namespace ForgottenEngine

@@ -6,97 +6,97 @@
 
 namespace ForgottenEngine {
 
-struct VulkanAllocatorData {
-	VmaAllocator allocator;
-	uint64_t total_allocated_bytes = 0;
-};
+	struct VulkanAllocatorData {
+		VmaAllocator allocator;
+		uint64_t total_allocated_bytes = 0;
+	};
 
-static VulkanAllocatorData* vma_data = nullptr;
+	static VulkanAllocatorData* vma_data = nullptr;
 
-VulkanAllocator::VulkanAllocator(const std::string& tag)
-	: tag(tag)
-{
-}
-
-VulkanAllocator::~VulkanAllocator() { }
-
-VmaAllocation VulkanAllocator::allocate_buffer(
-	VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage, VkBuffer& outBuffer)
-{
-	VmaAllocationCreateInfo allocCreateInfo = {};
-	allocCreateInfo.usage = usage;
-
-	VmaAllocation allocation;
-	vmaCreateBuffer(vma_data->allocator, &bufferCreateInfo, &allocCreateInfo, &outBuffer, &allocation, nullptr);
-
-	// TODO: Tracking
-	VmaAllocationInfo allocInfo{};
-	vmaGetAllocationInfo(vma_data->allocator, allocation, &allocInfo);
+	VulkanAllocator::VulkanAllocator(const std::string& tag)
+		: tag(tag)
 	{
-		vma_data->total_allocated_bytes += allocInfo.size;
 	}
 
-	return allocation;
-}
+	VulkanAllocator::~VulkanAllocator() { }
 
-VmaAllocation VulkanAllocator::allocate_image(
-	VkImageCreateInfo imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage)
-{
-	VmaAllocationCreateInfo allocCreateInfo = {};
-	allocCreateInfo.usage = usage;
-
-	VmaAllocation allocation;
-	vmaCreateImage(vma_data->allocator, &imageCreateInfo, &allocCreateInfo, &outImage, &allocation, nullptr);
-
-	// TODO: Tracking
-	VmaAllocationInfo allocInfo;
-	vmaGetAllocationInfo(vma_data->allocator, allocation, &allocInfo);
+	VmaAllocation VulkanAllocator::allocate_buffer(
+		VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage, VkBuffer& outBuffer)
 	{
-		vma_data->total_allocated_bytes += allocInfo.size;
+		VmaAllocationCreateInfo allocCreateInfo = {};
+		allocCreateInfo.usage = usage;
+
+		VmaAllocation allocation;
+		vmaCreateBuffer(vma_data->allocator, &bufferCreateInfo, &allocCreateInfo, &outBuffer, &allocation, nullptr);
+
+		// TODO: Tracking
+		VmaAllocationInfo allocInfo {};
+		vmaGetAllocationInfo(vma_data->allocator, allocation, &allocInfo);
+		{
+			vma_data->total_allocated_bytes += allocInfo.size;
+		}
+
+		return allocation;
 	}
-	return allocation;
-}
 
-void VulkanAllocator::free(VmaAllocation allocation) { vmaFreeMemory(vma_data->allocator, allocation); }
+	VmaAllocation VulkanAllocator::allocate_image(
+		VkImageCreateInfo imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage)
+	{
+		VmaAllocationCreateInfo allocCreateInfo = {};
+		allocCreateInfo.usage = usage;
 
-void VulkanAllocator::destroy_image(VkImage image, VmaAllocation allocation)
-{
-	CORE_ASSERT(image, "");
-	CORE_ASSERT(allocation, "");
-	vmaDestroyImage(vma_data->allocator, image, allocation);
-}
+		VmaAllocation allocation;
+		vmaCreateImage(vma_data->allocator, &imageCreateInfo, &allocCreateInfo, &outImage, &allocation, nullptr);
 
-void VulkanAllocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
-{
-	CORE_ASSERT(buffer, "");
-	CORE_ASSERT(allocation, "");
-	vmaDestroyBuffer(vma_data->allocator, buffer, allocation);
-}
+		// TODO: Tracking
+		VmaAllocationInfo allocInfo;
+		vmaGetAllocationInfo(vma_data->allocator, allocation, &allocInfo);
+		{
+			vma_data->total_allocated_bytes += allocInfo.size;
+		}
+		return allocation;
+	}
 
-void VulkanAllocator::unmap_memory(VmaAllocation allocation) { vmaUnmapMemory(vma_data->allocator, allocation); }
+	void VulkanAllocator::free(VmaAllocation allocation) { vmaFreeMemory(vma_data->allocator, allocation); }
 
-void VulkanAllocator::init(Reference<VulkanDevice> device)
-{
-	vma_data = new VulkanAllocatorData();
+	void VulkanAllocator::destroy_image(VkImage image, VmaAllocation allocation)
+	{
+		CORE_ASSERT(image, "");
+		CORE_ASSERT(allocation, "");
+		vmaDestroyImage(vma_data->allocator, image, allocation);
+	}
 
-	// Initialize VulkanMemoryAllocator
-	VmaAllocatorCreateInfo allocatorInfo = {};
-	allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_1;
-	allocatorInfo.physicalDevice = device->get_physical_device()->get_vulkan_physical_device();
-	allocatorInfo.device = device->get_vulkan_device();
-	allocatorInfo.instance = VulkanContext::get_instance();
+	void VulkanAllocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
+	{
+		CORE_ASSERT(buffer, "");
+		CORE_ASSERT(allocation, "");
+		vmaDestroyBuffer(vma_data->allocator, buffer, allocation);
+	}
 
-	vmaCreateAllocator(&allocatorInfo, &vma_data->allocator);
-}
+	void VulkanAllocator::unmap_memory(VmaAllocation allocation) { vmaUnmapMemory(vma_data->allocator, allocation); }
 
-void VulkanAllocator::shutdown()
-{
-	vmaDestroyAllocator(vma_data->allocator);
+	void VulkanAllocator::init(Reference<VulkanDevice> device)
+	{
+		vma_data = new VulkanAllocatorData();
 
-	delete vma_data;
-	vma_data = nullptr;
-}
+		// Initialize VulkanMemoryAllocator
+		VmaAllocatorCreateInfo allocatorInfo = {};
+		allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_1;
+		allocatorInfo.physicalDevice = device->get_physical_device()->get_vulkan_physical_device();
+		allocatorInfo.device = device->get_vulkan_device();
+		allocatorInfo.instance = VulkanContext::get_instance();
 
-VmaAllocator& VulkanAllocator::get_vma_allocator() { return vma_data->allocator; }
+		vmaCreateAllocator(&allocatorInfo, &vma_data->allocator);
+	}
 
-}
+	void VulkanAllocator::shutdown()
+	{
+		vmaDestroyAllocator(vma_data->allocator);
+
+		delete vma_data;
+		vma_data = nullptr;
+	}
+
+	VmaAllocator& VulkanAllocator::get_vma_allocator() { return vma_data->allocator; }
+
+} // namespace ForgottenEngine

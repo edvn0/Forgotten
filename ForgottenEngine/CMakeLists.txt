@@ -120,6 +120,13 @@ add_subdirectory(vendor/spirv-cross)
 add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/shaderc)
 
+find_program(CLANG_FORMAT "clang-format")
+
+if(CLANG_FORMAT)
+  add_custom_target(clang-format COMMAND /opt/homebrew/bin/clang-format -i
+                                         -style=file ${sources})
+endif()
+
 add_library(ForgottenEngine STATIC ${sources})
 target_include_directories(
   ForgottenEngine
@@ -147,9 +154,6 @@ target_include_directories(
           vendor/shaderc
           vendor/shaderc/libshaderc/include
           vendor/shaderc/libshaderc_util/include)
-
-message(STATUS ${Vulkan_LIBRARIES})
-
 target_link_libraries(
   ForgottenEngine
   PRIVATE ${Vulkan_LIBRARIES}
@@ -190,3 +194,4 @@ add_custom_command(
     $<TARGET_FILE_DIR:ForgottenEngine>/resources)
 
 add_dependencies(ForgottenEngine CompileEngineShaders)
+add_dependencies(ForgottenEngine clang-format)

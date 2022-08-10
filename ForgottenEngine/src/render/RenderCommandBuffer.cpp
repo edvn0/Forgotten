@@ -12,26 +12,26 @@
 
 namespace ForgottenEngine {
 
-Reference<RenderCommandBuffer> RenderCommandBuffer::create(uint32_t count)
-{
-	switch (RendererAPI::current()) {
-	case RendererAPIType::None:
-		return nullptr;
-	case RendererAPIType::Vulkan:
-		return Reference<VulkanRenderCommandBuffer>::create(count);
+	Reference<RenderCommandBuffer> RenderCommandBuffer::create(uint32_t count)
+	{
+		switch (RendererAPI::current()) {
+		case RendererAPIType::None:
+			return nullptr;
+		case RendererAPIType::Vulkan:
+			return Reference<VulkanRenderCommandBuffer>::create(count);
+		}
+		CORE_ASSERT(false, "Unknown RendererAPI");
 	}
-	CORE_ASSERT(false, "Unknown RendererAPI");
-}
 
-Reference<RenderCommandBuffer> RenderCommandBuffer::create_from_swapchain()
-{
-	switch (RendererAPI::current()) {
-	case RendererAPIType::None:
-		return nullptr;
-	case RendererAPIType::Vulkan:
-		return Reference<VulkanRenderCommandBuffer>::create();
+	Reference<RenderCommandBuffer> RenderCommandBuffer::create_from_swapchain()
+	{
+		switch (RendererAPI::current()) {
+		case RendererAPIType::None:
+			return nullptr;
+		case RendererAPIType::Vulkan:
+			return Reference<VulkanRenderCommandBuffer>::create();
+		}
+		CORE_ASSERT(false, "Unknown RendererAPI");
 	}
-	CORE_ASSERT(false, "Unknown RendererAPI");
-}
 
-}
+} // namespace ForgottenEngine

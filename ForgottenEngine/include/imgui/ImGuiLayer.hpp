@@ -5,7 +5,6 @@
 #pragma once
 
 #include "Layer.hpp"
-
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
@@ -14,31 +13,31 @@ typedef VkCommandPool_T* VkCommandPool;
 
 namespace ForgottenEngine {
 
-class ImGuiLayer : public Layer {
-private:
-	bool block{ false };
+	class ImGuiLayer : public Layer {
+	private:
+		bool block { false };
 
-public:
-	ImGuiLayer()
-		: Layer("ImGui"){};
+	public:
+		ImGuiLayer()
+			: Layer("ImGui") {};
 
-	~ImGuiLayer() override = default;
+		~ImGuiLayer() override = default;
 
-	void begin()
-	{
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-	}
+		void begin()
+		{
+			ImGui_ImplVulkan_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+		}
 
-	void end();
+		void end();
 
-	void on_attach() override;
-	void on_update(const TimeStep& step) override;
-	void on_event(Event& e) override;
-	void on_detach() override;
+		void on_attach() override;
+		void on_update(const TimeStep& step) override;
+		void on_event(Event& e) override;
+		void on_detach() override;
 
-	void should_block(bool should_block) { block = should_block; }
-};
+		void should_block(bool should_block) { block = should_block; }
+	};
 
-}
+} // namespace ForgottenEngine

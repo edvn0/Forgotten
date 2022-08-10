@@ -8,17 +8,17 @@
 
 namespace ForgottenEngine {
 
-VulkanStorageBufferSet::VulkanStorageBufferSet(uint32_t size) { }
+	VulkanStorageBufferSet::VulkanStorageBufferSet(uint32_t size) { }
 
-void VulkanStorageBufferSet::create(uint32_t size, uint32_t binding) { }
+	void VulkanStorageBufferSet::create(uint32_t size, uint32_t binding) { }
 
-Reference<StorageBuffer> VulkanStorageBufferSet::get_impl(uint32_t binding, uint32_t set, uint32_t frame)
-{
-	return {};
-}
+	Reference<StorageBuffer> VulkanStorageBufferSet::get_impl(uint32_t binding, uint32_t set, uint32_t frame)
+	{
+		return {};
+	}
 
-void VulkanStorageBufferSet::set_impl(Reference<StorageBuffer> buffer, uint32_t set, uint32_t frame) { }
+	void VulkanStorageBufferSet::set_impl(Reference<StorageBuffer> buffer, uint32_t set, uint32_t frame) { }
 
-void VulkanStorageBufferSet::resize(uint32_t binding, uint32_t set, uint32_t newSize) { }
+	void VulkanStorageBufferSet::resize(uint32_t binding, uint32_t set, uint32_t newSize) { }
 
-}
+} // namespace ForgottenEngine

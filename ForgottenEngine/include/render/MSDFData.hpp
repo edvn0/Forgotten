@@ -7,11 +7,9 @@
 
 namespace ForgottenEngine {
 
-struct MSDFData
-{
-	msdf_atlas::FontGeometry FontGeometry;
-	std::vector<msdf_atlas::GlyphGeometry> Glyphs;
-};
+	struct MSDFData {
+		msdf_atlas::FontGeometry FontGeometry;
+		std::vector<msdf_atlas::GlyphGeometry> Glyphs;
+	};
 
-}
-
+} // namespace ForgottenEngine
