@@ -12,6 +12,7 @@
 #include "events/Event.hpp"
 #include "events/KeyEvent.hpp"
 #include "events/MouseEvent.hpp"
+#include "imgui/CoreUserInterface.hpp"
 #include "render/Font.hpp"
 #include "render/Renderer.hpp"
 #include "render/Renderer2D.hpp"

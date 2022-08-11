@@ -1,10 +1,13 @@
 #include "ForgottenLayer.hpp"
 
 #include "fg.hpp"
+#include "imgui/CoreUserInterface.hpp"
 #include "render/SceneRenderer.hpp"
 
 // Note: Switch this to true to enable dockspace
 static auto is_dockspace_open = true;
+
+static bool should_show_debug_stats = false;
 
 ForgottenLayer::ForgottenLayer()
 	: Layer("Sandbox 2D")
@@ -19,7 +22,7 @@ void ForgottenLayer::on_attach()
 
 	FramebufferSpecification compFramebufferSpec;
 	compFramebufferSpec.DebugName = "SceneComposite";
-	compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
+	compFramebufferSpec.ClearColor = { 0.1f, 0.9f, 0.1f, 1.0f };
 	compFramebufferSpec.SwapChainTarget = true;
 	compFramebufferSpec.Attachments = { ImageFormat::RGBA };
 
@@ -38,6 +41,11 @@ void ForgottenLayer::on_attach()
 	pipeline_spec.DebugName = "SceneComposite";
 	pipeline_spec.DepthWrite = false;
 	swapchain_pipeline = Pipeline::create(pipeline_spec);
+
+	swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0)->invalidate();
+
+	Renderer::wait_and_render();
+
 	swapchain_material = Material::create(pipeline_spec.Shader);
 	command_buffer = RenderCommandBuffer::create_from_swapchain();
 	projection_matrix = glm::ortho(0.0f, width, 0.0f, height);
@@ -76,7 +84,8 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 
 	user_camera.on_update(ts);
 
-	draw_debug_stats();
+	if (should_show_debug_stats)
+		draw_debug_stats();
 
 	// Render final image to swapchain
 	Reference<Image2D> final_image = swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
@@ -204,6 +213,9 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
+				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
+
+				UI::image(swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0), vp_size, { 0, 1 }, { 1, 0 });
 				// ImTextureID texture_id = 0;
 				// ImGui::Image(
 				//	texture_id, ImVec2{ viewport_size.x, viewport_size.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
@@ -294,7 +306,7 @@ void ForgottenLayer::on_event(Event& event)
 
 void ForgottenLayer::draw_debug_stats()
 {
-	renderer->set_target_render_pass(renderer->external_composite_render_pass);
+	renderer->set_target_render_pass(swapchain_pipeline->get_specification().RenderPass);
 	renderer->begin_scene(projection_matrix, glm::mat4(1.0f));
 
 	// Add font size to this after each line
