@@ -2,14 +2,48 @@
 
 #include "Assets.hpp"
 
-#include <sys/stat.h>
-
 namespace ForgottenEngine {
 
-	bool Assets::exists(const Path& path)
+	static std::filesystem::path working_directory;
+	static bool initialized = false;
+
+	void Assets::init()
 	{
-		struct stat buffer { };
-		return (stat(path.c_str(), &buffer) == 0);
+		working_directory = std::filesystem::current_path();
+		initialized = true;
+	}
+
+	Path Assets::get_base_directory()
+	{
+		CORE_ASSERT(initialized, "");
+		return working_directory;
+	}
+
+	OptionalPath Assets::find_resources_by_path(const Path& path, const std::string& subdirectory)
+	{
+		if (exists(path))
+			return path;
+
+		std::filesystem::path try_path;
+		if (subdirectory.empty())
+			try_path = working_directory / RESOURCES / path.filename();
+		else
+			try_path = working_directory / RESOURCES / std::filesystem::path(subdirectory) / path.filename();
+
+		if (exists(try_path)) {
+			return try_path;
+		}
+
+		if (exists(RESOURCES / path)) {
+			return RESOURCES / path;
+		}
+
+		return {};
+	}
+
+	bool Assets::exists(const Path& p)
+	{
+		return std::filesystem::exists(p);
 	}
 
 } // namespace ForgottenEngine

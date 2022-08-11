@@ -1,8 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export CMAKE_MSVC_RUNTIME_LIBRARY="MultiThreadedDebug"
 
-[[ -v "OS_VERSION_WIN" ]]; /usr/bin/env python ./scripts/run_script/run.py "$@" && exit 0
+if ! [[ -z ${FORGOTTEN_OS+x} ]];
+then
+  export FORGOTTEN_OS="MacOS"
+fi
 
-[[ -v "OS_VERSION_MACOS" ]]; /usr/bin/env python3 ./scripts/run_script/run.py "$@" && exit 0
+if [[ "$FORGOTTEN_OS" == "MacOS" ]];
+then
+  /usr/bin/env python3 ./scripts/run_script/run.py "$@"
+  exit 0
+elif [[ "$FORGOTTEN_OS" == "Windows" ]];
+then
+  /usr/bin/env python3 ./scripts/run_script/run.py "$@"
+  exit 0
+fi
 
