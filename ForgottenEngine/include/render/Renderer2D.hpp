@@ -20,7 +20,7 @@ namespace ForgottenEngine {
 	class VertexBuffer;
 
 	struct Renderer2DSpecification {
-		bool swap_chain_target = false;
+		bool swap_chain_target = true;
 	};
 
 	class Renderer2D : public ReferenceCounted {
@@ -103,6 +103,10 @@ namespace ForgottenEngine {
 		};
 		void reset_stats();
 		Statistics get_stats();
+
+		Reference<Pipeline> composite_pipeline;
+		Reference<Pipeline> pre_depth_pipeline;
+		Reference<RenderPass> external_composite_render_pass;
 
 	private:
 		void Flush();

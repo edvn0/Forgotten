@@ -37,3 +37,12 @@
   default:
       type: str
       value: Ninja
+- name: install
+  type: Positional
+  default:
+      type: bool
+- name: install_path
+  type: Positional
+  default:
+      type: str
+      value: "/Users/edwincarlsson/Documents/PersonalProjects/ForgottenInstallDirectory"

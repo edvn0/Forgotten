@@ -55,7 +55,7 @@ namespace ForgottenEngine {
 			return;
 
 		serializer.read_raw(file.header);
-		if (memcmp(file.header.HEADER, "HZSP", 4) != 0)
+		if (memcmp(file.header.HEADER, "FGSP", 4) != 0)
 			return;
 
 		loaded = true;

@@ -1,6 +1,7 @@
 #include "ForgottenLayer.hpp"
 
 #include "fg.hpp"
+#include "render/SceneRenderer.hpp"
 
 // Note: Switch this to true to enable dockspace
 static auto is_dockspace_open = true;
@@ -20,24 +21,24 @@ void ForgottenLayer::on_attach()
 	compFramebufferSpec.DebugName = "SceneComposite";
 	compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
 	compFramebufferSpec.SwapChainTarget = true;
-	compFramebufferSpec.Attachments = { FramebufferTextureSpecification { ImageFormat::RGBA } };
+	compFramebufferSpec.Attachments = { ImageFormat::RGBA };
 
 	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
 
-	PipelineSpecification pipelineSpecification;
-	pipelineSpecification.Layout
+	PipelineSpecification pipeline_spec;
+	pipeline_spec.Layout
 		= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
-	pipelineSpecification.BackfaceCulling = false;
-	pipelineSpecification.Shader = Renderer::get_shader_library()->get("TexturePass");
+	pipeline_spec.BackfaceCulling = false;
+	pipeline_spec.Shader = Renderer::get_shader_library()->get("TexturePass");
 
 	RenderPassSpecification renderPassSpec;
 	renderPassSpec.TargetFramebuffer = framebuffer;
 	renderPassSpec.DebugName = "SceneComposite";
-	pipelineSpecification.RenderPass = RenderPass::create(renderPassSpec);
-	pipelineSpecification.DebugName = "SceneComposite";
-	pipelineSpecification.DepthWrite = false;
-	swapchain_pipeline = Pipeline::create(pipelineSpecification);
-	swapchain_material = Material::create(pipelineSpecification.Shader);
+	pipeline_spec.RenderPass = RenderPass::create(renderPassSpec);
+	pipeline_spec.DebugName = "SceneComposite";
+	pipeline_spec.DepthWrite = false;
+	swapchain_pipeline = Pipeline::create(pipeline_spec);
+	swapchain_material = Material::create(pipeline_spec.Shader);
 	command_buffer = RenderCommandBuffer::create_from_swapchain();
 	projection_matrix = glm::ortho(0.0f, width, 0.0f, height);
 }
@@ -293,6 +294,7 @@ void ForgottenLayer::on_event(Event& event)
 
 void ForgottenLayer::draw_debug_stats()
 {
+	renderer->set_target_render_pass(renderer->external_composite_render_pass);
 	renderer->begin_scene(projection_matrix, glm::mat4(1.0f));
 
 	// Add font size to this after each line

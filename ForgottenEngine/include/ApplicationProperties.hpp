@@ -14,7 +14,7 @@ namespace ForgottenEngine {
 		uint32_t environment_map_resolution = 1024;
 		uint32_t irradiance_map_compute_samples = 512;
 
-		std::string shader_pack_path = "ShaderPack.fgsp";
+		std::string shader_pack_path = "shader_pack.fgsp";
 	};
 
 	struct ApplicationProperties {

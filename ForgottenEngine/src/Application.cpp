@@ -45,6 +45,8 @@ namespace ForgottenEngine {
 		on_init();
 		while (is_running) {
 			static uint64_t frame_counter = 0;
+			CORE_INFO("-- BEGIN FRAME {0}", frame_counter);
+
 			process_events();
 
 			if (!is_minimized) {
@@ -72,7 +74,7 @@ namespace ForgottenEngine {
 			time_step = TimeStep(glm::min<float>(frame_time, 0.0333f));
 			last_frame_time = time;
 
-			// HZ_CORE_INFO("-- END FRAME {0}", frame_counter);
+			CORE_INFO("-- END FRAME {0}", frame_counter);
 			frame_counter++;
 		}
 	}

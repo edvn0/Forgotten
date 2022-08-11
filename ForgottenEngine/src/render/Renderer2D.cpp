@@ -192,6 +192,97 @@ namespace ForgottenEngine {
 			}
 		}
 
+		VertexBufferLayout vertexLayout = {
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float3, "a_Normal" },
+			{ ShaderDataType::Float3, "a_Tangent" },
+			{ ShaderDataType::Float3, "a_Binormal" },
+			{ ShaderDataType::Float2, "a_TexCoord" }
+		};
+
+		VertexBufferLayout instanceLayout = {
+			{ ShaderDataType::Float4, "a_MRow0" },
+			{ ShaderDataType::Float4, "a_MRow1" },
+			{ ShaderDataType::Float4, "a_MRow2" },
+		};
+
+		VertexBufferLayout boneInfluenceLayout = {
+			{ ShaderDataType::Int4, "a_BoneIDs" },
+			{ ShaderDataType::Float4, "a_BoneWeights" },
+		};
+
+		{
+			FramebufferSpecification preDepthFramebufferSpec;
+			preDepthFramebufferSpec.DebugName = "PreDepth-Opaque";
+			// Linear depth, reversed device depth
+			preDepthFramebufferSpec.Attachments = { /*ImageFormat::RED32F, */ ImageFormat::DEPTH32FSTENCIL8UINT };
+			preDepthFramebufferSpec.ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+			preDepthFramebufferSpec.DepthClearValue = 0.0f;
+
+			RenderPassSpecification preDepthRenderPassSpec;
+			preDepthRenderPassSpec.DebugName = preDepthFramebufferSpec.DebugName;
+			preDepthRenderPassSpec.TargetFramebuffer = Framebuffer::create(preDepthFramebufferSpec);
+
+			PipelineSpecification pipelineSpec;
+			pipelineSpec.DebugName = preDepthFramebufferSpec.DebugName;
+
+			pipelineSpec.Shader = Renderer::get_shader_library()->get("PreDepth");
+			pipelineSpec.Layout = vertexLayout;
+			pipelineSpec.InstanceLayout = instanceLayout;
+			pipelineSpec.RenderPass = RenderPass::create(preDepthRenderPassSpec);
+			pre_depth_pipeline = Pipeline::create(pipelineSpec);
+		}
+
+		// Composite
+		{
+			FramebufferSpecification compFramebufferSpec;
+			compFramebufferSpec.DebugName = "SceneComposite";
+			compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
+			compFramebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+			compFramebufferSpec.Transfer = true;
+
+			Reference<Framebuffer> fb = Framebuffer::create(compFramebufferSpec);
+
+			PipelineSpecification pipelineSpecification;
+			pipelineSpecification.Layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" }
+			};
+			pipelineSpecification.BackfaceCulling = false;
+			pipelineSpecification.Shader = Renderer::get_shader_library()->get("SceneComposite");
+
+			RenderPassSpecification rps;
+			rps.TargetFramebuffer = framebuffer;
+			rps.DebugName = "SceneComposite";
+			pipelineSpecification.RenderPass = RenderPass::create(rps);
+			pipelineSpecification.DebugName = "SceneComposite";
+			pipelineSpecification.DepthWrite = false;
+			pipelineSpecification.DepthTest = false;
+			composite_pipeline = Pipeline::create(pipelineSpecification);
+		}
+
+		{
+			FramebufferSpecification extCompFramebufferSpec;
+			extCompFramebufferSpec.DebugName = "External-Composite";
+			extCompFramebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32FSTENCIL8UINT };
+			extCompFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
+			extCompFramebufferSpec.ClearColorOnLoad = false;
+			extCompFramebufferSpec.ClearDepthOnLoad = false;
+			// Use the color buffer from the final compositing pass, but the depth buffer from
+			// the actual 3D geometry pass, in case we want to composite elements behind meshes
+			// in the scene
+			extCompFramebufferSpec.ExistingImages[0] = composite_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
+			extCompFramebufferSpec.ExistingImages[1] = pre_depth_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_depth_image();
+			Reference<Framebuffer> fb = Framebuffer::create(extCompFramebufferSpec);
+
+			RenderPassSpecification rps;
+			rps.DebugName = extCompFramebufferSpec.DebugName;
+			rps.TargetFramebuffer = framebuffer;
+			external_composite_render_pass = RenderPass::create(rps);
+		}
+
+		Renderer::compile_shaders();
+
 		uniform_buffer_set = UniformBufferSet::create(frames_in_flight);
 		uniform_buffer_set->create(sizeof(UBCamera), 0);
 

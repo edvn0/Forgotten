@@ -38,7 +38,7 @@ namespace ForgottenEngine {
 		Reference(T* instance)
 			: instance(instance)
 		{
-			static_assert(std::is_base_of<ReferenceCounted, T>::value, "Class is not ReferenceCounter!");
+			static_assert(std::is_base_of<ReferenceCounted, T>::value, "Class is not ReferenceCounted!");
 
 			inc_ref();
 		}

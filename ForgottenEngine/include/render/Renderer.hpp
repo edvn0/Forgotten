@@ -11,6 +11,7 @@ namespace ForgottenEngine {
 	class RendererContext;
 	class ShaderLibrary;
 	class Pipeline;
+	class ComputePipeline;
 	class UniformBufferSet;
 	class StorageBufferSet;
 	class Material;
@@ -63,6 +64,7 @@ namespace ForgottenEngine {
 		// Registrations
 		static void register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline);
 		static void register_shader_dependency(const Reference<Shader>& shader, Reference<Material> material);
+		static void register_shader_dependency(const Reference<Shader>& shader, Reference<ComputePipeline> compute);
 		// end Registrations
 
 		// shaders and macros

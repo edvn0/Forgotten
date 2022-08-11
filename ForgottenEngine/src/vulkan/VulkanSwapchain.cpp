@@ -453,6 +453,7 @@ namespace ForgottenEngine {
 
 		if (result != VK_SUCCESS) {
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+				CORE_INFO("RESIZE");
 				on_resize(width, height);
 			} else {
 				VK_CHECK(result);
@@ -478,16 +479,16 @@ namespace ForgottenEngine {
 
 	void VulkanSwapchain::find_image_format_and_color_space()
 	{
-		VkPhysicalDevice physicalDevice
+		VkPhysicalDevice physical_device
 			= VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
 		// Get list of supported surface formats
 		uint32_t formatCount;
-		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr));
+		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatCount, nullptr));
 		CORE_ASSERT(formatCount > 0, "");
 
 		std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, surfaceFormats.data()));
+		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatCount, surfaceFormats.data()));
 
 		// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
 		// there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM

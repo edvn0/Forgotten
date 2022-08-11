@@ -18,7 +18,7 @@ namespace ForgottenEngine {
 
 	struct FramebufferTextureSpecification {
 		FramebufferTextureSpecification() = default;
-		explicit FramebufferTextureSpecification(ImageFormat format)
+		FramebufferTextureSpecification(ImageFormat format)
 			: Format(format)
 		{
 		}
@@ -75,6 +75,7 @@ namespace ForgottenEngine {
 		Reference<Framebuffer> ExistingFramebuffer;
 
 		std::string DebugName;
+		bool Transfer;
 	};
 
 	class Framebuffer : public ReferenceCounted {

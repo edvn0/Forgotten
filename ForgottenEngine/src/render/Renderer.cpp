@@ -3,6 +3,7 @@
 #include "render/Renderer.hpp"
 
 #include "Application.hpp"
+#include "render/ComputePipeline.hpp"
 #include "render/IndexBuffer.hpp"
 #include "render/Material.hpp"
 #include "render/Pipeline.hpp"
@@ -63,6 +64,7 @@ namespace ForgottenEngine {
 	struct ShaderDependencies {
 		std::vector<Reference<Pipeline>> pipelines;
 		std::vector<Reference<Material>> materials;
+		std::vector<Reference<ComputePipeline>> computations;
 	};
 	static std::unordered_map<size_t, ShaderDependencies> shader_dependencies;
 
@@ -84,17 +86,24 @@ namespace ForgottenEngine {
 
 		renderer_data->shader_library = Reference<ShaderLibrary>::create();
 
-		//	if (!config.shader_pack_path.empty())
-		//		Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
+		// if (!config.shader_pack_path.empty())
+		//	Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
 
-		// Load 2D Renderer Shaders.
+		// Renderer2D Shaders
 		Renderer::get_shader_library()->load("Renderer2D.glsl");
-		Renderer::get_shader_library()->load("Renderer2D_Circle.glsl");
 		Renderer::get_shader_library()->load("Renderer2D_Line.glsl");
+		Renderer::get_shader_library()->load("Renderer2D_Circle.glsl");
 		Renderer::get_shader_library()->load("Renderer2D_Text.glsl");
 		Renderer::get_shader_library()->load("TexturePass.glsl");
+		Renderer::get_shader_library()->load("SceneComposite.glsl");
+		Renderer::get_shader_library()->load("PreDepth.glsl");
+		Renderer::get_shader_library()->load("LightCulling.glsl");
+		Renderer::get_shader_library()->load("DirShadowMap.glsl");
 
-		ShaderPack::create_from_library(Renderer::get_shader_library(), "shader_pack.fgsp");
+		// Compile shaders
+		Renderer::compile_shaders();
+
+		//		ShaderPack::create_from_library(Renderer::get_shader_library(), "shader_pack.fgsp");
 
 		Renderer::wait_and_render();
 
@@ -169,6 +178,11 @@ namespace ForgottenEngine {
 	void Renderer::register_shader_dependency(const Reference<Shader>& shader, Reference<Material> material)
 	{
 		shader_dependencies[shader->get_hash()].materials.push_back(material);
+	}
+
+	void Renderer::register_shader_dependency(const Reference<Shader>& shader, Reference<ComputePipeline> compute)
+	{
+		shader_dependencies[shader->get_hash()].computations.push_back(compute);
 	}
 
 	void Renderer::on_shader_reloaded(size_t hash)

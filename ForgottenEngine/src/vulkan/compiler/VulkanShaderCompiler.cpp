@@ -95,7 +95,6 @@ namespace ForgottenEngine {
 		const std::string source = StringUtils::read_file_and_skip_bom(shader_source_path);
 		CORE_VERIFY(source.size(), "Failed to load shader!");
 
-		CORE_TRACE("Renderer Compiling shader: {}", shader_source_path.string());
 		shader_source = pre_process(source);
 		const VkShaderStageFlagBits changedStages = VulkanShaderCache::has_changed(this);
 
@@ -140,8 +139,8 @@ namespace ForgottenEngine {
 		static shaderc::Compiler compiler;
 
 		shaderc_util::FileFinder fileFinder;
-		fileFinder.search_path().emplace_back("Resources/Shaders/Include/GLSL/"); // Main include directory
-		fileFinder.search_path().emplace_back("Resources/Shaders/Include/Common/"); // Shared include directory
+		fileFinder.search_path().emplace_back("Include/GLSL/"); // Main include directory
+		fileFinder.search_path().emplace_back("Include/Common/"); // Shared include directory
 		for (auto& [stage, shaderSource] : shaderSources) {
 			shaderc::CompileOptions options;
 			options.AddMacroDefinition("__GLSL__");
@@ -193,7 +192,7 @@ namespace ForgottenEngine {
 				ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), shaderCOptions);
 
 			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
-				return fmt::format("{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(),
+				return fmt::format("\n{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(),
 					shader_source_path.string(), ShaderUtils::ShaderStageToString(stage));
 
 			outputBinary = std::vector<uint32_t>(module.begin(), module.end());
@@ -422,14 +421,10 @@ namespace ForgottenEngine {
 
 	void VulkanShaderCompiler::reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData)
 	{
-		CORE_TRACE("Renderer ===========================");
-		CORE_TRACE("Renderer  Vulkan Shader Reflection");
-		CORE_TRACE("Renderer ===========================");
 
 		spirv_cross::Compiler compiler(shaderData);
 		auto resources = compiler.get_shader_resources();
 
-		CORE_TRACE("Renderer Uniform Buffers:");
 		for (const auto& resource : resources.uniform_buffers) {
 			auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
 			// Discard unused buffers from headers
@@ -461,15 +456,9 @@ namespace ForgottenEngine {
 						uniformBuffer.Size = size;
 				}
 				shaderDescriptorSet.uniform_buffers[binding] = compiler_uniform_buffers.at(descriptorSet).at(binding);
-
-				CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
-				CORE_TRACE("Renderer   Member Count: {0}", memberCount);
-				CORE_TRACE("Renderer   Size: {0}", size);
-				CORE_TRACE("Renderer -------------------");
 			}
 		}
 
-		CORE_TRACE("Renderer Storage Buffers:");
 		for (const auto& resource : resources.storage_buffers) {
 			auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
 			// Discard unused buffers from headers
@@ -502,15 +491,9 @@ namespace ForgottenEngine {
 				}
 
 				shaderDescriptorSet.storage_buffers[binding] = compiler_storage_buffers.at(descriptorSet).at(binding);
-
-				CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
-				CORE_TRACE("Renderer   Member Count: {0}", memberCount);
-				CORE_TRACE("Renderer   Size: {0}", size);
-				CORE_TRACE("Renderer -------------------");
 			}
 		}
 
-		CORE_TRACE("Renderer Push Constant Buffers:");
 		for (const auto& resource : resources.push_constant_buffers) {
 			const auto& bufferName = resource.name;
 			auto& bufferType = compiler.get_type(resource.base_type_id);
@@ -534,10 +517,6 @@ namespace ForgottenEngine {
 			buffer.Name = bufferName;
 			buffer.Size = bufferSize - bufferOffset;
 
-			CORE_TRACE("Renderer   Name: {0}", bufferName);
-			CORE_TRACE("Renderer   Member Count: {0}", memberCount);
-			CORE_TRACE("Renderer   Size: {0}", bufferSize);
-
 			for (uint32_t i = 0; i < memberCount; i++) {
 				const auto& type = compiler.get_type(bufferType.member_types[i]);
 				const auto& memberName = compiler.get_member_name(bufferType.self, i);
@@ -550,7 +529,6 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_TRACE("Renderer Sampled Images:");
 		for (const auto& resource : resources.sampled_images) {
 			const auto& name = resource.name;
 			auto& baseType = compiler.get_type(resource.base_type_id);
@@ -574,11 +552,8 @@ namespace ForgottenEngine {
 			imageSampler.ArraySize = arraySize;
 
 			reflection_data.resources[name] = ShaderResourceDeclaration(name, binding, 1);
-
-			CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
 		}
 
-		CORE_TRACE("Renderer Separate Images:");
 		for (const auto& resource : resources.separate_images) {
 			const auto& name = resource.name;
 			auto& baseType = compiler.get_type(resource.base_type_id);
@@ -602,11 +577,8 @@ namespace ForgottenEngine {
 			imageSampler.ArraySize = arraySize;
 
 			reflection_data.resources[name] = ShaderResourceDeclaration(name, binding, 1);
-
-			CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
 		}
 
-		CORE_TRACE("Renderer Separate Samplers:");
 		for (const auto& resource : resources.separate_samplers) {
 			const auto& name = resource.name;
 			auto& baseType = compiler.get_type(resource.base_type_id);
@@ -629,11 +601,8 @@ namespace ForgottenEngine {
 			imageSampler.ArraySize = arraySize;
 
 			reflection_data.resources[name] = ShaderResourceDeclaration(name, binding, 1);
-
-			CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
 		}
 
-		CORE_TRACE("Renderer Storage Images:");
 		for (const auto& resource : resources.storage_images) {
 			const auto& name = resource.name;
 			auto& type = compiler.get_type(resource.type_id);
@@ -656,16 +625,11 @@ namespace ForgottenEngine {
 			imageSampler.ShaderStage = shaderStage;
 
 			reflection_data.resources[name] = ShaderResourceDeclaration(name, binding, 1);
-
-			CORE_TRACE("Renderer   {0} ({1}, {2})", name, descriptorSet, binding);
 		}
 
-		CORE_TRACE("Renderer Special macros:");
 		for (const auto& macro : acknowledged_macros) {
-			CORE_TRACE("Renderer   {0}", macro);
+			(void)macro;
 		}
-
-		CORE_TRACE("Renderer ===========================");
 	}
 
 } // namespace ForgottenEngine

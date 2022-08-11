@@ -8,6 +8,7 @@ from subprocess import check_call, CalledProcessError
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from tabnanny import check
 from typing import Callable, List
 
 import yaml
@@ -89,6 +90,9 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
                         f"{default_value['type']}({default_value['value']})")
                 except NameError:
                     out_default = str(default_value['value'])
+                except SyntaxError:
+                    out_default = eval(
+                        f"{default_value['type']}(\"{default_value['value']}\")")
 
                 parser.add_argument(as_argument_type,
                                     default=out_default, required=False)
@@ -119,6 +123,43 @@ def build_project(build_folder: str, generator: str):
         exit(e.returncode)
 
 
+def try_install(cli_results: Namespace, build_dir: str):
+    if bool(cli_results.install):
+        try:
+            mkdir_call = f"mkdir -p"
+            mkdir_call = mkdir_call.split(" ")
+            mkdir_call.append(f"{cli_results.install_path}")
+            check_call(mkdir_call)
+        except CalledProcessError as e:
+            log_failure(
+                f"Could not create install directory, reason: \n\t\t{str(e)}")
+
+        log_success(
+            f"Created install directory at {cli_results.install_path}.")
+
+        try:
+            install_call = f"cp -r {build_dir}/ForgottenApp/resources"
+            install_call = install_call.split(" ")
+            install_call.append(f"{cli_results.install_path}")
+            check_call(install_call)
+        except CalledProcessError as e:
+            log_failure(
+                f"Could not copy installation resources, reason: \n\t\t{str(e)}")
+
+        log_success(f"Copied resources to {cli_results.install_path}.")
+
+        try:
+            install_call = f"cp {build_dir}/ForgottenApp/ForgottenApp"
+            install_call = install_call.split(" ")
+            install_call.append(f"{cli_results.install_path}")
+            check_call(install_call)
+        except CalledProcessError as e:
+            log_failure(
+                f"Could not copy Forgotten to install directory, reason: \n\t\t{str(e)}")
+
+        log_success(f"Installed Forgotten at {cli_results.install_path}.")
+
+
 def main():
     current_directory = Path(__file__).parent
 
@@ -137,11 +178,11 @@ def main():
 
     cli_results = initialize_cli(forgotten_root, args)
 
-    did_clean = bool(cli_results.clean)
+    should_clean = bool(cli_results.clean)
 
     build_folder = f"build-{cli_results.generator}".replace(" ", "")
 
-    if did_clean:
+    if should_clean:
         try:
             cmake_call = f"rm -rf {forgotten_root}/{build_folder}/{cli_results.build_type}"
             check_call(cmake_call.split(" "))
@@ -152,9 +193,9 @@ def main():
     build_dir_exists = os.path.isdir(
         f"{forgotten_root}/{build_folder}/{cli_results.build_type}")
 
-    if did_clean or not build_dir_exists or cli_results.force_regenerate:
+    if should_clean or not build_dir_exists or cli_results.force_regenerate:
         try:
-            cmake_call = f"cmake -S. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE={cli_results.build_type} -DBUILD_SHARED_LIBS=OFF -DUSE_ALTERNATE_LINKER={cli_results.linker} -DASSIMP_BUILD_ZLIB=TRUE -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=OFF -DSPIRV_CROSS_ENABLE_UTIL=OFF -DSPIRV_CROSS_SKIP_INSTALL=ON -DSHADERC_ENABLE_WGSL_OUTPUT=OFF -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_WERROR_COMPILE=OFF -B{forgotten_root}/{build_folder}/{cli_results.build_type}"
+            cmake_call = f"cmake -S. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE={cli_results.build_type} -DBUILD_SHARED_LIBS=OFF -DUSE_ALTERNATE_LINKER={cli_results.linker} -DASSIMP_BUILD_ZLIB=TRUE -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=OFF -DSPIRV_CROSS_ENABLE_UTIL=OFF -DSPIRV_CROSS_SKIP_INSTALL=ON -DSHADERC_ENABLE_WGSL_OUTPUT=OFF -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_WERROR_COMPILE=OFF -B{forgotten_root}/{build_folder}/{cli_results.build_type} "
 
             configure_call = cmake_call.split(" ")
             configure_call.append(f"-G{cli_results.generator}")
@@ -172,6 +213,9 @@ def main():
         check_call(symlink_call.split(" "))
     except CalledProcessError as e:
         log_info(f"Could not symlink compile_commmands from build to root.")
+
+    try_install(
+        cli_results, f"{forgotten_root}/{build_folder}/{cli_results.build_type}")
 
     try:
         run_call = [

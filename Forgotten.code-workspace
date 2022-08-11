@@ -116,7 +116,8 @@
             "codecvt": "cpp",
             "xlocale": "cpp",
             "xlocinfo": "cpp",
-            "xstring": "cpp"
+            "xstring": "cpp",
+            "*.ipp": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,
@@ -150,6 +151,7 @@
         "cSpell.words": [
             "Carlsson",
             "cbbi",
+            "drawbuffer",
             "framebuffer",
             "imageview",
             "renderable",
