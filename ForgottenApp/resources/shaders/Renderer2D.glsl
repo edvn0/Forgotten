@@ -9,25 +9,25 @@ layout(location = 2) in vec2 a_TexCoord;
 layout(location = 3) in float a_TexIndex;
 layout(location = 4) in float a_TilingFactor;
 
-layout (std140, binding = 0) uniform Camera
+layout(std140, binding = 0) uniform Camera
 {
 	mat4 u_ViewProjection;
 };
 
-layout (push_constant) uniform Transform
+layout(push_constant) uniform Transform
 {
 	mat4 Transform;
-} u_Renderer;
+}
+u_Renderer;
 
-struct VertexOutput
-{
+struct VertexOutput {
 	vec4 Color;
 	vec2 TexCoord;
 	float TilingFactor;
 };
 
-layout (location = 0) out VertexOutput Output;
-layout (location = 5) out flat float TexIndex;
+layout(location = 0) out VertexOutput Output;
+layout(location = 5) out flat float TexIndex;
 
 void main()
 {
@@ -43,23 +43,19 @@ void main()
 
 layout(location = 0) out vec4 color;
 
-struct VertexOutput
-{
+struct VertexOutput {
 	vec4 Color;
 	vec2 TexCoord;
 	float TilingFactor;
 };
 
-layout (location = 0) in VertexOutput Input;
-layout (location = 5) in flat float TexIndex;
+layout(location = 0) in VertexOutput Input;
+layout(location = 5) in flat float TexIndex;
 
-layout (binding = 1) uniform sampler2D u_Textures[16];
+layout(binding = 1) uniform sampler2D u_Textures[16];
 
 void main()
 {
 	color = texture(u_Textures[int(TexIndex)], Input.TexCoord * Input.TilingFactor) * Input.Color;
-
-	// Discard to avoid depth write
-	if (color.a == 0.0)
-		discard;
 }
+

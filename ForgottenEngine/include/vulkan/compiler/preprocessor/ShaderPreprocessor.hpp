@@ -131,6 +131,7 @@ namespace ForgottenEngine {
 		static VkShaderStageFlagBits PreprocessHeader(std::string& contents, bool& isGuarded,
 			std::unordered_set<std::string>& specialMacros, const std::unordered_set<IncludeData>& includeData,
 			const std::filesystem::path& fullPath);
+
 		template <ShaderUtils::SourceLang Lang>
 		static std::map<VkShaderStageFlagBits, std::string> PreprocessShader(
 			const std::string& source, std::unordered_set<std::string>& specialMacros);

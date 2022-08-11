@@ -7,10 +7,6 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vkb {
-	class Instance;
-}
-
 namespace ForgottenEngine {
 
 	class VulkanPhysicalDevice : public ReferenceCounted {

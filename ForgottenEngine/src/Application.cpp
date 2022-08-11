@@ -2,6 +2,7 @@
 
 #include "Application.hpp"
 
+#include "Assets.hpp"
 #include "Clock.hpp"
 #include "Input.hpp"
 #include "render/Font.hpp"
@@ -21,6 +22,8 @@ namespace ForgottenEngine {
 		window = std::unique_ptr<Window>(Window::create(props));
 		window->init();
 		window->set_event_callback([&](Event& event) { this->on_event(event); });
+
+		Assets::init();
 
 		Renderer::init();
 		Renderer::wait_and_render();

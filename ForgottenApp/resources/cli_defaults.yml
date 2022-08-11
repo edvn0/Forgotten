@@ -46,3 +46,8 @@
   default:
       type: str
       value: "/Users/edwincarlsson/Documents/PersonalProjects/ForgottenInstallDirectory"
+- name: os
+  type: Positional
+  default:
+      type: str
+      value: MacOS

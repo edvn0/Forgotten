@@ -90,12 +90,12 @@ namespace ForgottenEngine {
 		//	Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
 
 		// Renderer2D Shaders
-		Renderer::get_shader_library()->load("Renderer2D.glsl");
-		Renderer::get_shader_library()->load("Renderer2D_Line.glsl");
+		Renderer::get_shader_library()->load("SceneComposite.glsl");
 		Renderer::get_shader_library()->load("Renderer2D_Circle.glsl");
+		Renderer::get_shader_library()->load("Renderer2D_Line.glsl");
+		Renderer::get_shader_library()->load("Renderer2D.glsl");
 		Renderer::get_shader_library()->load("Renderer2D_Text.glsl");
 		Renderer::get_shader_library()->load("TexturePass.glsl");
-		Renderer::get_shader_library()->load("SceneComposite.glsl");
 		Renderer::get_shader_library()->load("PreDepth.glsl");
 		Renderer::get_shader_library()->load("LightCulling.glsl");
 		Renderer::get_shader_library()->load("DirShadowMap.glsl");

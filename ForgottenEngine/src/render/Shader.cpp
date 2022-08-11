@@ -40,13 +40,17 @@ namespace ForgottenEngine {
 	void ShaderLibrary::load(std::string_view path, bool force_compile, bool disable_optimizations)
 	{
 		Reference<Shader> shader;
+
+		auto found_path = Assets::find_resources_by_path(path, "shaders");
+		CORE_ASSERT(found_path, "");
+
 		if (!force_compile && shader_pack) {
 			if (shader_pack->contains(path))
-				shader = shader_pack->load_shader(path);
+				shader = shader_pack->load_shader((*found_path).string());
 		} else {
 			// Try compile from source
 			// Unavailable at runtime
-			shader = VulkanShaderCompiler::compile(path, force_compile, disable_optimizations);
+			shader = VulkanShaderCompiler::compile(*found_path, force_compile, disable_optimizations);
 		}
 
 		auto& name = shader->get_name();

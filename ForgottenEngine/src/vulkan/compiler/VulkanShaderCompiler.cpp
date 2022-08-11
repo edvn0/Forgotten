@@ -9,6 +9,7 @@
 #include "vulkan/compiler/VulkanShaderCache.hpp"
 #include "vulkan/compiler/preprocessor/GlslIncluder.hpp"
 
+#include <filesystem>
 #include <libshaderc_util/file_finder.h>
 #include <shaderc/shaderc.hpp>
 #include <spirv-tools/libspirv.h>
@@ -23,15 +24,17 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		static const char* get_cache_directory()
+		static std::filesystem::path get_cache_directory()
 		{
 			// TODO: make sure the assets directory is valid
-			return "shaders/cache/vulkan";
+			auto cache_dir_local = std::filesystem::path("resources") / std::filesystem::path("shaders") / std::filesystem::path("cache") / std::filesystem::path("vulkan");
+
+			return Assets::get_base_directory() / cache_dir_local;
 		}
 
 		static void create_cache_directory_if_needed()
 		{
-			std::string cacheDirectory = get_cache_directory();
+			std::string cacheDirectory = get_cache_directory().string();
 			if (!std::filesystem::exists(cacheDirectory))
 				std::filesystem::create_directories(cacheDirectory);
 		}
@@ -77,11 +80,11 @@ namespace ForgottenEngine {
 		}
 	} // namespace Utils
 
-	VulkanShaderCompiler::VulkanShaderCompiler(const std::filesystem::path& shaderSourcePath, bool disableOptimization)
-		: shader_source_path(shaderSourcePath)
-		, disable_optimization(disableOptimization)
+	VulkanShaderCompiler::VulkanShaderCompiler(const std::filesystem::path& shader_source_path, bool disable_optim)
+		: shader_source_path(shader_source_path)
+		, disable_optimization(disable_optim)
 	{
-		language = ShaderUtils::ShaderLangFromExtension(shaderSourcePath.extension().string());
+		language = ShaderUtils::ShaderLangFromExtension(shader_source_path.extension().string());
 	}
 
 	bool VulkanShaderCompiler::reload(bool forceCompile)
@@ -133,7 +136,7 @@ namespace ForgottenEngine {
 
 	std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_glsl(const std::string& source)
 	{
-		std::map<VkShaderStageFlagBits, std::string> shaderSources
+		auto shaderSources
 			= ShaderPreprocessor::PreprocessShader<ShaderUtils::SourceLang::GLSL>(source, acknowledged_macros);
 
 		static shaderc::Compiler compiler;
@@ -141,7 +144,7 @@ namespace ForgottenEngine {
 		shaderc_util::FileFinder fileFinder;
 		fileFinder.search_path().emplace_back("Include/GLSL/"); // Main include directory
 		fileFinder.search_path().emplace_back("Include/Common/"); // Shared include directory
-		for (auto& [stage, shaderSource] : shaderSources) {
+		for (auto& [stage, shader_source] : shaderSources) {
 			shaderc::CompileOptions options;
 			options.AddMacroDefinition("__GLSL__");
 			options.AddMacroDefinition(std::string(ShaderUtils::VKStageToShaderMacro(stage)));
@@ -155,18 +158,18 @@ namespace ForgottenEngine {
 
 			options.SetIncluder(std::unique_ptr<GlslIncluder>(includer));
 			const auto preProcessingResult = compiler.PreprocessGlsl(
-				shaderSource, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), options);
+				shader_source, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), options);
 			if (preProcessingResult.GetCompilationStatus() != shaderc_compilation_status_success)
 				CORE_ERROR("Renderer",
 					fmt::format("Failed to pre-process \"{}\"'s {} shader.\nError: {}", shader_source_path.string(),
 						ShaderUtils::ShaderStageToString(stage), preProcessingResult.GetErrorMessage()));
 
-			stages_metadata[stage].HashValue = Hash::generate_fnv_hash(shaderSource);
+			stages_metadata[stage].HashValue = Hash::generate_fnv_hash(shader_source);
 			stages_metadata[stage].Headers = std::move(includer->get_include_data());
 
 			acknowledged_macros.merge(includer->get_parsed_special_macros());
 
-			shaderSource = std::string(preProcessingResult.begin(), preProcessingResult.end());
+			shader_source = std::string(preProcessingResult.begin(), preProcessingResult.end());
 		}
 		return shaderSources;
 	}
@@ -179,7 +182,7 @@ namespace ForgottenEngine {
 		if (language == ShaderUtils::SourceLang::GLSL) {
 			static shaderc::Compiler compiler;
 			shaderc::CompileOptions shaderCOptions;
-			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
+			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 			shaderCOptions.SetWarningsAsErrors();
 			if (options.GenerateDebugInfo)
 				shaderCOptions.SetGenerateDebugInfo();
@@ -202,22 +205,17 @@ namespace ForgottenEngine {
 	}
 
 	Reference<VulkanShader> VulkanShaderCompiler::compile(
-		const std::filesystem::path& shaderSourcePath, bool forceCompile, bool disableOptimization)
+		const std::filesystem::path& shader_source_path, bool forceCompile, bool disable_optim)
 	{
-		// Set name
-		std::string path = shaderSourcePath.string();
-		size_t found = path.find_last_of("/\\");
-		std::string name = found != std::string::npos ? path.substr(found + 1) : path;
-		found = name.find_last_of('.');
-		name = found != std::string::npos ? name.substr(0, found) : name;
+		auto new_name = shader_source_path.filename().stem().string();
 
 		Reference<VulkanShader> shader = Reference<VulkanShader>::create();
-		shader->asset_path = shaderSourcePath;
-		shader->name = name;
-		shader->disable_optimisations = disableOptimization;
+		shader->asset_path = shader_source_path;
+		shader->name = new_name;
+		shader->disable_optimisations = disable_optim;
 
 		Reference<VulkanShaderCompiler> compiler
-			= Reference<VulkanShaderCompiler>::create(shaderSourcePath, disableOptimization);
+			= Reference<VulkanShaderCompiler>::create(shader_source_path, disable_optim);
 		compiler->reload(forceCompile);
 
 		shader->load_and_create_shaders(compiler->get_spirv_data());
@@ -255,9 +253,12 @@ namespace ForgottenEngine {
 		const VkShaderStageFlagBits changedStages, const bool forceCompile)
 	{
 		for (auto [stage, source] : shader_source) {
-			if (!compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, forceCompile))
+			auto compiled_debug = compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, forceCompile);
+			if (!compiled_debug)
 				return false;
-			if (!compile_or_get_vulkan_binary(stage, outputBinary[stage], false, changedStages, forceCompile))
+
+			auto compiled = compile_or_get_vulkan_binary(stage, outputBinary[stage], false, changedStages, forceCompile);
+			if (!compiled)
 				return false;
 		}
 		return true;

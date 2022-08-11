@@ -1,6 +1,8 @@
 #pragma once
 
 // clang-format off
+#define YAML_CPP_STATIC_DEFINE
+
 #include "Common.hpp"
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
@@ -27,7 +29,7 @@ private:
 #define CORE_ERROR(...)                                                                                       \
     do {                                                                                                      \
         ::ForgottenEngine::Logger::get_core_logger()->error(__VA_ARGS__);                                     \
-        abort();                                                                                              \
+        debug_break();                                                                                              \
 	} while (0)
 
 #define CORE_WARN(...) ::ForgottenEngine::Logger::get_core_logger()->warn(__VA_ARGS__)
@@ -43,7 +45,7 @@ private:
 #define CLIENT_TRACE(...) ::ForgottenEngine::Logger::get_client_logger()->trace(__VA_ARGS__)
 
 
-#define DEBUG_BREAK abort();
+#define DEBUG_BREAK debug_break();
 #define ENABLE_ASSERTS
 #define ENABLE_VERIFY
 

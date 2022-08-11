@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Logger.hpp"
+#include "PlatformSpecific.hpp"
 #include "Reference.hpp"
 #include "serialize/Serialization.hpp"
 
@@ -26,7 +27,7 @@ namespace ForgottenEngine {
 		VkResult err = x;                        \
 		if (err) {                               \
 			CORE_ERROR("Vulkan Error: {}", err); \
-			abort();                             \
+			debug_break();                       \
 		}                                        \
 	} while (0)
 

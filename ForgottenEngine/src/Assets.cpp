@@ -43,23 +43,6 @@ namespace ForgottenEngine {
 		return {};
 	}
 
-	OptionalPath Assets::find_resources_by_path(const Path& path)
-	{
-		if (exists(path))
-			return path;
-
-		const auto parent_resource_path = path.parent_path() / RESOURCES / path.filename();
-		if (exists(parent_resource_path)) {
-			return parent_resource_path;
-		}
-
-		if (exists(RESOURCES / path)) {
-			return RESOURCES / path;
-		}
-
-		return {};
-	}
-
 	template <typename T>
 	static auto load_from_directory_impl = [](const T& a, std::vector<OptionalPath>& out) -> void {
 		for (const auto& dir_entry : a) {

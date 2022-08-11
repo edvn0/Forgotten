@@ -20,20 +20,26 @@ namespace ForgottenEngine {
 		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
 		CORE_ASSERT(gpuCount > 0, "", "");
 		// Enumerate devices
-		std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
-		VK_CHECK(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, physicalDevices.data()));
+		std::vector<VkPhysicalDevice> devices_to_select_from(gpuCount);
+		VK_CHECK(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, devices_to_select_from.data()));
 
 		VkPhysicalDevice* selected_physical_device = nullptr;
-		for (VkPhysicalDevice physicalDevice : physicalDevices) {
-			vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+		for (VkPhysicalDevice physical : devices_to_select_from) {
+
+			vkGetPhysicalDeviceProperties(physical, &properties);
+			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+				selected_physical_device = &physical;
+				break;
+			}
+
 			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-				selected_physical_device = &physicalDevice;
+				selected_physical_device = &physical;
 				break;
 			}
 		}
 
 		if (!selected_physical_device) {
-			selected_physical_device = &physicalDevices.back();
+			selected_physical_device = &devices_to_select_from.back();
 		}
 
 		CORE_ASSERT(selected_physical_device, "Could not find any physical devices!", "");
@@ -214,7 +220,13 @@ namespace ForgottenEngine {
 
 		CORE_ASSERT(physical_device->is_extension_supported(VK_KHR_SWAPCHAIN_EXTENSION_NAME), "");
 		device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+#ifdef FORGOTTEN_MACOS
 		device_exts.push_back("VK_KHR_portability_subset");
+#endif
+#ifdef FORGOTTEN_WINDOWS
+		CORE_INFO("Windows chosen.");
+#endif
 
 		VkDeviceCreateInfo dci = {};
 		dci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
