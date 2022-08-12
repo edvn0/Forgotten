@@ -229,30 +229,30 @@ namespace ForgottenEngine {
 
 	static const std::vector<std::vector<VkWriteDescriptorSet>>&
 	rt_retrieve_or_create_uniform_buffer_write_descriptors(
-		Reference<UniformBufferSet> uniformBufferSet, Reference<VulkanMaterial> vulkanMaterial)
+		Reference<UniformBufferSet> ubs, Reference<VulkanMaterial> vulkan_material)
 	{
-		size_t shaderHash = vulkanMaterial->get_shader()->get_hash();
-		if (renderer_data->uniform_buffer_write_descriptor_cache.find(uniformBufferSet.raw())
+		size_t shader_hash = vulkan_material->get_shader()->get_hash();
+		if (renderer_data->uniform_buffer_write_descriptor_cache.find(ubs.raw())
 			!= renderer_data->uniform_buffer_write_descriptor_cache.end()) {
-			const auto& shaderMap = renderer_data->uniform_buffer_write_descriptor_cache.at(uniformBufferSet.raw());
-			if (shaderMap.find(shaderHash) != shaderMap.end()) {
-				const auto& writeDescriptors = shaderMap.at(shaderHash);
-				return writeDescriptors;
+			const auto& shader_map = renderer_data->uniform_buffer_write_descriptor_cache.at(ubs.raw());
+			if (shader_map.find(shader_hash) != shader_map.end()) {
+				const auto& write_descriptors = shader_map.at(shader_hash);
+				return write_descriptors;
 			}
 		}
 
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
-		Reference<VulkanShader> vulkanShader = vulkanMaterial->get_shader().as<VulkanShader>();
+		Reference<VulkanShader> vulkanShader = vulkan_material->get_shader().as<VulkanShader>();
 		if (vulkanShader->has_descriptor_set(0)) {
 			const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
 			if (!shaderDescriptorSets.empty()) {
 				for (auto&& [binding, shaderUB] : shaderDescriptorSets[0].uniform_buffers) {
-					auto& writeDescriptors
-						= renderer_data->uniform_buffer_write_descriptor_cache[uniformBufferSet.raw()][shaderHash];
-					writeDescriptors.resize(frames_in_flight);
+					auto& write_descriptors
+						= renderer_data->uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
+					write_descriptors.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
 						Reference<VulkanUniformBuffer> uniformBuffer
-							= uniformBufferSet->get(binding, 0, frame); // set = 0 for now
+							= ubs->get(binding, 0, frame); // set = 0 for now
 
 						VkWriteDescriptorSet writeDescriptorSet = {};
 						writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -260,41 +260,42 @@ namespace ForgottenEngine {
 						writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 						writeDescriptorSet.pBufferInfo = &uniformBuffer->get_descriptor_buffer_info();
 						writeDescriptorSet.dstBinding = uniformBuffer->get_binding();
-						writeDescriptors[frame].push_back(writeDescriptorSet);
+						write_descriptors[frame].push_back(writeDescriptorSet);
 					}
 				}
 			}
 		}
 
-		return renderer_data->uniform_buffer_write_descriptor_cache[uniformBufferSet.raw()][shaderHash];
+		return renderer_data->uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
 	}
 
 	static const std::vector<std::vector<VkWriteDescriptorSet>>&
 	rt_retrieve_or_create_storage_buffer_write_descriptors(
-		Reference<StorageBufferSet> storageBufferSet, Reference<VulkanMaterial> vulkanMaterial)
+		Reference<StorageBufferSet> sbs, Reference<VulkanMaterial> vulkan_material)
 	{
-		size_t shaderHash = vulkanMaterial->get_shader()->get_hash();
-		if (renderer_data->storage_buffer_write_descriptor_cache.find(storageBufferSet.raw())
-			!= renderer_data->storage_buffer_write_descriptor_cache.end()) {
-			const auto& shaderMap = renderer_data->storage_buffer_write_descriptor_cache.at(storageBufferSet.raw());
-			if (shaderMap.find(shaderHash) != shaderMap.end()) {
-				const auto& writeDescriptors = shaderMap.at(shaderHash);
-				return writeDescriptors;
+		size_t shader_hash = vulkan_material->get_shader()->get_hash();
+
+		auto& map = renderer_data->storage_buffer_write_descriptor_cache;
+		if (map.find(sbs.raw()) != map.end()) {
+			const auto& shader_map = renderer_data->storage_buffer_write_descriptor_cache.at(sbs.raw());
+			if (shader_map.find(shader_hash) != shader_map.end()) {
+				const auto& write_descriptors = shader_map.at(shader_hash);
+				return write_descriptors;
 			}
 		}
 
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
-		Reference<VulkanShader> vulkanShader = vulkanMaterial->get_shader().as<VulkanShader>();
+		Reference<VulkanShader> vulkanShader = vulkan_material->get_shader().as<VulkanShader>();
 		if (vulkanShader->has_descriptor_set(0)) {
 			const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
 			if (!shaderDescriptorSets.empty()) {
 				for (auto&& [binding, shaderSB] : shaderDescriptorSets[0].storage_buffers) {
-					auto& writeDescriptors
-						= renderer_data->storage_buffer_write_descriptor_cache[storageBufferSet.raw()][shaderHash];
-					writeDescriptors.resize(frames_in_flight);
+					auto& write_descriptors
+						= renderer_data->storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
+					write_descriptors.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
 						Reference<VulkanStorageBuffer> storageBuffer
-							= storageBufferSet->get(binding, 0, frame); // set = 0 for now
+							= sbs->get(binding, 0, frame); // set = 0 for now
 
 						VkWriteDescriptorSet writeDescriptorSet = {};
 						writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -302,13 +303,13 @@ namespace ForgottenEngine {
 						writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 						writeDescriptorSet.pBufferInfo = &storageBuffer->get_descriptor_buffer_info();
 						writeDescriptorSet.dstBinding = storageBuffer->get_binding();
-						writeDescriptors[frame].push_back(writeDescriptorSet);
+						write_descriptors[frame].push_back(writeDescriptorSet);
 					}
 				}
 			}
 		}
 
-		return renderer_data->storage_buffer_write_descriptor_cache[storageBufferSet.raw()][shaderHash];
+		return renderer_data->storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
 	}
 
 	void VulkanRenderer::init()
@@ -579,9 +580,9 @@ namespace ForgottenEngine {
 		const Reference<StorageBufferSet>& sb, const Reference<Material>& material)
 	{
 
-		Reference<VulkanMaterial> vulkanMaterial = material.as<VulkanMaterial>();
-		Renderer::submit([this, command_buffer, pipe = pipeline_in, uniformBufferSet = ub, storageBufferSet = sb,
-							 vulkanMaterial]() mutable {
+		Reference<VulkanMaterial> vulkan_material = material.as<VulkanMaterial>();
+		Renderer::submit([this, command_buffer, pipe = pipeline_in, ubs = ub, sbs = sb,
+							 vulkan_material]() mutable {
 			uint32_t frameIndex = Renderer::get_current_frame_index();
 			VkCommandBuffer commandBuffer
 				= command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
@@ -602,15 +603,15 @@ namespace ForgottenEngine {
 			VkPipeline pipeline = vulkanPipeline->get_vulkan_pipeline();
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-			this->rt_update_material_for_rendering(vulkanMaterial, uniformBufferSet, storageBufferSet);
+			this->rt_update_material_for_rendering(vulkan_material, ubs, sbs);
 
 			uint32_t bufferIndex = Renderer::get_current_frame_index();
-			VkDescriptorSet descriptorSet = vulkanMaterial->get_descriptor_set(bufferIndex);
+			VkDescriptorSet descriptorSet = vulkan_material->get_descriptor_set(bufferIndex);
 			if (descriptorSet)
 				vkCmdBindDescriptorSets(
 					commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
 
-			Buffer uniformStorageBuffer = vulkanMaterial->get_uniform_storage_buffer();
+			Buffer uniformStorageBuffer = vulkan_material->get_uniform_storage_buffer();
 			if (uniformStorageBuffer.size)
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.size,
 					uniformStorageBuffer.data);
@@ -631,23 +632,23 @@ namespace ForgottenEngine {
 	}
 
 	void VulkanRenderer::rt_update_material_for_rendering(Reference<VulkanMaterial> material,
-		Reference<UniformBufferSet> uniformBufferSet, Reference<StorageBufferSet> storageBufferSet)
+		Reference<UniformBufferSet> ubs, Reference<StorageBufferSet> sbs)
 	{
-		if (uniformBufferSet) {
-			auto writeDescriptors = rt_retrieve_or_create_uniform_buffer_write_descriptors(uniformBufferSet, material);
-			if (storageBufferSet) {
+		if (ubs) {
+			auto write_descriptors = rt_retrieve_or_create_uniform_buffer_write_descriptors(ubs, material);
+			if (sbs) {
 				const auto& storageBufferWriteDescriptors
-					= rt_retrieve_or_create_storage_buffer_write_descriptors(storageBufferSet, material);
+					= rt_retrieve_or_create_storage_buffer_write_descriptors(sbs, material);
 
 				const uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 				for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
-					writeDescriptors[frame].reserve(
-						writeDescriptors[frame].size() + storageBufferWriteDescriptors[frame].size());
-					writeDescriptors[frame].insert(writeDescriptors[frame].end(),
+					write_descriptors[frame].reserve(
+						write_descriptors[frame].size() + storageBufferWriteDescriptors[frame].size());
+					write_descriptors[frame].insert(write_descriptors[frame].end(),
 						storageBufferWriteDescriptors[frame].begin(), storageBufferWriteDescriptors[frame].end());
 				}
 			}
-			material->rt_update_for_rendering(writeDescriptors);
+			material->rt_update_for_rendering(write_descriptors);
 		} else {
 			material->rt_update_for_rendering();
 		}
@@ -664,10 +665,10 @@ namespace ForgottenEngine {
 		return result;
 	}
 	void VulkanRenderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
-		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
+		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& ubs,
 		const Reference<Material>& material)
 	{
-		submit_fullscreen_quad(command_buffer, pipeline, uniformBufferSet, nullptr, material);
+		submit_fullscreen_quad(command_buffer, pipeline, ubs, nullptr, material);
 	}
 
 }; // namespace ForgottenEngine

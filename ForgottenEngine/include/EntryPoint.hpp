@@ -20,6 +20,7 @@ namespace ForgottenEngine {
 int main(int argc, char** argv)
 {
 	ForgottenEngine::Application* app { nullptr };
+	ForgottenEngine::Assets::init();
 	ForgottenEngine::Logger::init();
 
 	auto cwd = std::filesystem::current_path();
@@ -32,7 +33,7 @@ int main(int argc, char** argv)
 	try {
 		config = YAML::LoadFile(defaults_path.string());
 	} catch (const YAML::BadFile& bad) {
-		CORE_ERR("Could not load CLI Defaults.");
+		CORE_ERROR("Could not load CLI Defaults.");
 		std::exit(1);
 	}
 
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
 		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
 		boost::program_options::notify(vm);
 	} catch (const std::runtime_error& err) {
-		CORE_ERR("EntryPoint Error: {}", err.what());
+		CORE_ERROR("EntryPoint Error: {}", err.what());
 		std::exit(1);
 	}
 
@@ -62,7 +63,7 @@ int main(int argc, char** argv)
 		try {
 			return vm["name"].as<std::string>();
 		} catch (const std::bad_any_cast& bad_any_cast) {
-			CORE_ERR("Bad cast, Name: {}", bad_any_cast.what());
+			CORE_ERROR("Bad cast, Name: {}", bad_any_cast.what());
 			std::exit(1);
 		}
 	}();
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
 		try {
 			return vm["width"].as<uint32_t>();
 		} catch (const std::bad_any_cast& bad_any_cast) {
-			CORE_ERR("Bad cast, Width: {}", bad_any_cast.what());
+			CORE_ERROR("Bad cast, Width: {}", bad_any_cast.what());
 			std::exit(1);
 		}
 	}();
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
 		try {
 			return vm["height"].as<uint32_t>();
 		} catch (const std::bad_any_cast& bad_any_cast) {
-			CORE_ERR("Bad cast, Height: {}", bad_any_cast.what());
+			CORE_ERROR("Bad cast, Height: {}", bad_any_cast.what());
 			std::exit(1);
 		}
 	}();
@@ -89,7 +90,7 @@ int main(int argc, char** argv)
 		try {
 			return vm["vsync"].as<bool>();
 		} catch (const std::bad_any_cast& bad_any_cast) {
-			CORE_ERR("Bad cast, Height: {}", bad_any_cast.what());
+			CORE_ERROR("Bad cast, Height: {}", bad_any_cast.what());
 			std::exit(1);
 		}
 	}();
@@ -107,6 +108,8 @@ int main(int argc, char** argv)
 	} catch (const std::system_error& e) {
 		CORE_INFO("{}", e.what());
 	}
+
+	Logger::shutdown();
 
 	delete app;
 }

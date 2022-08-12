@@ -39,6 +39,8 @@ namespace ForgottenEngine {
 			layer->~Layer();
 		}
 
+		Font::shutdown();
+
 		Renderer::wait_and_render();
 		Renderer::shut_down();
 	};

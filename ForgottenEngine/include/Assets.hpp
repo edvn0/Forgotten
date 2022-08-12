@@ -20,7 +20,7 @@ namespace ForgottenEngine {
 	using IFStream = std::ifstream;
 	using OptionalIFStream = std::optional<IFStream>;
 
-	using FileModifier = unsigned int;
+	using FileModifier = int;
 
 	namespace AssetModifiers {
 		static const FileModifier APPEND = 0x01;
@@ -39,6 +39,7 @@ namespace ForgottenEngine {
 
 		static Path get_base_directory();
 
+		static Path slashed_string_to_filepath(const std::string& slashed_string);
 		static OptionalIFStream load(const Path&,
 			FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
 		static OptionalIFStream load(const Path&, const std::string& resource_subdirectory,

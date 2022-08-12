@@ -6,7 +6,7 @@
 
 namespace ForgottenEngine::StringUtils {
 
-	static int skip_bom(std::istream& stream)
+	static size_t skip_bom(std::istream& stream)
 	{
 		char test[4] = { 0 };
 		stream.seekg(0, std::ios::beg);
@@ -24,24 +24,19 @@ namespace ForgottenEngine::StringUtils {
 	{
 		std::string result;
 
-		auto path = Assets::load(filepath, "shaders", AssetModifiers::INPUT | AssetModifiers::BINARY);
+		auto path = Assets::load(filepath, "shaders", std::ios::binary | std::ios::ate | std::ios::in);
 		if (!path) {
 			CORE_ERROR("Could not load file at path: {}", filepath.string());
 		}
 
 		std::ifstream& in = *path;
-		if (in) {
-			in.seekg(0, std::ios::end);
-			auto fileSize = in.tellg();
-			const int skippedChars = skip_bom(in);
+		CORE_ASSERT(in, "Could not open shader file.");
 
-			fileSize -= skippedChars - 1;
-			result.resize(fileSize);
-			in.read(result.data() + 1, fileSize);
-			// Add a dummy tab to beginning of file.
-			result[0] = '\t';
-		}
-		in.close();
+		size_t file_size = in.tellg();
+		in.seekg(0);
+
+		result.resize(file_size);
+		in.read(result.data(), file_size);
 		return result;
 	}
 

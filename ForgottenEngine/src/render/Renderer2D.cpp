@@ -1075,7 +1075,7 @@ namespace ForgottenEngine {
 			font_texture_slot_index++;
 		}
 
-		auto& fontGeometry = font->get_msdf_data()->FontGeometry;
+		auto& fontGeometry = font->get_msdf_data()->font_geometry;
 		const auto& metrics = fontGeometry.getMetrics();
 
 		// TODO(Yan): these font metrics really should be cleaned up/refactored...

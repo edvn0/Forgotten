@@ -23,7 +23,7 @@ namespace ForgottenEngine {
 		void write_raw(const T& type)
 		{
 			bool success = write_data((char*)&type, sizeof(T));
-			CORE_ASSERT(success, "");
+			CORE_ASSERT_BOOL(success);
 		}
 
 		template <typename T>

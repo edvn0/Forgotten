@@ -10,45 +10,44 @@ namespace ForgottenEngine {
 	using namespace msdf_atlas;
 
 	struct FontInput {
-		const char* fontFilename;
-		GlyphIdentifierType glyphIdentifierType;
-		const char* charsetFilename;
-		double fontScale;
-		const char* fontName;
+		const char* font_filename;
+		GlyphIdentifierType glyph_type;
+		const char* charset_filename;
+		double font_scale;
+		const char* font_name;
 	};
 
 	struct Configuration {
-		ImageType imageType;
-		msdf_atlas::ImageFormat imageFormat;
-		YDirection yDirection;
+		ImageType image_type;
+		msdf_atlas::ImageFormat image_format;
+		YDirection y_direction;
 		int width, height;
-		double emSize;
-		double pxRange;
-		double angleThreshold;
-		double miterLimit;
+		double em_size;
+		double px_range;
+		double angle_threshold;
+		double miter_limit;
 		void (*edgeColoring)(msdfgen::Shape&, double, unsigned long long);
-		bool expensiveColoring;
-		unsigned long long coloringSeed;
-		GeneratorAttributes generatorAttributes;
+		bool expensive_colouring;
+		unsigned long long colouring_seed;
+		GeneratorAttributes generator_attributes;
 	};
 
-#define DEFAULT_ANGLE_THRESHOLD 3.0
-#define DEFAULT_MITER_LIMIT 1.0
-#define LCG_MULTIPLIER 6364136223846793005ull
-#define LCG_INCREMENT 1442695040888963407ull
-#define THREADS 8
+	constexpr auto DEFAULT_ANGLE_THRESHOLD = 3.0;
+	constexpr auto DEFAULT_MITER_LIMIT = 1.0;
+	constexpr auto LCG_MULTIPLIER = 6364136223846793005ull;
+	constexpr auto LCG_INCREMENT = 1442695040888963407ull;
+	constexpr auto THREADS = 8;
 
 	namespace Utils {
 
-		static std::filesystem::path GetCacheDirectory()
+		static std::filesystem::path get_cache_directory()
 		{
-			// return Project::GetCacheDirectory() / "FontAtlases";
-			return "Resources/Cache/FontAtlases";
+			return Assets::slashed_string_to_filepath("resources/fonts/cache/font_atlases");
 		}
 
-		static void CreateCacheDirectoryIfNeeded()
+		static void create_cache_directory_if_needed()
 		{
-			std::filesystem::path cacheDirectory = GetCacheDirectory();
+			std::filesystem::path cacheDirectory = get_cache_directory();
 			if (!std::filesystem::exists(cacheDirectory))
 				std::filesystem::create_directories(cacheDirectory);
 		}
@@ -59,27 +58,27 @@ namespace ForgottenEngine {
 		uint32_t Width, Height;
 	};
 
-	static bool TryReadFontAtlasFromCache(
-		const std::string& fontName, float fontSize, AtlasHeader& header, void*& pixels, Buffer& storageBuffer)
+	static bool try_read_font_atlas_from_cache(
+		const std::string& font_name, float font_size, AtlasHeader& header, void*& pixels, Buffer& storage_buffer)
 	{
-		std::string filename = fmt::format("{0}-{1}.hfa", fontName, fontSize);
-		std::filesystem::path filepath = Utils::GetCacheDirectory() / filename;
+		std::string filename = fmt::format("{0}-{1}.hfa", font_name, font_size);
+		std::filesystem::path filepath = Utils::get_cache_directory() / filename;
 
 		if (std::filesystem::exists(filepath)) {
-			storageBuffer = FileSystem::read_bytes(filepath);
-			header = *storageBuffer.as<AtlasHeader>();
-			pixels = (uint8_t*)storageBuffer.data + sizeof(AtlasHeader);
+			storage_buffer = FileSystem::read_bytes(filepath);
+			header = *storage_buffer.as<AtlasHeader>();
+			pixels = (uint8_t*)storage_buffer.data + sizeof(AtlasHeader);
 			return true;
 		}
 		return false;
 	}
 
-	static void CacheFontAtlas(const std::string& fontName, float fontSize, AtlasHeader header, const void* pixels)
+	static void cache_font_atlas(const std::string& font_name, float font_size, AtlasHeader header, const void* pixels)
 	{
-		Utils::CreateCacheDirectoryIfNeeded();
+		Utils::create_cache_directory_if_needed();
 
-		std::string filename = fmt::format("{0}-{1}.hfa", fontName, fontSize);
-		std::filesystem::path filepath = Utils::GetCacheDirectory() / filename;
+		std::string filename = fmt::format("{0}-{1}.hfa", font_name, font_size);
+		std::filesystem::path filepath = Utils::get_cache_directory() / filename;
 
 		std::ofstream stream(filepath, std::ios::binary | std::ios::trunc);
 		if (!stream) {
@@ -93,11 +92,11 @@ namespace ForgottenEngine {
 	}
 
 	template <typename T, typename S, int N, GeneratorFunction<S, N> GEN_FN>
-	static Reference<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize,
+	static Reference<Texture2D> create_cache_atlas(const std::string& font_name, float font_size,
 		const std::vector<GlyphGeometry>& glyphs, const FontGeometry& fontGeometry, const Configuration& config)
 	{
 		ImmediateAtlasGenerator<S, N, GEN_FN, BitmapAtlasStorage<T, N>> generator(config.width, config.height);
-		generator.setAttributes(config.generatorAttributes);
+		generator.setAttributes(config.generator_attributes);
 		generator.setThreadCount(THREADS);
 		generator.generate(glyphs.data(), glyphs.size());
 
@@ -106,7 +105,7 @@ namespace ForgottenEngine {
 		AtlasHeader header;
 		header.Width = bitmap.width;
 		header.Height = bitmap.height;
-		CacheFontAtlas(fontName, fontSize, header, bitmap.pixels);
+		cache_font_atlas(font_name, font_size, header, bitmap.pixels);
 
 		TextureProperties props;
 		props.GenerateMips = false;
@@ -117,7 +116,7 @@ namespace ForgottenEngine {
 		return texture;
 	}
 
-	static Reference<Texture2D> CreateCachedAtlas(AtlasHeader header, const void* pixels)
+	static Reference<Texture2D> create_cached_atlas(AtlasHeader header, const void* pixels)
 	{
 		TextureProperties props;
 		props.GenerateMips = false;
@@ -129,47 +128,47 @@ namespace ForgottenEngine {
 	}
 
 	Font::Font(const std::filesystem::path& filepath)
-		: m_FilePath(filepath)
-		, m_MSDFData(new MSDFData())
+		: file_path(filepath)
+		, msdf_data(new MSDFData())
 	{
 		int result = 0;
 		FontInput fontInput = {};
 		Configuration config = {};
-		fontInput.glyphIdentifierType = GlyphIdentifierType::UNICODE_CODEPOINT;
-		fontInput.fontScale = -1;
-		config.imageType = ImageType::MSDF;
-		config.imageFormat = msdf_atlas::ImageFormat::BINARY_FLOAT;
-		config.yDirection = YDirection::BOTTOM_UP;
+		fontInput.glyph_type = GlyphIdentifierType::UNICODE_CODEPOINT;
+		fontInput.font_scale = -1;
+		config.image_type = ImageType::MSDF;
+		config.image_format = msdf_atlas::ImageFormat::BINARY_FLOAT;
+		config.y_direction = YDirection::BOTTOM_UP;
 		config.edgeColoring = msdfgen::edgeColoringInkTrap;
-		const char* imageFormatName = nullptr;
+		const char* image_formatName = nullptr;
 		int fixedWidth = -1, fixedHeight = -1;
-		config.generatorAttributes.config.overlapSupport = true;
-		config.generatorAttributes.scanlinePass = true;
+		config.generator_attributes.config.overlapSupport = true;
+		config.generator_attributes.scanlinePass = true;
 		double minEmSize = 0;
 		double rangeValue = 2.0;
 		TightAtlasPacker::DimensionsConstraint atlasSizeConstraint
 			= TightAtlasPacker::DimensionsConstraint::MULTIPLE_OF_FOUR_SQUARE;
-		config.angleThreshold = DEFAULT_ANGLE_THRESHOLD;
-		config.miterLimit = DEFAULT_MITER_LIMIT;
-		config.imageType = ImageType::MTSDF;
+		config.angle_threshold = DEFAULT_ANGLE_THRESHOLD;
+		config.miter_limit = DEFAULT_MITER_LIMIT;
+		config.image_type = ImageType::MTSDF;
 
-		std::string fontFilepath = m_FilePath.string();
-		fontInput.fontFilename = fontFilepath.c_str();
+		std::string font_filepath = file_path.string();
+		fontInput.font_filename = font_filepath.c_str();
 
-		config.emSize = 40;
+		config.em_size = 40;
 
 		// Load fonts
 		bool anyCodepointsAvailable = false;
 		class FontHolder {
 			msdfgen::FreetypeHandle* ft;
 			msdfgen::FontHandle* font;
-			const char* fontFilename;
+			const char* font_filename;
 
 		public:
 			FontHolder()
 				: ft(msdfgen::initializeFreetype())
 				, font(nullptr)
-				, fontFilename(nullptr)
+				, font_filename(nullptr)
 			{
 			}
 			~FontHolder()
@@ -180,35 +179,35 @@ namespace ForgottenEngine {
 					msdfgen::deinitializeFreetype(ft);
 				}
 			}
-			bool load(const char* fontFilename)
+			bool load(const char* font_filename)
 			{
-				if (ft && fontFilename) {
-					if (this->fontFilename && !strcmp(this->fontFilename, fontFilename))
+				if (ft && font_filename) {
+					if (this->font_filename && !strcmp(this->font_filename, font_filename))
 						return true;
 					if (font)
 						msdfgen::destroyFont(font);
-					if ((font = msdfgen::loadFont(ft, fontFilename))) {
-						this->fontFilename = fontFilename;
+					if ((font = msdfgen::loadFont(ft, font_filename))) {
+						this->font_filename = font_filename;
 						return true;
 					}
-					this->fontFilename = nullptr;
+					this->font_filename = nullptr;
 				}
 				return false;
 			}
 			operator msdfgen::FontHandle*() const { return font; }
 		} font;
 
-		if (!font.load(fontInput.fontFilename))
-			CORE_ASSERT(false, "");
-		if (fontInput.fontScale <= 0)
-			fontInput.fontScale = 1;
+		if (!font.load(fontInput.font_filename))
+			CORE_ASSERT_BOOL(false);
+		if (fontInput.font_scale <= 0)
+			fontInput.font_scale = 1;
 
 		// Load character set
-		fontInput.glyphIdentifierType = GlyphIdentifierType::UNICODE_CODEPOINT;
+		fontInput.glyph_type = GlyphIdentifierType::UNICODE_CODEPOINT;
 		Charset charset;
 
 		// From ImGui
-		static const uint32_t charsetRanges[] = {
+		static const uint32_t charset_ranges[] = {
 			0x0020,
 			0x00FF, // Basic Latin + Latin Supplement
 			0x0400,
@@ -221,141 +220,145 @@ namespace ForgottenEngine {
 		};
 
 		for (int range = 0; range < 8; range += 2) {
-			for (int c = charsetRanges[range]; c <= charsetRanges[range + 1]; c++)
+			for (int c = charset_ranges[range]; c <= charset_ranges[range + 1]; c++)
 				charset.add(c);
 		}
 
 		// Load glyphs
-		m_MSDFData->FontGeometry = FontGeometry(&m_MSDFData->Glyphs);
+		msdf_data->font_geometry = FontGeometry(&msdf_data->glyphs);
 		int glyphsLoaded = -1;
-		switch (fontInput.glyphIdentifierType) {
+		switch (fontInput.glyph_type) {
 		case GlyphIdentifierType::GLYPH_INDEX:
-			glyphsLoaded = m_MSDFData->FontGeometry.loadGlyphset(font, fontInput.fontScale, charset);
+			glyphsLoaded = msdf_data->font_geometry.loadGlyphset(font, fontInput.font_scale, charset);
 			break;
 		case GlyphIdentifierType::UNICODE_CODEPOINT:
-			glyphsLoaded = m_MSDFData->FontGeometry.loadCharset(font, fontInput.fontScale, charset);
+			glyphsLoaded = msdf_data->font_geometry.loadCharset(font, fontInput.font_scale, charset);
 			anyCodepointsAvailable |= glyphsLoaded > 0;
 			break;
 		}
 
 		if (glyphsLoaded < 0)
-			CORE_ASSERT(false, "");
+			CORE_ASSERT_BOOL(false);
 		CORE_TRACE("Loaded geometry of {0} out of {1} glyphs", glyphsLoaded, (int)charset.size());
 		// List missing glyphs
 		if (glyphsLoaded < (int)charset.size()) {
 			CORE_WARN("Missing {0} {1}", (int)charset.size() - glyphsLoaded,
-				fontInput.glyphIdentifierType == GlyphIdentifierType::UNICODE_CODEPOINT ? "codepoints" : "glyphs");
+				fontInput.glyph_type == GlyphIdentifierType::UNICODE_CODEPOINT ? "codepoints" : "glyphs");
 		}
 
-		if (fontInput.fontName)
-			m_MSDFData->FontGeometry.setName(fontInput.fontName);
+		if (fontInput.font_name)
+			msdf_data->font_geometry.setName(fontInput.font_name);
 
 		// NOTE(Yan): we still need to "pack" the font to determine atlas metadata, though this could also be cached.
 		//            The most intensive part is the actual atlas generation, which is what we do cache - it takes
 		//            around 96% of total time spent in this Font constructor.
 
 		// Determine final atlas dimensions, scale and range, pack glyphs
-		double pxRange = rangeValue;
+		double px_range = rangeValue;
 		bool fixedDimensions = fixedWidth >= 0 && fixedHeight >= 0;
-		bool fixedScale = config.emSize > 0;
+		bool fixedScale = config.em_size > 0;
 		TightAtlasPacker atlasPacker;
 		if (fixedDimensions)
 			atlasPacker.setDimensions(fixedWidth, fixedHeight);
 		else
 			atlasPacker.setDimensionsConstraint(atlasSizeConstraint);
-		atlasPacker.setPadding(config.imageType == ImageType::MSDF || config.imageType == ImageType::MTSDF ? 0 : -1);
+		atlasPacker.setPadding(config.image_type == ImageType::MSDF || config.image_type == ImageType::MTSDF ? 0 : -1);
 		// TODO: In this case (if padding is -1), the border pixels of each glyph are black, but still computed. For
 		// floating-point output, this may play a role.
 		if (fixedScale)
-			atlasPacker.setScale(config.emSize);
+			atlasPacker.setScale(config.em_size);
 		else
 			atlasPacker.setMinimumScale(minEmSize);
-		atlasPacker.setPixelRange(pxRange);
-		atlasPacker.setMiterLimit(config.miterLimit);
-		if (int remaining = atlasPacker.pack(m_MSDFData->Glyphs.data(), m_MSDFData->Glyphs.size())) {
+		atlasPacker.setPixelRange(px_range);
+		atlasPacker.setMiterLimit(config.miter_limit);
+		if (int remaining = atlasPacker.pack(msdf_data->glyphs.data(), msdf_data->glyphs.size())) {
 			if (remaining < 0) {
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			} else {
 				CORE_ERROR("Error: Could not fit {0} out of {1} glyphs into the atlas.", remaining,
-					(int)m_MSDFData->Glyphs.size());
-				CORE_ASSERT(false, "");
+					(int)msdf_data->glyphs.size());
+				CORE_ASSERT_BOOL(false);
 			}
 		}
 		atlasPacker.getDimensions(config.width, config.height);
 		CORE_ASSERT(config.width > 0 && config.height > 0, "");
-		config.emSize = atlasPacker.getScale();
-		config.pxRange = atlasPacker.getPixelRange();
+		config.em_size = atlasPacker.getScale();
+		config.px_range = atlasPacker.getPixelRange();
 		if (!fixedScale)
-			CORE_TRACE("Glyph size: {0} pixels/EM", config.emSize);
+			CORE_TRACE("Glyph size: {0} pixels/EM", config.em_size);
 		if (!fixedDimensions)
 			CORE_TRACE("Atlas dimensions: {0} x {1}", config.width, config.height);
 
 		// Edge coloring
-		if (config.imageType == ImageType::MSDF || config.imageType == ImageType::MTSDF) {
-			if (config.expensiveColoring) {
+		if (config.image_type == ImageType::MSDF || config.image_type == ImageType::MTSDF) {
+			if (config.expensive_colouring) {
 				Workload(
-					[&glyphs = m_MSDFData->Glyphs, &config](int i, int threadNo) -> bool {
+					[&glyphs = msdf_data->glyphs, &config](int i, int threadNo) -> bool {
 						unsigned long long glyphSeed
-							= (LCG_MULTIPLIER * (config.coloringSeed ^ i) + LCG_INCREMENT) * !!config.coloringSeed;
-						glyphs[i].edgeColoring(config.edgeColoring, config.angleThreshold, glyphSeed);
+							= (LCG_MULTIPLIER * (config.colouring_seed ^ i) + LCG_INCREMENT) * !!config.colouring_seed;
+						glyphs[i].edgeColoring(config.edgeColoring, config.angle_threshold, glyphSeed);
 						return true;
 					},
-					m_MSDFData->Glyphs.size())
+					msdf_data->glyphs.size())
 					.finish(THREADS);
 			} else {
-				unsigned long long glyphSeed = config.coloringSeed;
-				for (GlyphGeometry& glyph : m_MSDFData->Glyphs) {
+				unsigned long long glyphSeed = config.colouring_seed;
+				for (GlyphGeometry& glyph : msdf_data->glyphs) {
 					glyphSeed *= LCG_MULTIPLIER;
-					glyph.edgeColoring(config.edgeColoring, config.angleThreshold, glyphSeed);
+					glyph.edgeColoring(config.edgeColoring, config.angle_threshold, glyphSeed);
 				}
 			}
 		}
 
-		std::string fontName = filepath.filename().string();
+		std::string font_name = filepath.filename().string();
 
 		// Check cache here
-		Buffer storageBuffer;
+		Buffer storage_buffer;
 		AtlasHeader header;
 		void* pixels;
-		if (TryReadFontAtlasFromCache(fontName, (float)config.emSize, header, pixels, storageBuffer)) {
-			m_TextureAtlas = CreateCachedAtlas(header, pixels);
-			storageBuffer.release();
+		if (try_read_font_atlas_from_cache(font_name, (float)config.em_size, header, pixels, storage_buffer)) {
+			texture_atlas = create_cached_atlas(header, pixels);
+			storage_buffer.release();
 		} else {
 			bool floatingPointFormat = true;
 			Reference<Texture2D> texture;
-			switch (config.imageType) {
+			switch (config.image_type) {
 			case ImageType::MSDF:
 				if (floatingPointFormat)
-					texture = CreateAndCacheAtlas<float, float, 3, msdfGenerator>(
-						fontName, (float)config.emSize, m_MSDFData->Glyphs, m_MSDFData->FontGeometry, config);
+					texture = create_cache_atlas<float, float, 3, msdfGenerator>(
+						font_name, (float)config.em_size, msdf_data->glyphs, msdf_data->font_geometry, config);
 				else
-					texture = CreateAndCacheAtlas<byte, float, 3, msdfGenerator>(
-						fontName, (float)config.emSize, m_MSDFData->Glyphs, m_MSDFData->FontGeometry, config);
+					texture = create_cache_atlas<byte, float, 3, msdfGenerator>(
+						font_name, (float)config.em_size, msdf_data->glyphs, msdf_data->font_geometry, config);
 				break;
 			case ImageType::MTSDF:
 				if (floatingPointFormat)
-					texture = CreateAndCacheAtlas<float, float, 4, mtsdfGenerator>(
-						fontName, (float)config.emSize, m_MSDFData->Glyphs, m_MSDFData->FontGeometry, config);
+					texture = create_cache_atlas<float, float, 4, mtsdfGenerator>(
+						font_name, (float)config.em_size, msdf_data->glyphs, msdf_data->font_geometry, config);
 				else
-					texture = CreateAndCacheAtlas<byte, float, 4, mtsdfGenerator>(
-						fontName, (float)config.emSize, m_MSDFData->Glyphs, m_MSDFData->FontGeometry, config);
+					texture = create_cache_atlas<byte, float, 4, mtsdfGenerator>(
+						font_name, (float)config.em_size, msdf_data->glyphs, msdf_data->font_geometry, config);
 				break;
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 
-			m_TextureAtlas = texture;
+			texture_atlas = texture;
 		}
 	}
 
-	Font::~Font() { delete m_MSDFData; }
+	Font::~Font() { delete msdf_data; }
 
-	Reference<Font> Font::s_DefaultFont;
+	Reference<Font> Font::default_font;
 
-	void Font::init() { s_DefaultFont = Reference<Font>::create("fonts/OpenSans-Regular.ttf"); }
+	void Font::init()
+	{
+		auto path = Assets::slashed_string_to_filepath("resources/fonts/Olive Days.ttf");
+		default_font = Reference<Font>::create(path);
+	}
 
-	void Font::shutdown() { s_DefaultFont.reset(); }
+	void Font::shutdown() { default_font.reset(); }
 
-	Reference<Font> Font::get_default_font() { return s_DefaultFont; }
+	Reference<Font> Font::get_default_font() { return default_font; }
 
 } // namespace ForgottenEngine

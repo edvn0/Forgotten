@@ -80,14 +80,14 @@ namespace ForgottenEngine {
 		CORE_DEBUG("Initializing renderer API.");
 		renderer_api = init_renderer_api();
 
-		config.frames_in_flight = glm::min<uint32_t>(
-			config.frames_in_flight, Application::the().get_window().get_swapchain().get_image_count());
+		auto fif = Application::the().get_window().get_swapchain().get_image_count();
+		config.frames_in_flight = glm::min<uint32_t>(config.frames_in_flight, fif);
 		// Much stuff
 
 		renderer_data->shader_library = Reference<ShaderLibrary>::create();
 
-		// if (!config.shader_pack_path.empty())
-		//	Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
+		if (!config.shader_pack_path.empty())
+			Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
 
 		// Renderer2D Shaders
 		Renderer::get_shader_library()->load("SceneComposite.glsl");

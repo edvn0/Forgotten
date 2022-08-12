@@ -101,7 +101,7 @@ namespace ForgottenEngine {
 			case VK_RESULT_MAX_ENUM:
 				return "VK_RESULT_MAX_ENUM";
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 		}
 
@@ -193,7 +193,7 @@ namespace ForgottenEngine {
 			case VK_OBJECT_TYPE_MAX_ENUM:
 				return "VK_OBJECT_TYPE_MAX_ENUM";
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 		}
 

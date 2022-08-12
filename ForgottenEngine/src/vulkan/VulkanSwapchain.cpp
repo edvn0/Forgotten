@@ -59,8 +59,8 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_ASSERT(graphics_queue_index != UINT32_MAX, "");
-		CORE_ASSERT(present_queue_index != UINT32_MAX, "");
+		CORE_ASSERT_BOOL(graphics_queue_index != UINT32_MAX);
+		CORE_ASSERT_BOOL(present_queue_index != UINT32_MAX);
 
 		queue_node_index = graphics_queue_index;
 
@@ -84,7 +84,7 @@ namespace ForgottenEngine {
 		// Get available present modes
 		uint32_t presentModeCount;
 		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr));
-		CORE_ASSERT(presentModeCount > 0, "");
+		CORE_ASSERT_BOOL(presentModeCount > 0);
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
 			physicalDevice, surface, &presentModeCount, presentModes.data()));
@@ -485,7 +485,7 @@ namespace ForgottenEngine {
 		// Get list of supported surface formats
 		uint32_t formatCount;
 		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatCount, nullptr));
-		CORE_ASSERT(formatCount > 0, "");
+		CORE_ASSERT_BOOL(formatCount > 0);
 
 		std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
 		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatCount, surfaceFormats.data()));

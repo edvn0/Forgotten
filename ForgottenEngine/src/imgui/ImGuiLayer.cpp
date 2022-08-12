@@ -29,8 +29,8 @@ namespace ForgottenEngine {
 			Application& app = Application::the();
 			auto* window = static_cast<GLFWwindow*>(app.get_window().get_natively());
 
-			auto vulkanContext = VulkanContext::get();
-			auto device = vulkanContext->get_device();
+			auto vulkan_context = VulkanContext::get();
+			auto device = vulkan_context->get_device();
 
 			VkDescriptorPool imgui_descriptor_pool;
 
@@ -74,9 +74,9 @@ namespace ForgottenEngine {
 
 			// Upload Fonts
 			{
-				VkCommandBuffer commandBuffer = vulkanContext->get_device()->get_command_buffer(true);
+				VkCommandBuffer commandBuffer = vulkan_context->get_device()->get_command_buffer(true);
 				ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-				vulkanContext->get_device()->flush_command_buffer(commandBuffer);
+				vulkan_context->get_device()->flush_command_buffer(commandBuffer);
 
 				VK_CHECK(vkDeviceWaitIdle(device->get_vulkan_device()));
 				ImGui_ImplVulkan_DestroyFontUploadObjects();

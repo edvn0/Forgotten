@@ -19,7 +19,7 @@ namespace ForgottenEngine {
 			case TextureWrap::Repeat:
 				return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 			return (VkSamplerAddressMode)0;
 		}
@@ -34,7 +34,7 @@ namespace ForgottenEngine {
 			case TextureFilter::Cubic:
 				return VK_FILTER_CUBIC_IMG;
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 			return (VkFilter)0;
 		}
@@ -61,7 +61,7 @@ namespace ForgottenEngine {
 			case ImageFormat::B10R11G11UF:
 				return width * height * sizeof(float);
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 
 			return 0;
@@ -78,7 +78,7 @@ namespace ForgottenEngine {
 		, properties(properties)
 	{
 		bool loaded = load_image(path);
-		CORE_ASSERT(loaded, "");
+		CORE_ASSERT_BOOL(loaded);
 		if (!loaded) {
 			CORE_ERROR("Could not load Texture.");
 		}

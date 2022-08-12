@@ -62,6 +62,9 @@ namespace ForgottenEngine {
 		if (path == ".frag") {
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
 		}
+		if (path == ".comp") {
+			return VK_SHADER_STAGE_COMPUTE_BIT;
+		}
 		CORE_ERROR("Incorrect vert or frag extension");
 	}
 
@@ -131,7 +134,7 @@ namespace ForgottenEngine {
 		stage_create_infos.clear();
 		std::string moduleName;
 		for (auto [stage, data] : shaderData) {
-			CORE_ASSERT(data.size(), "");
+			CORE_ASSERT_BOOL(data.size());
 			VkShaderModuleCreateInfo moduleCreateInfo {};
 
 			moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -344,7 +347,7 @@ namespace ForgottenEngine {
 
 	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::allocate_descriptor_set(uint32_t set)
 	{
-		CORE_ASSERT(set < descriptor_set_layouts.size(), "");
+		CORE_ASSERT_BOOL(set < descriptor_set_layouts.size());
 		ShaderMaterialDescriptorSet result;
 
 		if (reflection_data.shader_descriptor_sets.empty())
@@ -358,7 +361,7 @@ namespace ForgottenEngine {
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &descriptor_set_layouts[set];
 		VkDescriptorSet descriptorSet = VulkanRenderer::rt_allocate_descriptor_set(alloc_info);
-		CORE_ASSERT(descriptorSet, "");
+		CORE_ASSERT_BOOL(descriptorSet);
 		result.descriptor_sets.push_back(descriptorSet);
 		return result;
 	}
@@ -369,7 +372,7 @@ namespace ForgottenEngine {
 
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 
-		CORE_ASSERT(type_counts.find(set) != type_counts.end(), "");
+		CORE_ASSERT_BOOL(type_counts.find(set) != type_counts.end());
 
 		// TODO: Move this to the centralized renderer
 		VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
@@ -453,7 +456,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_ASSERT(poolSizes.find(desc_set) != poolSizes.end(), "");
+		CORE_ASSERT_BOOL(poolSizes.find(desc_set) != poolSizes.end());
 
 		// TODO: Move this to the centralized renderer
 		VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
@@ -480,8 +483,9 @@ namespace ForgottenEngine {
 
 	const VkWriteDescriptorSet* VulkanShader::get_descriptor_set(const std::string& desc_set_name, uint32_t set) const
 	{
-		CORE_ASSERT(set < reflection_data.shader_descriptor_sets.size(), "");
-		CORE_ASSERT(reflection_data.shader_descriptor_sets[set], "");
+		CORE_ASSERT_BOOL(set < reflection_data.shader_descriptor_sets.size());
+		CORE_ASSERT_BOOL(reflection_data.shader_descriptor_sets[set]);
+
 		if (reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.find(desc_set_name)
 			== reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.end()) {
 			CORE_WARN(

@@ -141,7 +141,7 @@ namespace ForgottenEngine {
 			case ImageFormat::B10R11G11UF:
 				return 4;
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 			return 0;
 		}
@@ -169,7 +169,7 @@ namespace ForgottenEngine {
 			case ImageFormat::DEPTH24STENCIL8:
 				return false;
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 			return false;
 		}

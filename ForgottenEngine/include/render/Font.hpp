@@ -13,8 +13,8 @@ namespace ForgottenEngine {
 		Font(const std::filesystem::path& filepath);
 		virtual ~Font();
 
-		Reference<Texture2D> get_font_atlas() const { return m_TextureAtlas; }
-		const MSDFData* get_msdf_data() const { return m_MSDFData; }
+		Reference<Texture2D> get_font_atlas() const { return texture_atlas; }
+		const MSDFData* get_msdf_data() const { return msdf_data; }
 
 		static void init();
 		static void shutdown();
@@ -24,12 +24,12 @@ namespace ForgottenEngine {
 		AssetType get_asset_type() const override { return get_static_type(); }
 
 	private:
-		std::filesystem::path m_FilePath;
-		Reference<Texture2D> m_TextureAtlas;
-		MSDFData* m_MSDFData = nullptr;
+		std::filesystem::path file_path;
+		Reference<Texture2D> texture_atlas;
+		MSDFData* msdf_data = nullptr;
 
 	private:
-		static Reference<Font> s_DefaultFont;
+		static Reference<Font> default_font;
 	};
 
 } // namespace ForgottenEngine

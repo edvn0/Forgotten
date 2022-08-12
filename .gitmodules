@@ -40,3 +40,6 @@
 [submodule "ForgottenEngine/vendor/yaml-cpp"]
 	path = ForgottenEngine/vendor/yaml-cpp
 	url = https://github.com/edvn0/yaml-cpp
+[submodule "ForgottenEngine/vendor/entt"]
+	path = ForgottenEngine/vendor/entt
+	url = https://github.com/edvn0/entt

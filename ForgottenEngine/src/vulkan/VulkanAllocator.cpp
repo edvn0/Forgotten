@@ -61,15 +61,15 @@ namespace ForgottenEngine {
 
 	void VulkanAllocator::destroy_image(VkImage image, VmaAllocation allocation)
 	{
-		CORE_ASSERT(image, "");
-		CORE_ASSERT(allocation, "");
+		CORE_ASSERT_BOOL(image);
+		CORE_ASSERT_BOOL(allocation);
 		vmaDestroyImage(vma_data->allocator, image, allocation);
 	}
 
 	void VulkanAllocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
 	{
-		CORE_ASSERT(buffer, "");
-		CORE_ASSERT(allocation, "");
+		CORE_ASSERT_BOOL(buffer);
+		CORE_ASSERT_BOOL(allocation);
 		vmaDestroyBuffer(vma_data->allocator, buffer, allocation);
 	}
 

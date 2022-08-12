@@ -153,7 +153,7 @@ namespace ForgottenEngine {
 		Buffer buffer;
 
 		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		CORE_ASSERT(stream, "");
+		CORE_ASSERT_BOOL(stream);
 
 		std::streampos end = stream.tellg();
 		stream.seekg(0, std::ios::beg);

@@ -17,7 +17,7 @@ namespace ForgottenEngine {
 		static AssetType get_static_type() { return AssetType::None; }
 		virtual AssetType get_asset_type() const { return AssetType::None; }
 
-		bool IsValid() const { return ((flags & (uint16_t)AssetFlag::Missing) | (flags & (uint16_t)AssetFlag::Invalid)) == 0; }
+		bool is_valid() const { return ((flags & (uint16_t)AssetFlag::Missing) | (flags & (uint16_t)AssetFlag::Invalid)) == 0; }
 
 		virtual bool operator==(const Asset& other) const
 		{

@@ -225,7 +225,7 @@ namespace ForgottenEngine {
 						break;
 
 					default:
-						CORE_VERIFY(false, "");
+						CORE_VERIFY_BOOL(false);
 					}
 				}
 			}

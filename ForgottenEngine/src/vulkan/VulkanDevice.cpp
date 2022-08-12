@@ -307,20 +307,20 @@ namespace ForgottenEngine {
 
 		VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
+		VkSubmitInfo qsi = {};
+		qsi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		qsi.commandBufferCount = 1;
+		qsi.pCommandBuffers = &commandBuffer;
 
 		// Create fence to ensure that the command buffer has finished executing
-		VkFenceCreateInfo fenceCreateInfo = {};
-		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceCreateInfo.flags = 0;
+		VkFenceCreateInfo fci = {};
+		fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fci.flags = 0;
 		VkFence fence;
-		VK_CHECK(vkCreateFence(logical_device, &fenceCreateInfo, nullptr, &fence));
+		VK_CHECK(vkCreateFence(logical_device, &fci, nullptr, &fence));
 
 		// Submit to the queue
-		VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, fence));
+		VK_CHECK(vkQueueSubmit(queue, 1, &qsi, fence));
 		// Wait for the fence to signal that command buffer has finished executing
 		VK_CHECK(vkWaitForFences(logical_device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
 

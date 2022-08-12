@@ -18,7 +18,7 @@ namespace ForgottenEngine::UI {
 			Reference<VulkanTexture2D> vulkanTexture = texture.as<VulkanTexture2D>();
 			const VkDescriptorImageInfo& imageInfo = vulkanTexture->get_vulkan_descriptor_info();
 			if (!imageInfo.imageView)
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 
 			return reinterpret_cast<ImU64>(ImGui_ImplVulkan_AddTexture(imageInfo.sampler, imageInfo.imageView, imageInfo.imageLayout));
 		}
@@ -107,7 +107,7 @@ namespace ForgottenEngine::UI {
 
 	bool image_button(const char* stringID, const Reference<Texture2D>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
 	{
-		CORE_VERIFY(texture, "");
+		CORE_VERIFY_BOOL(texture);
 		if (!texture)
 			return false;
 
@@ -115,7 +115,7 @@ namespace ForgottenEngine::UI {
 			Reference<VulkanTexture2D> vulkanTexture = texture.as<VulkanTexture2D>();
 
 			// This is technically okay, could mean that GPU just hasn't created the texture yet
-			CORE_VERIFY(vulkanTexture->get_image(), "");
+			CORE_VERIFY_BOOL(vulkanTexture->get_image());
 			if (!vulkanTexture->get_image())
 				return false;
 

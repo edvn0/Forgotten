@@ -102,7 +102,9 @@ target_include_directories(
           vendor/spirv-cross
           vendor/shaderc
           vendor/shaderc/libshaderc/include
-          vendor/shaderc/libshaderc_util/include)
+          vendor/shaderc/libshaderc_util/include
+          vendor/entt/src/entt
+          vendor/entt/single_include)
 
 target_link_libraries(
   ForgottenEngine
@@ -115,6 +117,7 @@ target_link_libraries(
           shaderc
           spirv-cross-glsl
           spirv-cross-core
+          EnTT::EnTT
           Boost::program_options)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

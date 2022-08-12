@@ -9,6 +9,7 @@
 
 #include "Assets.hpp"
 
+#include <sstream>
 #include <sys/stat.h>
 
 namespace ForgottenEngine {
@@ -29,23 +30,23 @@ namespace ForgottenEngine {
 		auto const subdir = std::filesystem::path { resource_subdirectory };
 
 		if (exists(path))
-			return std::ifstream { path };
+			return std::ifstream(path, modifier);
 
 		const auto parent_resource_path = path.parent_path() / subdir / path.filename();
 		if (exists(parent_resource_path)) {
-			return std::ifstream { parent_resource_path };
+			return std::ifstream(parent_resource_path, modifier);
 		}
 
 		if (exists(subdir / path)) {
-			return std::ifstream { subdir / path };
+			return std::ifstream(subdir / path, modifier);
 		}
 
 		return {};
 	}
 
-	template <typename T>
-	static auto load_from_directory_impl = [](const T& a, std::vector<OptionalPath>& out) -> void {
-		for (const auto& dir_entry : a) {
+	template <typename T = std::filesystem::directory_iterator>
+	static auto load_from_directory_impl = [](const T& iterator, std::vector<OptionalPath>& out) -> void {
+		for (const auto& dir_entry : iterator) {
 			bool is_font_file = dir_entry.path().extension() == ".ttf" || dir_entry.path().extension() == ".otf";
 			bool is_regular_and_font_file = dir_entry.is_regular_file() && is_font_file;
 			if (is_regular_and_font_file) {
@@ -108,6 +109,26 @@ namespace ForgottenEngine {
 		Path path = input;
 
 		return path.extension().string();
+	}
+
+	Path Assets::slashed_string_to_filepath(const std::string& slashed_string)
+	{
+		auto vector = [&slashed_string]() {
+			std::stringstream stream(slashed_string);
+			std::string item;
+			std::vector<std::string> split_strings;
+			while (std::getline(stream, item, '/')) {
+				split_strings.push_back(item); // if C++11 (based on comment from @mchiasson)
+			}
+			return split_strings;
+		}();
+
+		std::filesystem::path result;
+		for (auto&& subpath : vector) {
+			result /= subpath;
+		}
+
+		return result;
 	}
 
 } // namespace ForgottenEngine

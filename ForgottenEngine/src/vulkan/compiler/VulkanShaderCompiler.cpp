@@ -104,7 +104,7 @@ namespace ForgottenEngine {
 		bool compileSucceeded
 			= compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, forceCompile);
 		if (!compileSucceeded) {
-			CORE_ASSERT(false, "");
+			CORE_ASSERT_BOOL(false);
 			return false;
 		}
 
@@ -155,21 +155,34 @@ namespace ForgottenEngine {
 
 			// Deleted by shaderc and created per stage
 			GlslIncluder* includer = new GlslIncluder(&fileFinder);
-
 			options.SetIncluder(std::unique_ptr<GlslIncluder>(includer));
-			const auto preProcessingResult = compiler.PreprocessGlsl(
-				shader_source, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), options);
-			if (preProcessingResult.GetCompilationStatus() != shaderc_compilation_status_success)
+
+			struct PreprocessorOptions {
+				std::string source;
+				shaderc_shader_kind stage;
+				const char* file_path;
+				shaderc::CompileOptions options;
+			};
+			PreprocessorOptions preprocessor_options = {
+				.source = shader_source,
+				.stage = ShaderUtils::ShaderStageToShaderC(stage),
+				.file_path = shader_source_path.string().c_str(),
+				.options = options
+			};
+
+			const auto result = compiler.PreprocessGlsl(preprocessor_options.source, preprocessor_options.stage, preprocessor_options.file_path, preprocessor_options.options);
+
+			if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 				CORE_ERROR("Renderer",
 					fmt::format("Failed to pre-process \"{}\"'s {} shader.\nError: {}", shader_source_path.string(),
-						ShaderUtils::ShaderStageToString(stage), preProcessingResult.GetErrorMessage()));
+						ShaderUtils::ShaderStageToString(stage), result.GetErrorMessage()));
 
 			stages_metadata[stage].HashValue = Hash::generate_fnv_hash(shader_source);
 			stages_metadata[stage].Headers = std::move(includer->get_include_data());
 
 			acknowledged_macros.merge(includer->get_parsed_special_macros());
 
-			shader_source = std::string(preProcessingResult.begin(), preProcessingResult.end());
+			shader_source = std::string(result.begin(), result.end());
 		}
 		return shaderSources;
 	}
@@ -252,7 +265,7 @@ namespace ForgottenEngine {
 		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
 		const VkShaderStageFlagBits changedStages, const bool forceCompile)
 	{
-		for (auto [stage, source] : shader_source) {
+		for (auto&& [stage, source] : shader_source) {
 			auto compiled_debug = compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, forceCompile);
 			if (!compiled_debug)
 				return false;
@@ -288,12 +301,12 @@ namespace ForgottenEngine {
 			}
 
 			if (std::string error = compile(outputBinary, stage, options); error.size()) {
-				CORE_ERR("Renderer {}", error);
+				CORE_ERROR("Renderer {}", error);
 				try_get_vulkan_cached_binary(cacheDirectory, extension, outputBinary);
 				if (outputBinary.empty()) {
-					CORE_ERR("Failed to compile shader and couldn't find a cached version.");
+					CORE_ERROR("Failed to compile shader and couldn't find a cached version.");
 				} else {
-					CORE_ERR("Failed to compile {}:{} so a cached version was loaded instead.",
+					CORE_ERROR("Failed to compile {}:{} so a cached version was loaded instead.",
 						shader_source_path.string(), ShaderUtils::ShaderStageToString(stage));
 				}
 				return false;
@@ -354,7 +367,7 @@ namespace ForgottenEngine {
 		serializer.read_raw(header);
 
 		bool validHeader = memcmp(&header, "FGSR", 4) == 0;
-		CORE_ASSERT(validHeader, "");
+		CORE_ASSERT_BOOL(validHeader);
 
 		clear_reflection_data();
 

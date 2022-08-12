@@ -29,11 +29,9 @@ namespace ForgottenEngine {
 
 	ShaderLibrary::~ShaderLibrary() = default;
 
-#define FIND_IN_SHADERS(x) CORE_ASSERT(shaders.find(x) == shaders.end(), "Shader with that name already exists.")
-
 	void ShaderLibrary::add(const std::string& name, const Reference<Shader>& shader)
 	{
-		FIND_IN_SHADERS(name);
+		CORE_ASSERT_BOOL(shaders.find(name) == shaders.end());
 		shaders[name] = shader;
 	}
 
@@ -42,7 +40,7 @@ namespace ForgottenEngine {
 		Reference<Shader> shader;
 
 		auto found_path = Assets::find_resources_by_path(path, "shaders");
-		CORE_ASSERT(found_path, "");
+		CORE_ASSERT_BOOL(found_path);
 
 		if (!force_compile && shader_pack) {
 			if (shader_pack->contains(path))
@@ -54,19 +52,20 @@ namespace ForgottenEngine {
 		}
 
 		auto& name = shader->get_name();
-		CORE_ASSERT(shaders.find(name) == shaders.end(), "");
+		CORE_ASSERT_BOOL(shaders.find(name) == shaders.end());
 		shaders[name] = shader;
 	}
 
 	void ShaderLibrary::load(std::string_view name, const std::string& path)
 	{
-		CORE_ASSERT(shaders.find(std::string(name)) == shaders.end(), "");
-		shaders[std::string(name)] = Shader::create(path);
+		std::string shader_name(name);
+		CORE_ASSERT_BOOL(shaders.find(shader_name) != shaders.end());
+		shaders[shader_name] = Shader::create(path);
 	}
 
 	const Reference<Shader>& ShaderLibrary::get(const std::string& name) const
 	{
-		CORE_ASSERT(shaders.find(name) != shaders.end(), "");
+		CORE_ASSERT_BOOL(shaders.find(name) != shaders.end());
 		return shaders.at(name);
 	}
 
@@ -75,7 +74,7 @@ namespace ForgottenEngine {
 		shader_pack = Reference<ShaderPack>::create(path);
 		if (!shader_pack->is_loaded()) {
 			shader_pack = nullptr;
-			CORE_ERR("Could not load shader pack: {}", path.string());
+			CORE_ERROR("Could not load shader pack: {}", path.string());
 		}
 	}
 

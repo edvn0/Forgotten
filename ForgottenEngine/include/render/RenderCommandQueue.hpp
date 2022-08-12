@@ -6,12 +6,12 @@ namespace ForgottenEngine {
 
 	class RenderCommandQueue {
 	public:
-		typedef void (*RenderCommandFunction)(void*);
+		typedef void (*RenderCommandFn)(void*);
 
 		RenderCommandQueue();
 		~RenderCommandQueue();
 
-		void* allocate(RenderCommandFunction func, uint32_t size);
+		void* allocate(RenderCommandFn func, uint32_t size);
 
 		void execute();
 

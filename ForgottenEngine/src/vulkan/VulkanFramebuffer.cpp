@@ -61,7 +61,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_ASSERT(specification.Attachments.Attachments.size(), "");
+		CORE_ASSERT_BOOL(specification.Attachments.Attachments.size());
 		resize(width, height, true);
 	}
 
@@ -350,7 +350,7 @@ namespace ForgottenEngine {
 				attachments[i] = image->get_layer_image_view(spec.ExistingImageLayers[i]);
 			else
 				attachments[i] = image->get_image_info().image_view;
-			CORE_ASSERT(attachments[i], "");
+			CORE_ASSERT_BOOL(attachments[i]);
 		}
 
 		if (depth_image) {
@@ -361,7 +361,7 @@ namespace ForgottenEngine {
 			} else
 				attachments.emplace_back(image->get_image_info().image_view);
 
-			CORE_ASSERT(attachments.back(), "");
+			CORE_ASSERT_BOOL(attachments.back());
 		}
 
 		VkFramebufferCreateInfo framebufferCreateInfo = {};

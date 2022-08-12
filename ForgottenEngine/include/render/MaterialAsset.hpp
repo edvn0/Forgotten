@@ -13,87 +13,85 @@ namespace ForgottenEngine {
 		MaterialAsset(Reference<Material> material);
 		~MaterialAsset();
 
-		glm::vec3& GetAlbedoColor();
-		void SetAlbedoColor(const glm::vec3& color);
+		glm::vec3& get_albedo_colour();
+		void set_albedo_colour(const glm::vec3& color);
 
-		float& GetMetalness();
-		void SetMetalness(float value);
+		float& get_metalness();
+		void set_metalness(float value);
 
-		float& GetRoughness();
-		void SetRoughness(float value);
+		float& get_roughness();
+		void set_roughness(float value);
 
-		float& GetEmission();
-		void SetEmission(float value);
+		float& get_emission();
+		void set_emission(float value);
 
 		// Textures
-		Reference<Texture2D> GetAlbedoMap();
-		void SetAlbedoMap(Reference<Texture2D> texture);
-		void ClearAlbedoMap();
+		Reference<Texture2D> get_albedo_map();
+		void set_albedo_map(Reference<Texture2D> texture);
+		void clear_albedo_map();
 
-		Reference<Texture2D> GetNormalMap();
-		void SetNormalMap(Reference<Texture2D> texture);
-		bool IsUsingNormalMap();
-		void SetUseNormalMap(bool value);
-		void ClearNormalMap();
+		Reference<Texture2D> get_normal_map();
+		void set_normal_map(Reference<Texture2D> texture);
+		bool is_using_normal_map();
+		void set_use_normal_map(bool value);
+		void clear_normal_map();
 
-		Reference<Texture2D> GetMetalnessMap();
-		void SetMetalnessMap(Reference<Texture2D> texture);
-		void ClearMetalnessMap();
+		Reference<Texture2D> get_metalness_map();
+		void set_metalness_map(Reference<Texture2D> texture);
+		void clear_metalness_map();
 
-		Reference<Texture2D> GetRoughnessMap();
-		void SetRoughnessMap(Reference<Texture2D> texture);
-		void ClearRoughnessMap();
+		Reference<Texture2D> get_roughness_map();
+		void set_roughness_map(Reference<Texture2D> texture);
+		void clear_roughness_map();
 
-		float& GetTransparency();
-		void SetTransparency(float transparency);
+		float& get_transparency();
+		void set_transparency(float transparency);
 
-		bool IsShadowCasting() const { return !m_Material->get_flag(MaterialFlag::DisableShadowCasting); }
-		void SetShadowCasting(bool castsShadows) { return m_Material->set_flag(MaterialFlag::DisableShadowCasting, !castsShadows); }
+		bool is_shadow_casting() const { return !material->get_flag(MaterialFlag::DisableShadowCasting); }
+		void set_is_shadow_casting(bool casts_shadows) { return material->set_flag(MaterialFlag::DisableShadowCasting, !casts_shadows); }
 
 		static AssetType get_static_type() { return AssetType::Material; }
 		virtual AssetType get_asset_type() const override { return get_static_type(); }
 
-		Reference<Material> GetMaterial() const { return m_Material; }
-		void SetMaterial(Reference<Material> material) { m_Material = material; }
+		Reference<Material> get_material() const { return material; }
+		void set_material(Reference<Material> in_material) { material = in_material; }
 
-		bool IsTransparent() const { return m_Transparent; }
-
-	private:
-		void SetDefaults();
+		bool is_transparent() const { return transparent; }
 
 	private:
-		Reference<Material> m_Material;
-		bool m_Transparent = false;
+		void set_defaults();
 
-		friend class MaterialEditor;
+	private:
+		Reference<Material> material;
+		bool transparent = false;
 	};
 
 	class MaterialTable : public ReferenceCounted {
 	public:
-		MaterialTable(uint32_t materialCount = 1);
+		MaterialTable(uint32_t in_material_count = 1);
 		MaterialTable(Reference<MaterialTable> other);
 		~MaterialTable() = default;
 
-		bool HasMaterial(uint32_t materialIndex) const { return m_Materials.find(materialIndex) != m_Materials.end(); }
-		void SetMaterial(uint32_t index, Reference<MaterialAsset> material);
-		void ClearMaterial(uint32_t index);
+		bool has_material(uint32_t materialIndex) const { return materials.find(materialIndex) != materials.end(); }
+		void set_material(uint32_t index, Reference<MaterialAsset> material);
+		void clear_material(uint32_t index);
 
-		Reference<MaterialAsset> GetMaterial(uint32_t materialIndex) const
+		Reference<MaterialAsset> get_material(uint32_t materialIndex) const
 		{
-			CORE_ASSERT(HasMaterial(materialIndex), "");
-			return m_Materials.at(materialIndex);
+			CORE_ASSERT(has_material(materialIndex), "");
+			return materials.at(materialIndex);
 		}
-		std::map<uint32_t, Reference<MaterialAsset>>& GetMaterials() { return m_Materials; }
-		const std::map<uint32_t, Reference<MaterialAsset>>& GetMaterials() const { return m_Materials; }
+		std::map<uint32_t, Reference<MaterialAsset>>& get_materials() { return materials; }
+		const std::map<uint32_t, Reference<MaterialAsset>>& get_materials() const { return materials; }
 
-		uint32_t GetMaterialCount() const { return m_MaterialCount; }
-		void SetMaterialCount(uint32_t materialCount) { m_MaterialCount = materialCount; }
+		uint32_t get_material_count() const { return material_count; }
+		void set_material_count(uint32_t in_material_count) { material_count = in_material_count; }
 
-		void Clear();
+		void clear();
 
 	private:
-		std::map<uint32_t, Reference<MaterialAsset>> m_Materials;
-		uint32_t m_MaterialCount;
+		std::map<uint32_t, Reference<MaterialAsset>> materials;
+		uint32_t material_count;
 	};
 
 } // namespace ForgottenEngine

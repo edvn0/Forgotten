@@ -1,51 +1,263 @@
-//
-// Created by Edwin Carlsson on 2022-08-10.
-//
-
 #pragma once
 
-#include "Reference.hpp"
+#include "RenderPass.hpp"
+#include "StorageBufferSet.hpp"
 #include "render/ComputePipeline.hpp"
-#include "render/Framebuffer.hpp"
-#include "render/Image.hpp"
-#include "render/IndexBuffer.hpp"
-#include "render/Material.hpp"
-#include "render/Pipeline.hpp"
+#include "render/Mesh.hpp"
 #include "render/RenderCommandBuffer.hpp"
-#include "render/RenderPass.hpp"
-#include "render/Renderer2D.hpp"
-#include "render/RendererContext.hpp"
-#include "render/Shader.hpp"
-#include "render/StorageBufferSet.hpp"
-#include "render/Texture.hpp"
 #include "render/UniformBufferSet.hpp"
-#include "render/VertexBuffer.hpp"
-
-#include <glm/glm.hpp>
+#include "scene/Components.hpp"
+#include "scene/Scene.hpp"
 
 namespace ForgottenEngine {
 
+	namespace ShaderDef {
+
+		enum class AOMethod {
+			None = 0,
+			GTAO = BIT(1),
+			HBAO = BIT(2),
+			All = GTAO | HBAO,
+		};
+
+		constexpr static std::underlying_type_t<AOMethod> GetMethodIndex(const AOMethod method)
+		{
+			switch (method) {
+			case AOMethod::None:
+				return 0;
+			case AOMethod::GTAO:
+				return 1;
+			case AOMethod::HBAO:
+				return 2;
+			case AOMethod::All:
+				return 3;
+			}
+			return 0;
+		}
+
+		constexpr static ShaderDef::AOMethod ROMETHODS[4] = { AOMethod::None, AOMethod::GTAO, AOMethod::HBAO, AOMethod::All };
+
+		constexpr static AOMethod GetAOMethod(const bool gtao_enabled, const bool hba_enabled)
+		{
+			if (gtao_enabled && hba_enabled)
+				return AOMethod::All;
+			else if (gtao_enabled)
+				return AOMethod::GTAO;
+			else if (hba_enabled)
+				return AOMethod::HBAO;
+			else
+				return AOMethod::None;
+		}
+	}; // namespace ShaderDef
+
+	struct SceneRendererOptions {
+		bool ShowGrid = true;
+		bool ShowSelectedInWireframe = false;
+
+		enum class PhysicsColliderView {
+			SelectedEntity = 0,
+			All = 1
+		};
+
+		bool ShowPhysicsColliders = false;
+		PhysicsColliderView PhysicsColliderMode = PhysicsColliderView::SelectedEntity;
+		bool ShowPhysicsCollidersOnTop = false;
+		glm::vec4 SimplePhysicsCollidersColor = glm::vec4 { 0.2f, 1.0f, 0.2f, 1.0f };
+		glm::vec4 ComplexPhysicsCollidersColor = glm::vec4 { 0.5f, 0.5f, 1.0f, 1.0f };
+
+		// General AO
+		float AOShadowTolerance = 0.15f;
+
+		// HBAO
+		bool EnableHBAO = false;
+		float HBAOIntensity = 1.5f;
+		float HBAORadius = 1.0f;
+		float HBAOBias = 0.35f;
+		float HBAOBlurSharpness = 1.0f;
+
+		// GTAO
+		bool EnableGTAO = true;
+		bool GTAOBentNormals = false;
+		int GTAODenoisePasses = 4;
+
+		// SSR
+		bool EnableSSR = false;
+		ShaderDef::AOMethod ReflectionOcclusionMethod = ShaderDef::AOMethod::None;
+	};
+
+	struct SSROptionsUB {
+		// SSR
+		glm::vec2 HZBUvFactor;
+		glm::vec2 FadeIn = { 0.1f, 0.15f };
+		float Brightness = 0.7f;
+		float DepthTolerance = 0.8f;
+		float FacingReflectionsFading = 0.1f;
+		int MaxSteps = 70;
+		uint32_t NumDepthMips;
+		float RoughnessDepthTolerance = 1.0f;
+		bool HalfRes = true;
+		char Padding[3] { 0, 0, 0 };
+		bool EnableConeTracing = true;
+		char Padding1[3] { 0, 0, 0 };
+		float LuminanceFactor = 1.0f;
+	};
+
+	struct SceneRendererCamera {
+		ForgottenEngine::Camera Camera;
+		glm::mat4 ViewMatrix;
+		float Near, Far; // Non-reversed
+		float FOV;
+	};
+
+	struct BloomSettings {
+		bool Enabled = true;
+		float Threshold = 1.0f;
+		float Knee = 0.1f;
+		float UpsampleScale = 1.0f;
+		float Intensity = 1.0f;
+		float DirtIntensity = 1.0f;
+	};
+
+	// struct SceneRendererSpecification {
+	//	Tiering::Renderer::RendererTieringSettings Tiering;
+	// };
+
 	class SceneRenderer : public ReferenceCounted {
 	public:
-		SceneRenderer() { init(); }
-		void init();
-		void init_materials();
+		struct Statistics {
+			uint32_t DrawCalls = 0;
+			uint32_t Meshes = 0;
+			uint32_t Instances = 0;
+			uint32_t SavedDraws = 0;
 
-		Reference<Pipeline> GetFinalPipeline();
+			float TotalGPUTime = 0.0f;
+		};
+
+	public:
+		SceneRenderer(Reference<Scene> scene /*, SceneRendererSpecification specification = SceneRendererSpecification() */);
+		virtual ~SceneRenderer();
+
+		void Init();
+		void InitMaterials();
+
+		void Shutdown();
+
+		// Should only be called at initialization.
+		void InitOptions();
+
+		void SetScene(Reference<Scene> scene);
+
+		void SetViewportSize(uint32_t width, uint32_t height);
+
+		void UpdateHBAOData();
+		void UpdateGTAOData();
+
+		void BeginScene(const SceneRendererCamera& camera);
+		void EndScene();
+
+		static void InsertGPUPerfMarker(Reference<RenderCommandBuffer> renderCommandBuffer, const std::string& label, const glm::vec4& markerColor = {});
+		static void BeginGPUPerfMarker(Reference<RenderCommandBuffer> renderCommandBuffer, const std::string& label, const glm::vec4& markerColor = {});
+		static void EndGPUPerfMarker(Reference<RenderCommandBuffer> renderCommandBuffer);
+
+		void SubmitMesh(Reference<Mesh> mesh, uint32_t submeshIndex, Reference<MaterialTable> materialTable, const glm::mat4& transform = glm::mat4(1.0f), Reference<Material> overrideMaterial = nullptr);
+		void SubmitStaticMesh(Reference<StaticMesh> staticMesh, Reference<MaterialTable> materialTable, const glm::mat4& transform = glm::mat4(1.0f), Reference<Material> overrideMaterial = nullptr);
+
+		void SubmitSelectedMesh(Reference<Mesh> mesh, uint32_t submeshIndex, Reference<MaterialTable> materialTable, const glm::mat4& transform = glm::mat4(1.0f), Reference<Material> overrideMaterial = nullptr);
+		void SubmitSelectedStaticMesh(Reference<StaticMesh> staticMesh, Reference<MaterialTable> materialTable, const glm::mat4& transform = glm::mat4(1.0f), Reference<Material> overrideMaterial = nullptr);
+
+		void SubmitPhysicsDebugMesh(Reference<Mesh> mesh, uint32_t submeshIndex, const glm::mat4& transform = glm::mat4(1.0f));
+		void SubmitPhysicsStaticDebugMesh(Reference<StaticMesh> mesh, const glm::mat4& transform = glm::mat4(1.0f), const bool isPrimitiveCollider = true);
+
 		Reference<RenderPass> GetFinalRenderPass();
-		Reference<RenderPass> GetCompositeRenderPass();
-		Reference<RenderPass> GetExternalCompositeRenderPass();
+		Reference<RenderPass> GetCompositeRenderPass() { return m_CompositePipeline->get_specification().RenderPass; }
+		Reference<RenderPass> GetExternalCompositeRenderPass() { return m_ExternalCompositeRenderPass; }
 		Reference<Image2D> GetFinalPassImage();
 
+		Reference<Renderer2D> GetRenderer2D() { return m_Renderer2D; }
+
+		SceneRendererOptions& GetOptions();
+
+		void SetShadowSettings(float nearPlane, float farPlane, float lambda)
+		{
+			CascadeNearPlaneOffset = nearPlane;
+			CascadeFarPlaneOffset = farPlane;
+			CascadeSplitLambda = lambda;
+		}
+
+		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
+
+		void SetLineWidth(float width);
+
+		void OnImGuiRender();
+
+		static void WaitForThreads();
+
+		uint32_t GetViewportWidth() const { return m_ViewportWidth; }
+		uint32_t GetViewportHeight() const { return m_ViewportHeight; }
+
+		float GetOpacity() const { return m_Opacity; }
+		void SetOpacity(float opacity) { m_Opacity = opacity; }
+
+		const Statistics& GetStatistics() const { return m_Statistics; }
+
 	private:
+		void FlushDrawList();
+
+		void PreRender();
+
+		void ClearPass();
+		void ClearPass(Reference<RenderPass> renderPass, bool explicitClear = false);
+		void DeinterleavingPass();
+		void HBAOCompute();
+		void GTAOCompute();
+
+		void AOComposite();
+
+		void GTAODenoiseCompute();
+
+		void ReinterleavingPass();
+		void HBAOBlurPass();
+		void ShadowMapPass();
+		void PreDepthPass();
+		void HZBCompute();
+		void PreIntegration();
+		void LightCullingPass();
+		void GeometryPass();
+		void PreConvolutionCompute();
+		void JumpFloodPass();
+
+		// Post-processing
+		void BloomCompute();
+		void SSRCompute();
+		void SSRCompositePass();
+		void CompositePass();
+
+		struct CascadeData {
+			glm::mat4 ViewProj;
+			glm::mat4 View;
+			float SplitDepth;
+		};
+		void CalculateCascades(CascadeData* cascades, const SceneRendererCamera& sceneCamera, const glm::vec3& lightDirection) const;
+
+		void UpdateStatistics();
+
+	private:
+		Reference<Scene> m_Scene;
+		// SceneRendererSpecification m_Specification;
 		Reference<RenderCommandBuffer> m_CommandBuffer;
 
 		Reference<Renderer2D> m_Renderer2D;
 
-		struct PointLight {
-			glm::vec3 from;
-			glm::vec3 dir;
-		};
+		struct SceneInfo {
+			SceneRendererCamera SceneCamera;
+
+			// Resources
+			Reference<SceneEnvironment> SceneEnvironment;
+			float SkyboxLod = 0.0f;
+			float SceneEnvironmentIntensity;
+			LightEnvironment SceneLightEnvironment;
+			DirLight ActiveLight;
+		} m_SceneData;
 
 		struct UBCamera {
 			// projection with near and far inverted
@@ -125,16 +337,6 @@ namespace ForgottenEngine {
 			PointLight PointLights[1024] {};
 		} PointLightsUB;
 
-		struct UBSpotLights {
-			uint32_t Count { 0 };
-			glm::vec3 Padding {};
-			PointLight SpotLights[1000] {};
-		} SpotLightUB;
-
-		struct UBSpotShadowData {
-			glm::mat4 ShadowMatrices[1000] {};
-		} SpotShadowDataUB;
-
 		struct UBScene {
 			DirLight Lights;
 			glm::vec3 CameraPosition;
@@ -189,16 +391,12 @@ namespace ForgottenEngine {
 
 		Reference<Shader> m_CompositeShader;
 
-		// Shadows
-		Reference<Pipeline> m_SpotShadowPassPipeline;
-		Reference<Pipeline> m_SpotShadowPassAnimPipeline;
-		Reference<Material> m_SpotShadowPassMaterial;
-
 		glm::uvec3 m_LightCullingWorkGroups;
 
 		Reference<UniformBufferSet> m_UniformBufferSet;
 		Reference<StorageBufferSet> m_StorageBufferSet;
 
+		Reference<Shader> ShadowMapShader, ShadowMapAnimShader;
 		float LightDistance = 0.1f;
 		float CascadeSplitLambda = 0.92f;
 		glm::vec4 CascadeSplits;
@@ -222,6 +420,9 @@ namespace ForgottenEngine {
 		Reference<Material> m_PreIntegrationMaterial;
 		glm::uvec3 m_SSRWorkGroups { 1 };
 
+		bool EnableBloom = false;
+		float BloomThreshold = 1.5f;
+
 		glm::vec2 FocusPoint = { 0.5f, 0.5f };
 
 		Reference<Material> m_CompositeMaterial;
@@ -229,31 +430,14 @@ namespace ForgottenEngine {
 
 		Reference<Pipeline> m_GeometryPipeline;
 		Reference<Pipeline> m_TransparentGeometryPipeline;
-		Reference<Pipeline> m_GeometryPipelineAnim;
-
 		Reference<Pipeline> m_SelectedGeometryPipeline;
-		Reference<Pipeline> m_SelectedGeometryPipelineAnim;
-		Reference<Material> m_SelectedGeometryMaterial;
-		Reference<Material> m_SelectedGeometryMaterialAnim;
-
 		Reference<Pipeline> m_GeometryWireframePipeline;
-		Reference<Pipeline> m_GeometryWireframePipelineAnim;
 		Reference<Pipeline> m_GeometryWireframeOnTopPipeline;
-		Reference<Pipeline> m_GeometryWireframeOnTopPipelineAnim;
-		Reference<Material> m_WireframeMaterial;
-
-		Reference<Pipeline> m_PreDepthPipeline;
-		Reference<Pipeline> m_PreDepthTransparentPipeline;
-		Reference<Pipeline> m_PreDepthPipelineAnim;
-		Reference<Material> m_PreDepthMaterial;
-
+		Reference<Pipeline> m_PreDepthPipeline, m_PreDepthTransparentPipeline;
 		Reference<Pipeline> m_CompositePipeline;
-
 		Reference<Pipeline> m_ShadowPassPipelines[4];
-		Reference<Pipeline> m_ShadowPassPipelinesAnim[4];
-
 		Reference<Material> m_ShadowPassMaterial;
-
+		Reference<Material> m_PreDepthMaterial;
 		Reference<Pipeline> m_SkyboxPipeline;
 		Reference<Material> m_SkyboxMaterial;
 
@@ -284,17 +468,104 @@ namespace ForgottenEngine {
 			TransformVertexData* Data = nullptr;
 		};
 
+		std::vector<TransformBuffer> m_SubmeshTransformBuffers;
+
+		Reference<Material> m_SelectedGeometryMaterial;
+
 		std::vector<Reference<Framebuffer>> m_TempFramebuffers;
 
 		Reference<RenderPass> m_ExternalCompositeRenderPass;
 
+		struct DrawCommand {
+			Reference<Mesh> Mesh;
+			uint32_t SubmeshIndex;
+			Reference<MaterialTable> MaterialTable;
+			Reference<Material> OverrideMaterial;
+
+			uint32_t InstanceCount = 0;
+			uint32_t InstanceOffset = 0;
+		};
+
+		struct StaticDrawCommand {
+			Reference<StaticMesh> StaticMesh;
+			uint32_t SubmeshIndex;
+			Reference<MaterialTable> MaterialTable;
+			Reference<Material> OverrideMaterial;
+
+			uint32_t InstanceCount = 0;
+			uint32_t InstanceOffset = 0;
+		};
+
+		struct MeshKey {
+			AssetHandle MeshHandle;
+			AssetHandle MaterialHandle;
+			uint32_t SubmeshIndex;
+			bool IsSelected;
+
+			MeshKey(AssetHandle meshHandle, AssetHandle materialHandle, uint32_t submeshIndex, bool isSelected)
+				: MeshHandle(meshHandle)
+				, MaterialHandle(materialHandle)
+				, SubmeshIndex(submeshIndex)
+				, IsSelected(isSelected)
+			{
+			}
+
+			bool operator<(const MeshKey& other) const
+			{
+				if (MeshHandle < other.MeshHandle)
+					return true;
+
+				if (MeshHandle > other.MeshHandle)
+					return false;
+
+				if (SubmeshIndex < other.SubmeshIndex)
+					return true;
+
+				if (SubmeshIndex > other.SubmeshIndex)
+					return false;
+
+				if (MaterialHandle < other.MaterialHandle)
+					return true;
+
+				if (MaterialHandle > other.MaterialHandle)
+					return false;
+
+				return IsSelected < other.IsSelected;
+			}
+		};
+
+		struct TransformMapData {
+			std::vector<TransformVertexData> Transforms;
+			uint32_t TransformOffset = 0;
+		};
+
+		std::map<MeshKey, TransformMapData> m_MeshTransformMap;
+
+		// std::vector<DrawCommand> m_DrawList;
+		std::map<MeshKey, DrawCommand> m_DrawList;
+		std::map<MeshKey, DrawCommand> m_TransparentDrawList;
+		std::map<MeshKey, DrawCommand> m_SelectedMeshDrawList;
+		std::map<MeshKey, DrawCommand> m_ShadowPassDrawList;
+
+		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
+		std::map<MeshKey, StaticDrawCommand> m_TransparentStaticMeshDrawList;
+		std::map<MeshKey, StaticDrawCommand> m_SelectedStaticMeshDrawList;
+		std::map<MeshKey, StaticDrawCommand> m_StaticMeshShadowPassDrawList;
+
+		// Debug
+		std::map<MeshKey, StaticDrawCommand> m_StaticColliderDrawList;
+		std::map<MeshKey, DrawCommand> m_ColliderDrawList;
+
 		// Grid
 		Reference<Pipeline> m_GridPipeline;
+		Reference<Shader> m_GridShader;
 		Reference<Material> m_GridMaterial;
+		Reference<Material> m_OutlineMaterial, OutlineAnimMaterial;
+		Reference<Material> m_SimpleColliderMaterial, m_ComplexColliderMaterial;
+		Reference<Material> m_WireframeMaterial;
 
-		Reference<Material> m_OutlineMaterial;
-		Reference<Material> m_SimpleColliderMaterial;
-		Reference<Material> m_ComplexColliderMaterial;
+		SceneRendererOptions m_Options;
+		SSROptionsUB m_SSROptions;
 
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 		float m_InvViewportWidth = 0.f, m_InvViewportHeight = 0.f;
@@ -304,34 +575,31 @@ namespace ForgottenEngine {
 
 		float m_LineWidth = 2.0f;
 
+		BloomSettings m_BloomSettings;
 		Reference<Texture2D> m_BloomDirtTexture;
-
-		Reference<Image2D> m_ReadBackImage;
-		glm::vec4* m_ReadBackBuffer = nullptr;
 
 		float m_Opacity = 1.0f;
 
 		struct GPUTimeQueries {
-			uint32_t DirShadowMapPassQuery = 0;
-			uint32_t SpotShadowMapPassQuery = 0;
-			uint32_t DepthPrePassQuery = 0;
-			uint32_t HierarchicalDepthQuery = 0;
-			uint32_t PreIntegrationQuery = 0;
-			uint32_t LightCullingPassQuery = 0;
-			uint32_t GeometryPassQuery = 0;
-			uint32_t PreConvolutionQuery = 0;
-			uint32_t HBAOPassQuery = 0;
-			uint32_t GTAOPassQuery = 0;
-			uint32_t GTAODenoisePassQuery = 0;
-			uint32_t AOCompositePassQuery = 0;
-			uint32_t SSRQuery = 0;
-			uint32_t SSRCompositeQuery = 0;
-			uint32_t BloomComputePassQuery = 0;
-			uint32_t JumpFloodPassQuery = 0;
-			uint32_t CompositePassQuery = 0;
+			uint32_t ShadowMapPassQuery = UINT32_MAX;
+			uint32_t DepthPrePassQuery = UINT32_MAX;
+			uint32_t HierarchicalDepthQuery = UINT32_MAX;
+			uint32_t PreIntegrationQuery = UINT32_MAX;
+			uint32_t LightCullingPassQuery = UINT32_MAX;
+			uint32_t GeometryPassQuery = UINT32_MAX;
+			uint32_t PreConvolutionQuery = UINT32_MAX;
+			uint32_t HBAOPassQuery = UINT32_MAX;
+			uint32_t GTAOPassQuery = UINT32_MAX;
+			uint32_t GTAODenoisePassQuery = UINT32_MAX;
+			uint32_t AOCompositePassQuery = UINT32_MAX;
+			uint32_t SSRQuery = UINT32_MAX;
+			uint32_t SSRCompositeQuery = UINT32_MAX;
+			uint32_t BloomComputePassQuery = UINT32_MAX;
+			uint32_t JumpFloodPassQuery = UINT32_MAX;
+			uint32_t CompositePassQuery = UINT32_MAX;
 		} m_GPUTimeQueries;
 
-		friend class SceneRendererPanel;
+		Statistics m_Statistics;
 	};
 
 } // namespace ForgottenEngine

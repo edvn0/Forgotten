@@ -52,7 +52,7 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return "comp";
 		default:
-			CORE_ASSERT(false, "");
+			CORE_ASSERT_BOOL(false);
 		}
 		return "UNKNOWN";
 	}
@@ -76,7 +76,7 @@ namespace ForgottenEngine::ShaderUtils {
 		if (type == ".hlsl")
 			CORE_ASSERT(false, "Cannot read HLSL.");
 
-		CORE_ASSERT(false, "");
+		CORE_ASSERT_BOOL(false);
 
 		return SourceLang::NONE;
 	}
@@ -91,9 +91,9 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return shaderc_compute_shader;
 		default:
-			CORE_ASSERT(false, "");
+			CORE_ASSERT_BOOL(false);
 		}
-		CORE_ASSERT(false, "");
+		CORE_ASSERT_BOOL(false);
 		return {};
 	}
 
@@ -108,7 +108,7 @@ namespace ForgottenEngine::ShaderUtils {
 			case VK_SHADER_STAGE_COMPUTE_BIT:
 				return ".cached_vulkan_debug.comp";
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 		} else {
 			switch (stage) {
@@ -119,7 +119,7 @@ namespace ForgottenEngine::ShaderUtils {
 			case VK_SHADER_STAGE_COMPUTE_BIT:
 				return ".cached_vulkan.comp";
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 		}
 
@@ -136,7 +136,7 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return L"cs_6_0";
 		default:
-			CORE_ASSERT(false, "");
+			CORE_ASSERT_BOOL(false);
 		}
 		return L"";
 	}

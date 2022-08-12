@@ -114,7 +114,7 @@ namespace ForgottenEngine {
 			case ImageFormat::DEPTH24STENCIL8:
 				return VulkanContext::get_current_device()->get_physical_device()->get_depth_format();
 			default:
-				CORE_ASSERT(false, "");
+				CORE_ASSERT_BOOL(false);
 			}
 
 			return VK_FORMAT_UNDEFINED;

@@ -16,14 +16,14 @@ namespace ForgottenEngine {
 	VulkanImage2D::~VulkanImage2D()
 	{
 		if (info.image) {
-			Renderer::submit_resource_free([info = this->info, layerViews = per_layer_image_views]() {
-				const auto vulkanDevice = VulkanContext::get_current_device()->get_vulkan_device();
-				vkDestroyImageView(vulkanDevice, info.image_view, nullptr);
-				vkDestroySampler(vulkanDevice, info.sampler, nullptr);
+			Renderer::submit_resource_free([info = this->info, layer_views = per_layer_image_views]() {
+				const auto vk_device = VulkanContext::get_current_device()->get_vulkan_device();
+				vkDestroyImageView(vk_device, info.image_view, nullptr);
+				vkDestroySampler(vk_device, info.sampler, nullptr);
 
-				for (auto& view : layerViews) {
+				for (auto& view : layer_views) {
 					if (view)
-						vkDestroyImageView(vulkanDevice, view, nullptr);
+						vkDestroyImageView(vk_device, view, nullptr);
 				}
 
 				VulkanAllocator allocator("VulkanImage2D");
@@ -46,18 +46,18 @@ namespace ForgottenEngine {
 			return;
 
 		Renderer::submit_resource_free(
-			[info = this->info, mipViews = per_mip_image_views, layerViews = per_layer_image_views]() mutable {
-				const auto vulkanDevice = VulkanContext::get_current_device()->get_vulkan_device();
-				vkDestroyImageView(vulkanDevice, info.image_view, nullptr);
-				vkDestroySampler(vulkanDevice, info.sampler, nullptr);
+			[info = this->info, mip_views = per_mip_image_views, layer_views = per_layer_image_views]() mutable {
+				const auto vk_device = VulkanContext::get_current_device()->get_vulkan_device();
+				vkDestroyImageView(vk_device, info.image_view, nullptr);
+				vkDestroySampler(vk_device, info.sampler, nullptr);
 
-				for (auto& view : mipViews) {
+				for (auto& view : mip_views) {
 					if (view.second)
-						vkDestroyImageView(vulkanDevice, view.second, nullptr);
+						vkDestroyImageView(vk_device, view.second, nullptr);
 				}
-				for (auto& view : layerViews) {
+				for (auto& view : layer_views) {
 					if (view)
-						vkDestroyImageView(vulkanDevice, view, nullptr);
+						vkDestroyImageView(vk_device, view, nullptr);
 				}
 				VulkanAllocator allocator("VulkanImage2D");
 				allocator.destroy_image(info.image, info.memory_alloc);
@@ -71,7 +71,7 @@ namespace ForgottenEngine {
 
 	void VulkanImage2D::rt_invalidate()
 	{
-		CORE_VERIFY(specification.Width > 0 && specification.Height > 0, "");
+		CORE_VERIFY_BOOL(specification.Width > 0 && specification.Height > 0);
 
 		// Try release first if necessary
 		release();
