@@ -10,11 +10,7 @@ namespace ForgottenEngine {
 
 	class Framebuffer;
 
-	enum class FramebufferBlendMode { None = 0,
-		OneZero,
-		SrcAlphaOneMinusSrcAlpha,
-		Additive,
-		Zero_SrcColor };
+	enum class FramebufferBlendMode { None = 0, OneZero, SrcAlphaOneMinusSrcAlpha, Additive, Zero_SrcColor };
 
 	struct FramebufferTextureSpecification {
 		FramebufferTextureSpecification() = default;

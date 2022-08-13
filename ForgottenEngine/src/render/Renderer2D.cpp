@@ -42,7 +42,8 @@ namespace ForgottenEngine {
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 
 		FramebufferSpecification framebufferSpec;
-		framebufferSpec.Attachments = { FramebufferTextureSpecification { ImageFormat::RGBA32F }, FramebufferTextureSpecification { ImageFormat::Depth } };
+		framebufferSpec.Attachments
+			= { FramebufferTextureSpecification { ImageFormat::RGBA32F }, FramebufferTextureSpecification { ImageFormat::Depth } };
 		framebufferSpec.Samples = 1;
 		framebufferSpec.ClearColorOnLoad = true;
 		framebufferSpec.ClearColor = { 0.1f, 0.9f, 0.5f, 1.0f };
@@ -61,9 +62,9 @@ namespace ForgottenEngine {
 			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D");
 			pipelineSpecification.RenderPass = renderPass;
 			pipelineSpecification.BackfaceCulling = false;
-			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float4, "a_Color" }, { ShaderDataType::Float2, "a_TextureCoords" },
-				{ ShaderDataType::Float, "a_TextureIndex" }, { ShaderDataType::Float, "a_TilingFactor" } };
+			pipelineSpecification.Layout
+				= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" }, { ShaderDataType::Float2, "a_TextureCoords" },
+					  { ShaderDataType::Float, "a_TextureIndex" }, { ShaderDataType::Float, "a_TilingFactor" } };
 			quad_pipeline = Pipeline::create(pipelineSpecification);
 
 			quad_vertex_buffer.resize(frames_in_flight);
@@ -110,8 +111,7 @@ namespace ForgottenEngine {
 			pipelineSpecification.RenderPass = renderPass;
 			pipelineSpecification.Topology = PrimitiveTopology::Lines;
 			pipelineSpecification.LineWidth = 2.0f;
-			pipelineSpecification.Layout
-				= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" } };
+			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" } };
 			line_pipeline = Pipeline::create(pipelineSpecification);
 			pipelineSpecification.DepthTest = false;
 			line_on_top_pipeline = Pipeline::create(pipelineSpecification);
@@ -138,9 +138,8 @@ namespace ForgottenEngine {
 			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Text");
 			pipelineSpecification.RenderPass = renderPass;
 			pipelineSpecification.BackfaceCulling = false;
-			pipelineSpecification.Layout
-				= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" },
-					  { ShaderDataType::Float2, "a_TextureCoords" }, { ShaderDataType::Float, "a_TextureIndex" } };
+			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" },
+				{ ShaderDataType::Float2, "a_TextureCoords" }, { ShaderDataType::Float, "a_TextureIndex" } };
 
 			text_pipeline = Pipeline::create(pipelineSpecification);
 			text_material = Material::create(pipelineSpecification.Shader);
@@ -178,9 +177,8 @@ namespace ForgottenEngine {
 			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
 			pipelineSpecification.BackfaceCulling = false;
 			pipelineSpecification.RenderPass = renderPass;
-			pipelineSpecification.Layout
-				= { { ShaderDataType::Float3, "a_WorldPosition" }, { ShaderDataType::Float, "a_Thickness" },
-					  { ShaderDataType::Float2, "a_LocalPosition" }, { ShaderDataType::Float4, "a_Color" } };
+			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_WorldPosition" }, { ShaderDataType::Float, "a_Thickness" },
+				{ ShaderDataType::Float2, "a_LocalPosition" }, { ShaderDataType::Float4, "a_Color" } };
 			circle_pipeline = Pipeline::create(pipelineSpecification);
 			circle_material = Material::create(pipelineSpecification.Shader);
 
@@ -192,13 +190,8 @@ namespace ForgottenEngine {
 			}
 		}
 
-		VertexBufferLayout vertexLayout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float3, "a_Normal" },
-			{ ShaderDataType::Float3, "a_Tangent" },
-			{ ShaderDataType::Float3, "a_Binormal" },
-			{ ShaderDataType::Float2, "a_TexCoord" }
-		};
+		VertexBufferLayout vertexLayout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float3, "a_Normal" },
+			{ ShaderDataType::Float3, "a_Tangent" }, { ShaderDataType::Float3, "a_Binormal" }, { ShaderDataType::Float2, "a_TexCoord" } };
 
 		VertexBufferLayout instanceLayout = {
 			{ ShaderDataType::Float4, "a_MRow0" },
@@ -244,10 +237,7 @@ namespace ForgottenEngine {
 			Reference<Framebuffer> fb = Framebuffer::create(compFramebufferSpec);
 
 			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.Layout = {
-				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float2, "a_TexCoord" }
-			};
+			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
 			pipelineSpecification.BackfaceCulling = false;
 			pipelineSpecification.Shader = Renderer::get_shader_library()->get("SceneComposite");
 
@@ -271,8 +261,10 @@ namespace ForgottenEngine {
 			// Use the color buffer from the final compositing pass, but the depth buffer from
 			// the actual 3D geometry pass, in case we want to composite elements behind meshes
 			// in the scene
-			extCompFramebufferSpec.ExistingImages[0] = composite_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
-			extCompFramebufferSpec.ExistingImages[1] = pre_depth_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_depth_image();
+			extCompFramebufferSpec.ExistingImages[0]
+				= composite_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
+			extCompFramebufferSpec.ExistingImages[1]
+				= pre_depth_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_depth_image();
 			Reference<Framebuffer> fb = Framebuffer::create(extCompFramebufferSpec);
 
 			RenderPassSpecification rps;
@@ -393,8 +385,7 @@ namespace ForgottenEngine {
 
 			Renderer::submit([lineWidth = line_width, renderCommandBuffer = render_command_buffer]() {
 				uint32_t index = Renderer::get_current_frame_index();
-				VkCommandBuffer commandBuffer
-					= renderCommandBuffer.as<VulkanRenderCommandBuffer>()->get_command_buffer(index);
+				VkCommandBuffer commandBuffer = renderCommandBuffer.as<VulkanRenderCommandBuffer>()->get_command_buffer(index);
 				vkCmdSetLineWidth(commandBuffer, lineWidth);
 			});
 			Renderer::render_geometry(render_command_buffer, line_pipeline, uniform_buffer_set, nullptr, line_material,
@@ -407,9 +398,8 @@ namespace ForgottenEngine {
 		data_size = (uint32_t)((uint8_t*)circle_vertex_buffer_ptr - (uint8_t*)circle_vertex_buffer_base[frame_index]);
 		if (data_size) {
 			circle_vertex_buffer[frame_index]->set_data(circle_vertex_buffer_base[frame_index], data_size);
-			Renderer::render_geometry(render_command_buffer, circle_pipeline, uniform_buffer_set, nullptr,
-				circle_material, circle_vertex_buffer[frame_index], quad_index_buffer, glm::mat4(1.0f),
-				circle_index_count);
+			Renderer::render_geometry(render_command_buffer, circle_pipeline, uniform_buffer_set, nullptr, circle_material,
+				circle_vertex_buffer[frame_index], quad_index_buffer, glm::mat4(1.0f), circle_index_count);
 
 			stats.draw_calls++;
 		}
@@ -419,14 +409,9 @@ namespace ForgottenEngine {
 		render_command_buffer->submit();
 	}
 
-	void Renderer2D::Flush()
-	{
-	}
+	void Renderer2D::Flush() { }
 
-	Reference<RenderPass> Renderer2D::get_target_render_pass()
-	{
-		return quad_pipeline->get_specification().RenderPass;
-	}
+	Reference<RenderPass> Renderer2D::get_target_render_pass() { return quad_pipeline->get_specification().RenderPass; }
 
 	void Renderer2D::set_target_render_pass(const Reference<RenderPass>& renderPass)
 	{
@@ -494,8 +479,7 @@ namespace ForgottenEngine {
 		stats.quad_count++;
 	}
 
-	void Renderer2D::draw_quad(const glm::mat4& transform, const Reference<Texture2D>& texture, float tilingFactor,
-		const glm::vec4& tintColor)
+	void Renderer2D::draw_quad(const glm::mat4& transform, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -548,8 +532,7 @@ namespace ForgottenEngine {
 		const float textureIndex = 0.0f; // White Texture
 		const float tilingFactor = 1.0f;
 
-		glm::mat4 transform
-			= glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
 		quad_vertex_buffer_ptr->Color = color;
@@ -584,14 +567,14 @@ namespace ForgottenEngine {
 		stats.quad_count++;
 	}
 
-	void Renderer2D::draw_quad(const glm::vec2& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-		float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::draw_quad(
+		const glm::vec2& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		draw_quad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::draw_quad(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-		float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::draw_quad(
+		const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		if (quad_index_count >= MaxIndices)
 			FlushAndReset();
@@ -612,8 +595,7 @@ namespace ForgottenEngine {
 			texture_slot_index++;
 		}
 
-		glm::mat4 transform
-			= glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
 		quad_vertex_buffer_ptr->Color = color;
@@ -659,32 +641,32 @@ namespace ForgottenEngine {
 		glm::vec3 camRightWS = { camera_view[0][0], camera_view[1][0], camera_view[2][0] };
 		glm::vec3 camUpWS = { camera_view[0][1], camera_view[1][1], camera_view[2][1] };
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * (quad_vertex_positions[0].x) * size.x
-			+ camUpWS * quad_vertex_positions[0].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * (quad_vertex_positions[0].x) * size.x + camUpWS * quad_vertex_positions[0].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * quad_vertex_positions[1].x * size.x
-			+ camUpWS * quad_vertex_positions[1].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * quad_vertex_positions[1].x * size.x + camUpWS * quad_vertex_positions[1].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * quad_vertex_positions[2].x * size.x
-			+ camUpWS * quad_vertex_positions[2].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * quad_vertex_positions[2].x * size.x + camUpWS * quad_vertex_positions[2].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * quad_vertex_positions[3].x * size.x
-			+ camUpWS * quad_vertex_positions[3].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * quad_vertex_positions[3].x * size.x + camUpWS * quad_vertex_positions[3].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
@@ -696,8 +678,8 @@ namespace ForgottenEngine {
 		stats.quad_count++;
 	}
 
-	void Renderer2D::draw_quad_billboard(const glm::vec3& position, const glm::vec2& size,
-		const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::draw_quad_billboard(
+		const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		if (quad_index_count >= MaxIndices)
 			FlushAndReset();
@@ -721,32 +703,32 @@ namespace ForgottenEngine {
 		glm::vec3 camRightWS = { camera_view[0][0], camera_view[1][0], camera_view[2][0] };
 		glm::vec3 camUpWS = { camera_view[0][1], camera_view[1][1], camera_view[2][1] };
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * (quad_vertex_positions[0].x) * size.x
-			+ camUpWS * quad_vertex_positions[0].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * (quad_vertex_positions[0].x) * size.x + camUpWS * quad_vertex_positions[0].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * quad_vertex_positions[1].x * size.x
-			+ camUpWS * quad_vertex_positions[1].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * quad_vertex_positions[1].x * size.x + camUpWS * quad_vertex_positions[1].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * quad_vertex_positions[2].x * size.x
-			+ camUpWS * quad_vertex_positions[2].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * quad_vertex_positions[2].x * size.x + camUpWS * quad_vertex_positions[2].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
-		quad_vertex_buffer_ptr->Position = position + camRightWS * quad_vertex_positions[3].x * size.x
-			+ camUpWS * quad_vertex_positions[3].y * size.y;
+		quad_vertex_buffer_ptr->Position
+			= position + camRightWS * quad_vertex_positions[3].x * size.x + camUpWS * quad_vertex_positions[3].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
 		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
@@ -758,14 +740,12 @@ namespace ForgottenEngine {
 		stats.quad_count++;
 	}
 
-	void Renderer2D::draw_rotated_quad(
-		const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		draw_rotated_quad({ position.x, position.y, 0.0f }, size, rotation, color);
 	}
 
-	void Renderer2D::draw_rotated_quad(
-		const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		if (quad_index_count >= MaxIndices)
 			FlushAndReset();
@@ -773,8 +753,7 @@ namespace ForgottenEngine {
 		const float textureIndex = 0.0f; // White Texture
 		const float tilingFactor = 1.0f;
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
@@ -810,14 +789,14 @@ namespace ForgottenEngine {
 		stats.quad_count++;
 	}
 
-	void Renderer2D::draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation,
-		const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation, const Reference<Texture2D>& texture,
+		float tilingFactor, const glm::vec4& tintColor)
 	{
 		draw_rotated_quad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation,
-		const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const Reference<Texture2D>& texture,
+		float tilingFactor, const glm::vec4& tintColor)
 	{
 		if (quad_index_count >= MaxIndices)
 			FlushAndReset();
@@ -838,8 +817,7 @@ namespace ForgottenEngine {
 			texture_slot_index++;
 		}
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
@@ -875,24 +853,21 @@ namespace ForgottenEngine {
 		stats.quad_count++;
 	}
 
-	void Renderer2D::draw_rotated_rect(
-		const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::draw_rotated_rect(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		draw_rotated_rect({ position.x, position.y, 0.0f }, size, rotation, color);
 	}
 
-	void Renderer2D::draw_rotated_rect(
-		const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::draw_rotated_rect(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		if (line_index_count >= MaxLineIndices)
 			FlushAndResetLines();
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		glm::vec3 positions[4] = { transform * quad_vertex_positions[0], transform * quad_vertex_positions[1],
-			transform * quad_vertex_positions[2], transform * quad_vertex_positions[3] };
+		glm::vec3 positions[4] = { transform * quad_vertex_positions[0], transform * quad_vertex_positions[1], transform * quad_vertex_positions[2],
+			transform * quad_vertex_positions[3] };
 
 		for (int i = 0; i < 4; i++) {
 			auto& v0 = positions[i];
@@ -921,8 +896,7 @@ namespace ForgottenEngine {
 		if (circle_index_count >= MaxIndices)
 			FlushAndReset();
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::scale(glm::mat4(1.0f), { radius * 2.0f, radius * 2.0f, 1.0f });
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { radius * 2.0f, radius * 2.0f, 1.0f });
 
 		for (int i = 0; i < 4; i++) {
 			circle_vertex_buffer_ptr->WorldPosition = transform * quad_vertex_positions[i];
@@ -954,13 +928,10 @@ namespace ForgottenEngine {
 		stats.line_count++;
 	}
 
-	void Renderer2D::draw_circle(
-		const glm::vec3& position, const glm::vec3& rotation, float radius, const glm::vec4& color)
+	void Renderer2D::draw_circle(const glm::vec3& position, const glm::vec3& rotation, float radius, const glm::vec4& color)
 	{
-		const glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), rotation.x, { 1.0f, 0.0f, 0.0f })
-			* glm::rotate(glm::mat4(1.0f), rotation.y, { 0.0f, 1.0f, 0.0f })
-			* glm::rotate(glm::mat4(1.0f), rotation.z, { 0.0f, 0.0f, 1.0f })
+		const glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), rotation.x, { 1.0f, 0.0f, 0.0f })
+			* glm::rotate(glm::mat4(1.0f), rotation.y, { 0.0f, 1.0f, 0.0f }) * glm::rotate(glm::mat4(1.0f), rotation.z, { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), glm::vec3(radius));
 
 		draw_circle(transform, color);
@@ -993,21 +964,17 @@ namespace ForgottenEngine {
 		}
 	}
 
-	void Renderer2D::draw_aabb(
-		const AABB& aabb, const glm::mat4& transform, const glm::vec4& color /*= glm::vec4(1.0f)*/)
+	void Renderer2D::draw_aabb(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color /*= glm::vec4(1.0f)*/)
 	{
 		glm::vec4 min = { aabb.min.x, aabb.min.y, aabb.min.z, 1.0f };
 		glm::vec4 max = { aabb.max.x, aabb.max.y, aabb.max.z, 1.0f };
 
 		glm::vec4 corners[8] = { transform * glm::vec4 { aabb.min.x, aabb.min.y, aabb.max.z, 1.0f },
-			transform * glm::vec4 { aabb.min.x, aabb.max.y, aabb.max.z, 1.0f },
-			transform * glm::vec4 { aabb.max.x, aabb.max.y, aabb.max.z, 1.0f },
+			transform * glm::vec4 { aabb.min.x, aabb.max.y, aabb.max.z, 1.0f }, transform * glm::vec4 { aabb.max.x, aabb.max.y, aabb.max.z, 1.0f },
 			transform * glm::vec4 { aabb.max.x, aabb.min.y, aabb.max.z, 1.0f },
 
-			transform * glm::vec4 { aabb.min.x, aabb.min.y, aabb.min.z, 1.0f },
-			transform * glm::vec4 { aabb.min.x, aabb.max.y, aabb.min.z, 1.0f },
-			transform * glm::vec4 { aabb.max.x, aabb.max.y, aabb.min.z, 1.0f },
-			transform * glm::vec4 { aabb.max.x, aabb.min.y, aabb.min.z, 1.0f } };
+			transform * glm::vec4 { aabb.min.x, aabb.min.y, aabb.min.z, 1.0f }, transform * glm::vec4 { aabb.min.x, aabb.max.y, aabb.min.z, 1.0f },
+			transform * glm::vec4 { aabb.max.x, aabb.max.y, aabb.min.z, 1.0f }, transform * glm::vec4 { aabb.max.x, aabb.min.y, aabb.min.z, 1.0f } };
 
 		for (uint32_t i = 0; i < 4; i++)
 			draw_line(corners[i], corners[(i + 1) % 4], color);
@@ -1028,15 +995,14 @@ namespace ForgottenEngine {
 		return false;
 	}
 
-	void Renderer2D::draw_string(
-		const std::string& string, const glm::vec3& position, float maxWidth, const glm::vec4& color)
+	void Renderer2D::draw_string(const std::string& string, const glm::vec3& position, float maxWidth, const glm::vec4& color)
 	{
 		// Use default font
 		draw_string(string, Font::get_default_font(), position, maxWidth, color);
 	}
 
-	void Renderer2D::draw_string(const std::string& string, const Reference<Font>& font, const glm::vec3& position,
-		float maxWidth, const glm::vec4& color)
+	void Renderer2D::draw_string(
+		const std::string& string, const Reference<Font>& font, const glm::vec3& position, float maxWidth, const glm::vec4& color)
 	{
 		draw_string(string, font, glm::translate(glm::mat4(1.0f), position), maxWidth, color);
 	}
@@ -1048,8 +1014,8 @@ namespace ForgottenEngine {
 		return conv.from_bytes(s);
 	}
 
-	void Renderer2D::draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform,
-		float maxWidth, const glm::vec4& color, float lineHeightOffset, float kerningOffset)
+	void Renderer2D::draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform, float maxWidth,
+		const glm::vec4& color, float lineHeightOffset, float kerningOffset)
 	{
 		if (string.empty())
 			return;

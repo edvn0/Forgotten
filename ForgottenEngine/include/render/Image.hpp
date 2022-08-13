@@ -32,24 +32,13 @@ namespace ForgottenEngine {
 		Depth = DEPTH24STENCIL8,
 	};
 
-	enum class ImageUsage { None = 0,
-		Texture,
-		Attachment,
-		Storage,
-		HostRead };
+	enum class ImageUsage { None = 0, Texture, Attachment, Storage, HostRead };
 
-	enum class TextureWrap { None = 0,
-		Clamp,
-		Repeat };
+	enum class TextureWrap { None = 0, Clamp, Repeat };
 
-	enum class TextureFilter { None = 0,
-		Linear,
-		Nearest,
-		Cubic };
+	enum class TextureFilter { None = 0, Linear, Nearest, Cubic };
 
-	enum class TextureType { None = 0,
-		Texture2D,
-		TextureCube };
+	enum class TextureType { None = 0, Texture2D, TextureCube };
 
 	struct TextureProperties {
 		std::string DebugName;
@@ -174,20 +163,13 @@ namespace ForgottenEngine {
 			return false;
 		}
 
-		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
-		{
-			return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1;
-		}
+		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height) { return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1; }
 
-		inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height)
-		{
-			return width * height * GetImageFormatBPP(format);
-		}
+		inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height) { return width * height * GetImageFormatBPP(format); }
 
 		inline bool IsDepthFormat(ImageFormat format)
 		{
-			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F
-				|| format == ImageFormat::DEPTH32FSTENCIL8UINT)
+			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F || format == ImageFormat::DEPTH32FSTENCIL8UINT)
 				return true;
 
 			return false;

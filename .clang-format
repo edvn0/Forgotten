@@ -20,3 +20,4 @@ SortUsingDeclarations: "true"
 Standard: Cpp11
 TabWidth: "4"
 UseTab: Always
+ColumnLimit: 150

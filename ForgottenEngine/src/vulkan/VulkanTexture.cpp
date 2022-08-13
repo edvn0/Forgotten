@@ -97,8 +97,7 @@ namespace ForgottenEngine {
 		Renderer::submit([instance]() mutable { instance->invalidate(); });
 	}
 
-	VulkanTexture2D::VulkanTexture2D(
-		ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties properties)
+	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties properties)
 		: width(width)
 		, height(height)
 		, properties(properties)
@@ -202,8 +201,7 @@ namespace ForgottenEngine {
 			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferAllocation
-				= allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
@@ -240,8 +238,8 @@ namespace ForgottenEngine {
 			// Insert a memory dependency at the proper pipeline stages that will execute the reference layout
 			// transition Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT) Destination
 			// pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
-			vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
-				nullptr, 1, &imageMemoryBarrier);
+			vkCmdPipelineBarrier(
+				copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 			VkBufferImageCopy bufferCopyRegion = {};
 			bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -254,19 +252,16 @@ namespace ForgottenEngine {
 			bufferCopyRegion.bufferOffset = 0;
 
 			// Copy mip levels from staging buffer
-			vkCmdCopyBufferToImage(
-				copyCmd, stagingBuffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
+			vkCmdCopyBufferToImage(copyCmd, stagingBuffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
 
 			if (mipCount > 1) // Mips to generate
 			{
-				Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_WRITE_BIT,
-					VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
 					VK_PIPELINE_STAGE_TRANSFER_BIT, subresourceRange);
 			} else {
-				Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_READ_BIT,
-					VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					reference->get_descriptor_info().imageLayout, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, reference->get_descriptor_info().imageLayout, VK_PIPELINE_STAGE_TRANSFER_BIT,
 					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
 			}
 
@@ -280,8 +275,8 @@ namespace ForgottenEngine {
 			subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			subresourceRange.layerCount = 1;
 			subresourceRange.levelCount = get_mip_level_count();
-			Utils::set_image_layout(transitionCommandBuffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED,
-				reference->get_descriptor_info().imageLayout, subresourceRange);
+			Utils::set_image_layout(
+				transitionCommandBuffer, info.image, VK_IMAGE_LAYOUT_UNDEFINED, reference->get_descriptor_info().imageLayout, subresourceRange);
 			device->flush_command_buffer(transitionCommandBuffer);
 		}
 
@@ -326,8 +321,7 @@ namespace ForgottenEngine {
 			view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			view.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			view.format = Utils::VulkanImageFormat(format);
-			view.components
-				= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+			view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 			// The subresource range describes the set of mip levels (and array layers) that can be accessed through
 			// this reference view It's possible to create multiple reference views for a single reference referring to
 			// different (and/or overlapping) ranges of the reference
@@ -415,20 +409,17 @@ namespace ForgottenEngine {
 			mipSubRange.layerCount = 1;
 
 			// Prepare current mip level as image blit destination
-			Utils::insert_image_memory_barrier(blitCmd, info.image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
-				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
+			Utils::insert_image_memory_barrier(blitCmd, info.image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
 
 			// Blit from previous level
-			vkCmdBlitImage(blitCmd, info.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, info.image,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit,
+			vkCmdBlitImage(blitCmd, info.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit,
 				Utils::VulkanSamplerFilter(properties.SamplerFilter));
 
 			// Prepare current mip level as image blit source for next level
-			Utils::insert_image_memory_barrier(blitCmd, info.image, VK_ACCESS_TRANSFER_WRITE_BIT,
-				VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				mipSubRange);
+			Utils::insert_image_memory_barrier(blitCmd, info.image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
 		}
 
 		// After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
@@ -438,8 +429,8 @@ namespace ForgottenEngine {
 		subresourceRange.levelCount = mipLevels;
 
 		Utils::insert_image_memory_barrier(blitCmd, info.image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
 
 		VulkanContext::get_current_device()->flush_command_buffer(blitCmd);
 	}
@@ -448,8 +439,7 @@ namespace ForgottenEngine {
 	// TextureCube
 	//////////////////////////////////////////////////////////////////////////////////
 
-	VulkanTextureCube::VulkanTextureCube(
-		ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+	VulkanTextureCube::VulkanTextureCube(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
 		: format(format)
 		, width(width)
 		, height(height)
@@ -518,8 +508,8 @@ namespace ForgottenEngine {
 		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageCreateInfo.extent = { width, height, 1 };
-		imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-			| VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+		imageCreateInfo.usage
+			= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 		imageCreateInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		memory_alloc = allocator.allocate_image(imageCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, image);
 
@@ -534,8 +524,7 @@ namespace ForgottenEngine {
 			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferAllocation
-				= allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
@@ -571,8 +560,8 @@ namespace ForgottenEngine {
 			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 			// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
 			// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
-			vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
-				nullptr, 1, &imageMemoryBarrier);
+			vkCmdPipelineBarrier(
+				copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 			VkBufferImageCopy bufferCopyRegion = {};
 			bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -585,13 +574,11 @@ namespace ForgottenEngine {
 			bufferCopyRegion.bufferOffset = 0;
 
 			// Copy mip levels from staging buffer
-			vkCmdCopyBufferToImage(
-				copyCmd, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
+			vkCmdCopyBufferToImage(copyCmd, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
 
-			Utils::insert_image_memory_barrier(copyCmd, image, VK_ACCESS_TRANSFER_WRITE_BIT,
-				VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				subresourceRange);
+			Utils::insert_image_memory_barrier(copyCmd, image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, subresourceRange);
 
 			device->flush_command_buffer(copyCmd);
 
@@ -606,8 +593,7 @@ namespace ForgottenEngine {
 		subresourceRange.levelCount = mipCount;
 		subresourceRange.layerCount = 6;
 
-		Utils::set_image_layout(
-			layoutCmd, image, VK_IMAGE_LAYOUT_UNDEFINED, descriptor_image_info.imageLayout, subresourceRange);
+		Utils::set_image_layout(layoutCmd, image, VK_IMAGE_LAYOUT_UNDEFINED, descriptor_image_info.imageLayout, subresourceRange);
 
 		device->flush_command_buffer(layoutCmd);
 
@@ -645,8 +631,7 @@ namespace ForgottenEngine {
 		view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		view.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
 		view.format = format;
-		view.components
-			= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+		view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this
 		// image view It's possible to create multiple image views for a single image referring to different (and/or
 		// overlapping) ranges of the image
@@ -686,8 +671,7 @@ namespace ForgottenEngine {
 		view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		view.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
 		view.format = format;
-		view.components
-			= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+		view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 		view.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		view.subresourceRange.baseMipLevel = mip;
 		view.subresourceRange.baseArrayLayer = 0;
@@ -718,9 +702,8 @@ namespace ForgottenEngine {
 			mipSubRange.layerCount = 1;
 
 			// Prepare current mip level as image blit destination
-			Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
-				VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
+			Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_GENERAL,
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
 		}
 
 		for (uint32_t i = 1; i < mipLevels; i++) {
@@ -753,18 +736,16 @@ namespace ForgottenEngine {
 				mipSubRange.layerCount = 1;
 
 				// Prepare current mip level as image blit destination
-				Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
-					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
+				Utils::insert_image_memory_barrier(blitCmd, image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
 
 				// Blit from previous level
-				vkCmdBlitImage(blitCmd, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image,
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit, VK_FILTER_LINEAR);
+				vkCmdBlitImage(blitCmd, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit,
+					VK_FILTER_LINEAR);
 
 				// Prepare current mip level as image blit source for next level
-				Utils::insert_image_memory_barrier(blitCmd, image, VK_ACCESS_TRANSFER_WRITE_BIT,
-					VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				Utils::insert_image_memory_barrier(blitCmd, image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
 					VK_PIPELINE_STAGE_TRANSFER_BIT, mipSubRange);
 			}
 		}
@@ -776,16 +757,14 @@ namespace ForgottenEngine {
 		subresourceRange.levelCount = mipLevels;
 
 		Utils::insert_image_memory_barrier(blitCmd, image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
 
 		device->flush_command_buffer(blitCmd);
 
 		mips_generated = true;
 
-		descriptor_image_info.imageLayout
-			= readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
+		descriptor_image_info.imageLayout = readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
 	}
 
 } // namespace ForgottenEngine

@@ -6,8 +6,7 @@ namespace ForgottenEngine {
 
 	class SceneCamera : public Camera {
 	public:
-		enum class ProjectionType { Perspective = 0,
-			Orthographic = 1 };
+		enum class ProjectionType { Perspective = 0, Orthographic = 1 };
 
 	public:
 		void set_perspective(float vertical_fov, float near_clip = 0.1f, float far_clip = 1000.0f);

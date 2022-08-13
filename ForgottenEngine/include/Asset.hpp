@@ -19,15 +19,9 @@ namespace ForgottenEngine {
 
 		bool is_valid() const { return ((flags & (uint16_t)AssetFlag::Missing) | (flags & (uint16_t)AssetFlag::Invalid)) == 0; }
 
-		virtual bool operator==(const Asset& other) const
-		{
-			return handle == other.handle;
-		}
+		virtual bool operator==(const Asset& other) const { return handle == other.handle; }
 
-		virtual bool operator!=(const Asset& other) const
-		{
-			return !(*this == other);
-		}
+		virtual bool operator!=(const Asset& other) const { return !(*this == other); }
 
 		bool is_flag_set(AssetFlag flag) const { return (uint16_t)flag & flags; }
 		void set_flag(AssetFlag flag, bool value = true)

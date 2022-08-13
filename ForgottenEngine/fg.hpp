@@ -16,7 +16,6 @@
 #include "render/Font.hpp"
 #include "render/Renderer.hpp"
 #include "render/Renderer2D.hpp"
-#include "render/SceneRenderer.hpp"
 #include "render/StorageBufferSet.hpp"
 #include "render/UniformBufferSet.hpp"
 #include "vulkan/VulkanAssetLibrary.hpp"

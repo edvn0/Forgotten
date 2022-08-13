@@ -43,3 +43,6 @@
 [submodule "ForgottenEngine/vendor/entt"]
 	path = ForgottenEngine/vendor/entt
 	url = https://github.com/edvn0/entt
+[submodule "ForgottenEngine/vendor/box2d"]
+	path = ForgottenEngine/vendor/box2d
+	url = https://github.com/edvn0/box2d

@@ -47,10 +47,9 @@ namespace ForgottenEngine {
 		static AssetType get_static_type() { return AssetType::Texture; }
 		AssetType get_asset_type() const override { return get_static_type(); }
 
-		static Reference<Texture2D> create(ImageFormat format, uint32_t width, uint32_t height,
-			const void* data = nullptr, TextureProperties properties = TextureProperties());
 		static Reference<Texture2D> create(
-			const std::string& path, TextureProperties properties = TextureProperties());
+			ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr, TextureProperties properties = TextureProperties());
+		static Reference<Texture2D> create(const std::string& path, TextureProperties properties = TextureProperties());
 	};
 
 	class TextureCube : public Texture {
@@ -60,10 +59,9 @@ namespace ForgottenEngine {
 		static AssetType get_static_type() { return AssetType::EnvMap; }
 		AssetType get_asset_type() const override { return get_static_type(); }
 
-		static Reference<TextureCube> create(ImageFormat format, uint32_t width, uint32_t height,
-			const void* data = nullptr, TextureProperties properties = TextureProperties());
 		static Reference<TextureCube> create(
-			const std::string& path, TextureProperties properties = TextureProperties());
+			ImageFormat format, uint32_t width, uint32_t height, const void* data = nullptr, TextureProperties properties = TextureProperties());
+		static Reference<TextureCube> create(const std::string& path, TextureProperties properties = TextureProperties());
 	};
 
 } // namespace ForgottenEngine

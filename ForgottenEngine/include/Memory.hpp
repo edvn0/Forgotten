@@ -24,13 +24,11 @@ namespace ForgottenEngine {
 		const AllocationStats& get_allocation_stats();
 	}
 
-	template <class T>
-	struct Mallocator {
+	template <class T> struct Mallocator {
 		typedef T value_type;
 
 		Mallocator() = default;
-		template <class U>
-		constexpr explicit Mallocator(const Mallocator<U>&) noexcept { }
+		template <class U> constexpr explicit Mallocator(const Mallocator<U>&) noexcept { }
 
 		T* allocate(std::size_t n)
 		{
@@ -71,10 +69,7 @@ namespace ForgottenEngine {
 		static void* allocate(size_t size, const char* file, int line);
 		static void free(void* memory);
 
-		static const AllocatorData::AllocationStatsMap& GetAllocationStats()
-		{
-			return allocator_data->allocation_stats_map;
-		}
+		static const AllocatorData::AllocationStatsMap& GetAllocationStats() { return allocator_data->allocation_stats_map; }
 
 	private:
 		inline static AllocatorData* allocator_data = nullptr;

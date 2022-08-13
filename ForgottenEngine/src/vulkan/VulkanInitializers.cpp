@@ -19,8 +19,7 @@ namespace ForgottenEngine::VI {
 		return info;
 	}
 
-	VkCommandBufferAllocateInfo command_buffer_allocate_info(
-		VkCommandPool pool, uint32_t count, VkCommandBufferLevel level)
+	VkCommandBufferAllocateInfo command_buffer_allocate_info(VkCommandPool pool, uint32_t count, VkCommandBufferLevel level)
 	{
 		VkCommandBufferAllocateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -132,8 +131,8 @@ namespace ForgottenEngine::VI {
 	VkPipelineColorBlendAttachmentState Pipeline::color_blend_attachment_state()
 	{
 		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-			| VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		colorBlendAttachment.colorWriteMask
+			= VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		colorBlendAttachment.blendEnable = VK_FALSE;
 		return colorBlendAttachment;
 	}
@@ -173,8 +172,7 @@ namespace ForgottenEngine::VI {
 		return info;
 	}
 
-	VkImageViewCreateInfo Image::image_view_create_info(
-		VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
+	VkImageViewCreateInfo Image::image_view_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
 	{
 		// build a image-view for the depth image to use for rendering
 		VkImageViewCreateInfo info = {};
@@ -194,8 +192,7 @@ namespace ForgottenEngine::VI {
 	}
 
 	// implementation
-	VkSamplerCreateInfo Image::sampler_create_info(
-		VkFilter filters, VkSamplerAddressMode sampler_address_mode /*= VK_SAMPLER_ADDRESS_MODE_REPEAT*/)
+	VkSamplerCreateInfo Image::sampler_create_info(VkFilter filters, VkSamplerAddressMode sampler_address_mode /*= VK_SAMPLER_ADDRESS_MODE_REPEAT*/)
 	{
 		VkSamplerCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -225,8 +222,7 @@ namespace ForgottenEngine::VI {
 		return write;
 	}
 
-	VkPipelineDepthStencilStateCreateInfo Pipeline::depth_stencil_create_info(
-		bool depth_test, bool depth_write, VkCompareOp compare_op)
+	VkPipelineDepthStencilStateCreateInfo Pipeline::depth_stencil_create_info(bool depth_test, bool depth_write, VkCompareOp compare_op)
 	{
 		VkPipelineDepthStencilStateCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -243,8 +239,7 @@ namespace ForgottenEngine::VI {
 		return info;
 	}
 
-	VkDescriptorSetLayoutBinding Descriptor::descriptor_set_layout_binding(
-		VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding)
+	VkDescriptorSetLayoutBinding Descriptor::descriptor_set_layout_binding(VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding)
 	{
 		VkDescriptorSetLayoutBinding info = {};
 		info.binding = binding;

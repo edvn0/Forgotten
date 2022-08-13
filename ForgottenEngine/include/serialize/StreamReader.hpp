@@ -18,18 +18,15 @@ namespace ForgottenEngine {
 		void read_buffer(Buffer& buffer, uint32_t size = 0);
 		void read_string(std::string& string);
 
-		template <typename T>
-		void read_raw(T& type)
+		template <typename T> void read_raw(T& type)
 		{
 			bool success = read_data((char*)&type, sizeof(T));
 			CORE_ASSERT(success, "Could not read data into type T.");
 		}
 
-		template <typename T>
-		void read_object(T& obj) { T::deserialize(this, obj); }
+		template <typename T> void read_object(T& obj) { T::deserialize(this, obj); }
 
-		template <typename Key, typename Value>
-		void read_map(std::map<Key, Value>& map, uint32_t size = 0)
+		template <typename Key, typename Value> void read_map(std::map<Key, Value>& map, uint32_t size = 0)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);
@@ -48,8 +45,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename Key, typename Value>
-		void read_map(std::unordered_map<Key, Value>& map, uint32_t size = 0)
+		template <typename Key, typename Value> void read_map(std::unordered_map<Key, Value>& map, uint32_t size = 0)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);
@@ -68,8 +64,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename Value>
-		void read_map(std::unordered_map<std::string, Value>& map, uint32_t size = 0)
+		template <typename Value> void read_map(std::unordered_map<std::string, Value>& map, uint32_t size = 0)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);
@@ -85,8 +80,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename T>
-		void read_array(std::vector<T>& array, uint32_t size = 0)
+		template <typename T> void read_array(std::vector<T>& array, uint32_t size = 0)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);
@@ -101,8 +95,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <>
-		void read_array(std::vector<std::string>& array, uint32_t size)
+		template <> void read_array(std::vector<std::string>& array, uint32_t size)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);

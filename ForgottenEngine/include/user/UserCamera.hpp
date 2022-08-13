@@ -19,11 +19,7 @@ namespace ForgottenEngine {
 	template <typename T>
 	concept Number = std::integral<T> or std::floating_point<T>;
 
-	enum class CameraMode {
-		NONE,
-		FLYCAM,
-		ARCBALL
-	};
+	enum class CameraMode { NONE, FLYCAM, ARCBALL };
 
 	class UserCamera : public Camera {
 	public:
@@ -44,8 +40,7 @@ namespace ForgottenEngine {
 
 		[[nodiscard]] const glm::vec3& get_focal_point() const { return focal_point; }
 
-		template <Number T>
-		inline void set_viewport_size(T width, T height)
+		template <Number T> inline void set_viewport_size(T width, T height)
 		{
 			auto in_w = static_cast<uint32_t>(width);
 			auto in_h = static_cast<uint32_t>(height);
@@ -73,7 +68,7 @@ namespace ForgottenEngine {
 
 		[[nodiscard]] float get_vertical_fov() const { return vertical_fov; }
 		[[nodiscard]] float get_aspect_ratio() const { return aspect_ratio; }
-		[[nodiscard]] float get_neat_clip() const { return near_clip; }
+		[[nodiscard]] float get_near_clip() const { return near_clip; }
 		[[nodiscard]] float get_far_clip() const { return far_clip; }
 		[[nodiscard]] float get_pitch() const { return pitch; }
 		[[nodiscard]] float get_yaw() const { return yaw; }

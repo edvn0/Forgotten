@@ -93,13 +93,12 @@ namespace ForgottenEngine {
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		Renderer::submit_resource_free(
-			[pipeline = pipeline, pipelineCache = pipeline_cache, pipelineLayout = pipeline_layout]() {
-				const auto vulkanDevice = VulkanContext::get_current_device()->get_vulkan_device();
-				vkDestroyPipeline(vulkanDevice, pipeline, nullptr);
-				vkDestroyPipelineCache(vulkanDevice, pipelineCache, nullptr);
-				vkDestroyPipelineLayout(vulkanDevice, pipelineLayout, nullptr);
-			});
+		Renderer::submit_resource_free([pipeline = pipeline, pipelineCache = pipeline_cache, pipelineLayout = pipeline_layout]() {
+			const auto vulkanDevice = VulkanContext::get_current_device()->get_vulkan_device();
+			vkDestroyPipeline(vulkanDevice, pipeline, nullptr);
+			vkDestroyPipelineCache(vulkanDevice, pipelineCache, nullptr);
+			vkDestroyPipelineLayout(vulkanDevice, pipelineLayout, nullptr);
+		});
 	}
 
 	void VulkanPipeline::invalidate()
@@ -111,8 +110,7 @@ namespace ForgottenEngine {
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 			CORE_ASSERT(instance->spec.Shader, "");
 			Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(instance->spec.Shader);
-			Reference<VulkanFramebuffer> framebuffer
-				= instance->spec.RenderPass->get_specification().TargetFramebuffer.as<VulkanFramebuffer>();
+			Reference<VulkanFramebuffer> framebuffer = instance->spec.RenderPass->get_specification().TargetFramebuffer.as<VulkanFramebuffer>();
 
 			auto descriptorSetLayouts = vulkanShader->get_all_descriptor_set_layouts();
 			const auto& pushConstantRanges = vulkanShader->get_push_constant_ranges();
@@ -174,8 +172,7 @@ namespace ForgottenEngine {
 
 			// Color blend state describes how blend factors are calculated (if used)
 			// We need one blend attachment state per color attachment (even if blending is not used)
-			size_t colorAttachmentCount
-				= framebuffer->get_specification().SwapChainTarget ? 1 : framebuffer->get_color_attachment_count();
+			size_t colorAttachmentCount = framebuffer->get_specification().SwapChainTarget ? 1 : framebuffer->get_color_attachment_count();
 			std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates(colorAttachmentCount);
 			if (framebuffer->get_specification().SwapChainTarget) {
 				blendAttachmentStates[0].colorWriteMask = 0xf;
@@ -196,8 +193,7 @@ namespace ForgottenEngine {
 						break;
 
 					const auto& attachmentSpec = framebuffer->get_specification().Attachments.Attachments[i];
-					FramebufferBlendMode blendMode
-						= framebuffer->get_specification().BlendMode == FramebufferBlendMode::None
+					FramebufferBlendMode blendMode = framebuffer->get_specification().BlendMode == FramebufferBlendMode::None
 						? attachmentSpec.BlendMode
 						: framebuffer->get_specification().BlendMode;
 
@@ -243,8 +239,8 @@ namespace ForgottenEngine {
 			std::vector<VkDynamicState> dynamicStateEnables;
 			dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 			dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
-			if (instance->spec.Topology == PrimitiveTopology::Lines
-				|| instance->spec.Topology == PrimitiveTopology::LineStrip || instance->spec.Wireframe)
+			if (instance->spec.Topology == PrimitiveTopology::Lines || instance->spec.Topology == PrimitiveTopology::LineStrip
+				|| instance->spec.Wireframe)
 				dynamicStateEnables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 
 			VkPipelineDynamicStateCreateInfo dynamicState = {};
@@ -336,8 +332,7 @@ namespace ForgottenEngine {
 			VK_CHECK(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &instance->pipeline_cache));
 
 			// Create rendering pipeline using the specified states
-			VK_CHECK(vkCreateGraphicsPipelines(
-				device, instance->pipeline_cache, 1, &pipelineCreateInfo, nullptr, &instance->pipeline));
+			VK_CHECK(vkCreateGraphicsPipelines(device, instance->pipeline_cache, 1, &pipelineCreateInfo, nullptr, &instance->pipeline));
 
 			// Shader modules are no longer needed once the graphics pipeline has been created
 			// vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
@@ -347,18 +342,15 @@ namespace ForgottenEngine {
 		});
 	}
 
-	void VulkanPipeline::set_uniform_buffer(
-		Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
+	void VulkanPipeline::set_uniform_buffer(Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
 	{
 		Reference<VulkanPipeline> instance = this;
-		Renderer::submit(
-			[instance, ub, binding, set]() mutable { instance->rt_set_uniform_buffer(ub, binding, set); });
+		Renderer::submit([instance, ub, binding, set]() mutable { instance->rt_set_uniform_buffer(ub, binding, set); });
 	}
 
 	void VulkanPipeline::bind() { }
 
-	void VulkanPipeline::rt_set_uniform_buffer(
-		Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
+	void VulkanPipeline::rt_set_uniform_buffer(Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
 	{
 		Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(spec.Shader);
 		Reference<VulkanUniformBuffer> vulkanUniformBuffer = ub.as<VulkanUniformBuffer>();

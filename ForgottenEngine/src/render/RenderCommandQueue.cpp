@@ -13,10 +13,7 @@ namespace ForgottenEngine {
 		memset(command_buffer, 0, COMMAND_QUEUE_SIZE);
 	}
 
-	RenderCommandQueue::~RenderCommandQueue()
-	{
-		delete[] command_buffer;
-	}
+	RenderCommandQueue::~RenderCommandQueue() { delete[] command_buffer; }
 
 	void* RenderCommandQueue::allocate(RenderCommandFn fn, uint32_t size)
 	{

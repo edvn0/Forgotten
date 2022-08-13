@@ -18,8 +18,7 @@ namespace ForgottenEngine {
 
 	void VulkanSwapchain::init_surface(GLFWwindow* handle)
 	{
-		VkPhysicalDevice physicalDevice
-			= VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
+		VkPhysicalDevice physicalDevice = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
 		glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
@@ -72,8 +71,7 @@ namespace ForgottenEngine {
 		is_vsync = vsync;
 
 		// VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-		VkPhysicalDevice physicalDevice
-			= VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
+		VkPhysicalDevice physicalDevice = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
 		VkSwapchainKHR old_sc = swapchain;
 
@@ -86,8 +84,7 @@ namespace ForgottenEngine {
 		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr));
 		CORE_ASSERT_BOOL(presentModeCount > 0);
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
-			physicalDevice, surface, &presentModeCount, presentModes.data()));
+		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data()));
 
 		VkExtent2D sc_extent = {};
 		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the
@@ -121,8 +118,7 @@ namespace ForgottenEngine {
 					sc_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 					break;
 				}
-				if ((sc_present_mode != VK_PRESENT_MODE_MAILBOX_KHR)
-					&& (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+				if ((sc_present_mode != VK_PRESENT_MODE_MAILBOX_KHR) && (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
 					sc_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 				}
 			}
@@ -212,8 +208,7 @@ namespace ForgottenEngine {
 			cav.pNext = nullptr;
 			cav.format = color_format;
 			cav.image = vulkan_images[i];
-			cav.components
-				= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+			cav.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 			cav.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			cav.subresourceRange.baseMipLevel = 0;
 			cav.subresourceRange.levelCount = 1;
@@ -244,12 +239,10 @@ namespace ForgottenEngine {
 
 			command_buffers.resize(image_count);
 			for (auto& commandBuffer : command_buffers) {
-				VK_CHECK(vkCreateCommandPool(
-					device->get_vulkan_device(), &cmdPoolInfo, nullptr, &commandBuffer.command_pool));
+				VK_CHECK(vkCreateCommandPool(device->get_vulkan_device(), &cmdPoolInfo, nullptr, &commandBuffer.command_pool));
 
 				commandBufferAllocateInfo.commandPool = commandBuffer.command_pool;
-				VK_CHECK(vkAllocateCommandBuffers(
-					device->get_vulkan_device(), &commandBufferAllocateInfo, &commandBuffer.buffer));
+				VK_CHECK(vkAllocateCommandBuffers(device->get_vulkan_device(), &commandBufferAllocateInfo, &commandBuffer.buffer));
 			}
 		}
 
@@ -259,10 +252,10 @@ namespace ForgottenEngine {
 		if (!semaphores.render_complete_semaphore || !semaphores.present_complete_semaphore) {
 			VkSemaphoreCreateInfo semaphoreCreateInfo {};
 			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-			VK_CHECK(vkCreateSemaphore(VulkanContext::get_current_device()->get_vulkan_device(), &semaphoreCreateInfo,
-				nullptr, &semaphores.render_complete_semaphore));
-			VK_CHECK(vkCreateSemaphore(VulkanContext::get_current_device()->get_vulkan_device(), &semaphoreCreateInfo,
-				nullptr, &semaphores.present_complete_semaphore));
+			VK_CHECK(vkCreateSemaphore(
+				VulkanContext::get_current_device()->get_vulkan_device(), &semaphoreCreateInfo, nullptr, &semaphores.render_complete_semaphore));
+			VK_CHECK(vkCreateSemaphore(
+				VulkanContext::get_current_device()->get_vulkan_device(), &semaphoreCreateInfo, nullptr, &semaphores.present_complete_semaphore));
 		}
 
 		if (wait_fences.size() != image_count) {
@@ -272,8 +265,7 @@ namespace ForgottenEngine {
 
 			wait_fences.resize(image_count);
 			for (auto& fence : wait_fences) {
-				VK_CHECK(vkCreateFence(
-					VulkanContext::get_current_device()->get_vulkan_device(), &fenceCreateInfo, nullptr, &fence));
+				VK_CHECK(vkCreateFence(VulkanContext::get_current_device()->get_vulkan_device(), &fenceCreateInfo, nullptr, &fence));
 			}
 		}
 
@@ -334,8 +326,7 @@ namespace ForgottenEngine {
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		VK_CHECK(vkCreateRenderPass(
-			VulkanContext::get_current_device()->get_vulkan_device(), &renderPassInfo, nullptr, &render_pass));
+		VK_CHECK(vkCreateRenderPass(VulkanContext::get_current_device()->get_vulkan_device(), &renderPassInfo, nullptr, &render_pass));
 
 		// Create framebuffers for every swapchain image
 		{
@@ -353,8 +344,8 @@ namespace ForgottenEngine {
 			framebuffers.resize(image_count);
 			for (uint32_t i = 0; i < framebuffers.size(); i++) {
 				frameBufferCreateInfo.pAttachments = &images[i].view;
-				VK_CHECK(vkCreateFramebuffer(VulkanContext::get_current_device()->get_vulkan_device(),
-					&frameBufferCreateInfo, nullptr, &framebuffers[i]));
+				VK_CHECK(
+					vkCreateFramebuffer(VulkanContext::get_current_device()->get_vulkan_device(), &frameBufferCreateInfo, nullptr, &framebuffers[i]));
 			}
 		}
 	}
@@ -407,8 +398,7 @@ namespace ForgottenEngine {
 
 		current_image_index = acquire_next_image();
 
-		VK_CHECK(vkResetCommandPool(VulkanContext::get_current_device()->get_vulkan_device(),
-			command_buffers[current_buffer_index].command_pool, 0));
+		VK_CHECK(vkResetCommandPool(VulkanContext::get_current_device()->get_vulkan_device(), command_buffers[current_buffer_index].command_pool, 0));
 	}
 
 	void VulkanSwapchain::present()
@@ -427,10 +417,8 @@ namespace ForgottenEngine {
 		submitInfo.pCommandBuffers = &command_buffers[current_buffer_index].buffer;
 		submitInfo.commandBufferCount = 1;
 
-		VK_CHECK(vkResetFences(
-			VulkanContext::get_current_device()->get_vulkan_device(), 1, &wait_fences[current_buffer_index]));
-		VK_CHECK(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submitInfo,
-			wait_fences[current_buffer_index]));
+		VK_CHECK(vkResetFences(VulkanContext::get_current_device()->get_vulkan_device(), 1, &wait_fences[current_buffer_index]));
+		VK_CHECK(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submitInfo, wait_fences[current_buffer_index]));
 
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for
@@ -464,8 +452,8 @@ namespace ForgottenEngine {
 			const auto& config = Renderer::get_config();
 			current_buffer_index = (current_buffer_index + 1) % config.frames_in_flight;
 			// Make sure the frame we're requesting has finished rendering
-			VK_CHECK(vkWaitForFences(VulkanContext::get_current_device()->get_vulkan_device(), 1,
-				&wait_fences[current_buffer_index], VK_TRUE, UINT64_MAX));
+			VK_CHECK(vkWaitForFences(
+				VulkanContext::get_current_device()->get_vulkan_device(), 1, &wait_fences[current_buffer_index], VK_TRUE, UINT64_MAX));
 		}
 	}
 
@@ -479,8 +467,7 @@ namespace ForgottenEngine {
 
 	void VulkanSwapchain::find_image_format_and_color_space()
 	{
-		VkPhysicalDevice physical_device
-			= VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
+		VkPhysicalDevice physical_device = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
 		// Get list of supported surface formats
 		uint32_t formatCount;

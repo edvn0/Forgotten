@@ -122,10 +122,7 @@ namespace ForgottenEngine {
 
 #if FORGOTTEN_TRACK_MEMORY
 
-void* operator new(size_t size)
-{
-	return ForgottenEngine::Allocator::allocate(size);
-}
+void* operator new(size_t size) { return ForgottenEngine::Allocator::allocate(size); }
 
 void* operator new[](size_t size) { return ForgottenEngine::Allocator::allocate(size); }
 
@@ -133,14 +130,8 @@ void* operator new(size_t size, const char* desc) { return ForgottenEngine::Allo
 
 void* operator new[](size_t size, const char* desc) { return ForgottenEngine::Allocator::allocate(size, desc); }
 
-void* operator new(size_t size, const char* file, int line)
-{
-	return ForgottenEngine::Allocator::allocate(size, file, line);
-}
+void* operator new(size_t size, const char* file, int line) { return ForgottenEngine::Allocator::allocate(size, file, line); }
 
-void* operator new[](size_t size, const char* file, int line)
-{
-	return ForgottenEngine::Allocator::allocate(size, file, line);
-}
+void* operator new[](size_t size, const char* file, int line) { return ForgottenEngine::Allocator::allocate(size, file, line); }
 
 #endif

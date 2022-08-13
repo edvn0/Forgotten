@@ -108,11 +108,7 @@ namespace ForgottenEngine::ShaderResource {
 
 		std::unordered_map<std::string, VkWriteDescriptorSet> write_descriptor_sets;
 
-		operator bool() const
-		{
-			return !(storage_buffers.empty() && uniform_buffers.empty() && image_samplers.empty()
-				&& storage_images.empty());
-		}
+		operator bool() const { return !(storage_buffers.empty() && uniform_buffers.empty() && image_samplers.empty() && storage_images.empty()); }
 	};
 
 } // namespace ForgottenEngine::ShaderResource

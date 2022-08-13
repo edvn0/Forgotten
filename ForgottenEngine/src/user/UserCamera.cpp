@@ -12,13 +12,9 @@
 
 namespace ForgottenEngine {
 
-	static inline void disable_mouse()
-	{
-	}
+	static inline void disable_mouse() { }
 
-	static inline void enable_mouse()
-	{
-	}
+	static inline void enable_mouse() { }
 
 	UserCamera::UserCamera(const float deg_fov, const float width, const float height, const float near_p, const float far_p)
 		: Camera(deg_fov, width, height, near_p, far_p)
@@ -94,8 +90,8 @@ namespace ForgottenEngine {
 
 			right_direction = glm::cross(direction, glm::vec3 { 0.f, yawSign, 0.f });
 
-			direction = glm::rotate(glm::normalize(glm::cross(glm::angleAxis(-pitch_delta, right_direction),
-										glm::angleAxis(-yaw_delta, glm::vec3 { 0.f, yawSign, 0.f }))),
+			direction = glm::rotate(glm::normalize(glm::cross(
+										glm::angleAxis(-pitch_delta, right_direction), glm::angleAxis(-yaw_delta, glm::vec3 { 0.f, yawSign, 0.f }))),
 				direction);
 
 			const float dist = glm::distance(focal_point, position);
@@ -136,30 +132,15 @@ namespace ForgottenEngine {
 		dispatcher.dispatch_event<MouseScrolledEvent>([this](MouseScrolledEvent& e) { return on_mouse_scroll(e); });
 	}
 
-	glm::vec3 UserCamera::get_up_direction() const
-	{
-		return glm::rotate(get_orientation(), glm::vec3(0.0f, 1.0f, 0.0f));
-	}
+	glm::vec3 UserCamera::get_up_direction() const { return glm::rotate(get_orientation(), glm::vec3(0.0f, 1.0f, 0.0f)); }
 
-	glm::vec3 UserCamera::get_right_direction() const
-	{
-		return glm::rotate(get_orientation(), glm::vec3(1.f, 0.f, 0.f));
-	}
+	glm::vec3 UserCamera::get_right_direction() const { return glm::rotate(get_orientation(), glm::vec3(1.f, 0.f, 0.f)); }
 
-	glm::vec3 UserCamera::get_forward_direction() const
-	{
-		return glm::rotate(get_orientation(), glm::vec3(0.0f, 0.0f, -1.0f));
-	}
+	glm::vec3 UserCamera::get_forward_direction() const { return glm::rotate(get_orientation(), glm::vec3(0.0f, 0.0f, -1.0f)); }
 
-	glm::vec3 UserCamera::calculate_position() const
-	{
-		return focal_point - get_forward_direction() * distance + position_delta;
-	}
+	glm::vec3 UserCamera::calculate_position() const { return focal_point - get_forward_direction() * distance + position_delta; }
 
-	glm::quat UserCamera::get_orientation() const
-	{
-		return glm::quat(glm::vec3(-pitch - pitch_delta, -yaw - yaw_delta, 0.0f));
-	}
+	glm::quat UserCamera::get_orientation() const { return glm::quat(glm::vec3(-pitch - pitch_delta, -yaw - yaw_delta, 0.0f)); }
 
 	float UserCamera::get_camera_speed() const
 	{
@@ -242,10 +223,7 @@ namespace ForgottenEngine {
 		return { factor_x, factor_y };
 	}
 
-	float UserCamera::rotation_speed() const
-	{
-		return 0.3;
-	}
+	float UserCamera::rotation_speed() const { return 0.3; }
 
 	float UserCamera::zoom_speed() const
 	{

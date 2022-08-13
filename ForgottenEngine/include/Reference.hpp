@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <concepts>
 #include <stdint.h>
 
 namespace ForgottenEngine {
@@ -23,6 +24,7 @@ namespace ForgottenEngine {
 	} // namespace RefUtils
 
 	template <typename T>
+	requires std::derived_from<T, ReferenceCounted>
 	class Reference {
 	public:
 		Reference()
@@ -38,20 +40,16 @@ namespace ForgottenEngine {
 		Reference(T* instance)
 			: instance(instance)
 		{
-			static_assert(std::is_base_of<ReferenceCounted, T>::value, "Class is not ReferenceCounted!");
-
 			inc_ref();
 		}
 
-		template <typename T2>
-		Reference(const Reference<T2>& other)
+		template <typename T2> Reference(const Reference<T2>& other)
 		{
 			instance = (T*)other.instance;
 			inc_ref();
 		}
 
-		template <typename T2>
-		Reference(Reference<T2>&& other)
+		template <typename T2> Reference(Reference<T2>&& other)
 		{
 			instance = (T*)other.instance;
 			other.instance = nullptr;
@@ -88,8 +86,7 @@ namespace ForgottenEngine {
 			return *this;
 		}
 
-		template <typename T2>
-		Reference& operator=(const Reference<T2>& other)
+		template <typename T2> Reference& operator=(const Reference<T2>& other)
 		{
 			other.inc_ref();
 			dec_ref();
@@ -98,8 +95,7 @@ namespace ForgottenEngine {
 			return *this;
 		}
 
-		template <typename T2>
-		Reference& operator=(Reference<T2>&& other)
+		template <typename T2> Reference& operator=(Reference<T2>&& other)
 		{
 			dec_ref();
 
@@ -126,14 +122,9 @@ namespace ForgottenEngine {
 			instance = instance;
 		}
 
-		template <typename T2>
-		Reference<T2> as() const { return Reference<T2>(*this); }
+		template <typename T2> Reference<T2> as() const { return Reference<T2>(*this); }
 
-		template <typename... Args>
-		static Reference<T> create(Args&&... args)
-		{
-			return Reference<T>(new T(std::forward<Args>(args)...));
-		}
+		template <typename... Args> static Reference<T> create(Args&&... args) { return Reference<T>(new T(std::forward<Args>(args)...)); }
 
 		bool operator==(const Reference<T>& other) const { return instance == other.instance; }
 
@@ -168,13 +159,11 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <class T2>
-		friend class Reference;
+		template <class T2> friend class Reference;
 		mutable T* instance;
 	};
 
-	template <typename T>
-	class WeakReference {
+	template <typename T> class WeakReference {
 	public:
 		WeakReference() = default;
 

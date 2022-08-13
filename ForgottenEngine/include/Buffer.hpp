@@ -50,8 +50,7 @@ namespace ForgottenEngine {
 				memset(this->data, 0, this->size);
 		}
 
-		template <typename T>
-		T& read(uint32_t offset = 0) { return *(T*)((byte*)this->data + offset); }
+		template <typename T> T& read(uint32_t offset = 0) { return *(T*)((byte*)this->data + offset); }
 
 		byte* read_bytes(uint32_t in_size, uint32_t offset) const
 		{
@@ -72,8 +71,7 @@ namespace ForgottenEngine {
 		byte& operator[](int index) { return ((byte*)this->data)[index]; }
 		byte operator[](int index) const { return ((byte*)this->data)[index]; }
 
-		template <typename T>
-		T* as() const { return (T*)this->data; }
+		template <typename T> T* as() const { return (T*)this->data; }
 
 		[[nodiscard]] inline uint32_t get_size() const { return this->size; }
 

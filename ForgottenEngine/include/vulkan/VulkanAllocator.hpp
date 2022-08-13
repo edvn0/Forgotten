@@ -24,8 +24,7 @@ namespace ForgottenEngine {
 		void destroy_image(VkImage image, VmaAllocation allocation);
 		void destroy_buffer(VkBuffer buffer, VmaAllocation allocation);
 
-		template <typename T>
-		T* map_memory(VmaAllocation allocation)
+		template <typename T> T* map_memory(VmaAllocation allocation)
 		{
 			T* mappedMemory;
 			vmaMapMemory(VulkanAllocator::get_vma_allocator(), allocation, (void**)&mappedMemory);

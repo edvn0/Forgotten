@@ -19,18 +19,15 @@ namespace ForgottenEngine {
 		void write_zero(uint64_t size);
 		void write_string(const std::string& string);
 
-		template <typename T>
-		void write_raw(const T& type)
+		template <typename T> void write_raw(const T& type)
 		{
 			bool success = write_data((char*)&type, sizeof(T));
 			CORE_ASSERT_BOOL(success);
 		}
 
-		template <typename T>
-		void write_object(const T& obj) { T::serialize(this, obj); }
+		template <typename T> void write_object(const T& obj) { T::serialize(this, obj); }
 
-		template <typename Key, typename Value>
-		void write_map(const std::map<Key, Value>& map, bool writeSize = true)
+		template <typename Key, typename Value> void write_map(const std::map<Key, Value>& map, bool writeSize = true)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)map.size());
@@ -48,8 +45,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename Key, typename Value>
-		void write_map(const std::unordered_map<Key, Value>& map, bool writeSize = true)
+		template <typename Key, typename Value> void write_map(const std::unordered_map<Key, Value>& map, bool writeSize = true)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)map.size());
@@ -67,8 +63,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename Value>
-		void write_map(const std::unordered_map<std::string, Value>& map, bool writeSize = true)
+		template <typename Value> void write_map(const std::unordered_map<std::string, Value>& map, bool writeSize = true)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)map.size());
@@ -83,8 +78,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename T>
-		void write_array(const std::vector<T>& array, bool writeSize = true)
+		template <typename T> void write_array(const std::vector<T>& array, bool writeSize = true)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)array.size());
@@ -97,8 +91,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <>
-		void write_array(const std::vector<std::string>& array, bool writeSize)
+		template <> void write_array(const std::vector<std::string>& array, bool writeSize)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)array.size());

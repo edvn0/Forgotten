@@ -48,8 +48,7 @@ namespace ForgottenEngine {
 		Reference<Texture2D> try_get_texture_2d(const std::string& name) override;
 		Reference<TextureCube> try_get_texture_cube(const std::string& name) override;
 
-		template <typename T>
-		void set(const std::string& name, const T& value)
+		template <typename T> void set(const std::string& name, const T& value)
 		{
 			auto decl = find_uniform_declaration(name);
 			CORE_ASSERT(decl, "Could not find uniform!");
@@ -60,8 +59,7 @@ namespace ForgottenEngine {
 			buffer.write((byte*)&value, decl->get_size(), decl->get_offset());
 		}
 
-		template <typename T>
-		T& get(const std::string& name)
+		template <typename T> T& get(const std::string& name)
 		{
 			auto decl = find_uniform_declaration(name);
 			CORE_ASSERT(decl, "Could not find uniform with name 'x'");
@@ -69,8 +67,7 @@ namespace ForgottenEngine {
 			return buffer.read<T>(decl->get_offset());
 		}
 
-		template <typename T>
-		Reference<T> get_resource(const std::string& name)
+		template <typename T> Reference<T> get_resource(const std::string& name)
 		{
 			auto decl = find_resource_declaration(name);
 			CORE_ASSERT(decl, "Could not find uniform with name 'x'");
@@ -79,8 +76,7 @@ namespace ForgottenEngine {
 			return Reference<T>(material_textures[slot]);
 		}
 
-		template <typename T>
-		Reference<T> try_get_resource(const std::string& name)
+		template <typename T> Reference<T> try_get_resource(const std::string& name)
 		{
 			auto decl = find_resource_declaration(name);
 			if (!decl)
@@ -111,14 +107,12 @@ namespace ForgottenEngine {
 		Buffer get_uniform_storage_buffer() { return uniform_storage_buffer; }
 
 		void rt_update_for_rendering(
-			const std::vector<std::vector<VkWriteDescriptorSet>>& uniformBufferWriteDescriptors
-			= std::vector<std::vector<VkWriteDescriptorSet>>());
+			const std::vector<std::vector<VkWriteDescriptorSet>>& uniformBufferWriteDescriptors = std::vector<std::vector<VkWriteDescriptorSet>>());
 		void invalidate_descriptor_sets();
 
 		VkDescriptorSet get_descriptor_set(uint32_t index) const
 		{
-			return !descriptor_sets[index].descriptor_sets.empty() ? descriptor_sets[index].descriptor_sets[0]
-																   : nullptr;
+			return !descriptor_sets[index].descriptor_sets.empty() ? descriptor_sets[index].descriptor_sets[0] : nullptr;
 		}
 
 	private:
@@ -137,10 +131,7 @@ namespace ForgottenEngine {
 		Reference<Shader> material_shader;
 		std::string material_name;
 
-		enum class PendingDescriptorType { None = 0,
-			Texture2D,
-			TextureCube,
-			Image2D };
+		enum class PendingDescriptorType { None = 0, Texture2D, TextureCube, Image2D };
 		struct PendingDescriptor {
 			PendingDescriptorType type = PendingDescriptorType::None;
 			VkWriteDescriptorSet wds;

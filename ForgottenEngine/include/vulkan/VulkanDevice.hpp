@@ -60,8 +60,7 @@ namespace ForgottenEngine {
 	// Represents a logical device
 	class VulkanDevice : public ReferenceCounted {
 	public:
-		VulkanDevice(
-			const Reference<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
+		VulkanDevice(const Reference<VulkanPhysicalDevice>& physical_device, VkPhysicalDeviceFeatures enabled_features);
 		~VulkanDevice();
 
 		void destroy();

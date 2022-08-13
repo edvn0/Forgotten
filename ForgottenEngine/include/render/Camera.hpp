@@ -51,7 +51,7 @@ namespace ForgottenEngine {
 		}
 
 		[[nodiscard]] float get_expose() const { return exposure; }
-		float& get_expose() { return exposure; }
+		float& get_exposure() { return exposure; }
 
 	protected:
 		float exposure = 0.8f;

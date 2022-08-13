@@ -9,8 +9,6 @@
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
 
-typedef VkCommandPool_T* VkCommandPool;
-
 namespace ForgottenEngine {
 
 	class ImGuiLayer : public Layer {

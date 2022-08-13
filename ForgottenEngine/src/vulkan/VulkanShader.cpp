@@ -125,8 +125,7 @@ namespace ForgottenEngine {
 
 	size_t VulkanShader::get_hash() const { return 1; }
 
-	void VulkanShader::load_and_create_shaders(
-		const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
+	void VulkanShader::load_and_create_shaders(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
 	{
 		shader_data = shaderData;
 
@@ -223,8 +222,7 @@ namespace ForgottenEngine {
 				layoutBinding.stageFlags = storageBuffer.ShaderStage;
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
-					"Binding is already present!");
+				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[storageBuffer.Name];
 				set = {};
@@ -242,10 +240,8 @@ namespace ForgottenEngine {
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
-					"Binding is already present!");
+				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
 				set = {};
@@ -263,12 +259,9 @@ namespace ForgottenEngine {
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
-					"Binding is already present!");
+				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
 				set = {};
@@ -286,14 +279,11 @@ namespace ForgottenEngine {
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(),
-					"Binding is already present!");
+				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
+				CORE_ASSERT(
+					shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
 				set = {};
@@ -314,16 +304,13 @@ namespace ForgottenEngine {
 				// uint32_t descriptorSet = (bindingAndSet >> 32);
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(),
-					"Binding is already present!");
-				CORE_ASSERT(shader_desc_set.separate_samplers.find(binding) == shader_desc_set.separate_samplers.end(),
-					"Binding is already present!");
+				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
+				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
+				CORE_ASSERT(
+					shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(), "Binding is already present!");
+				CORE_ASSERT(
+					shader_desc_set.separate_samplers.find(binding) == shader_desc_set.separate_samplers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
 				set = {};
@@ -394,8 +381,7 @@ namespace ForgottenEngine {
 		return result;
 	}
 
-	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(
-		uint32_t desc_set, uint32_t numberOfSets)
+	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::create_descriptor_sets(uint32_t desc_set, uint32_t numberOfSets)
 	{
 		ShaderMaterialDescriptorSet result;
 
@@ -488,8 +474,7 @@ namespace ForgottenEngine {
 
 		if (reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.find(desc_set_name)
 			== reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.end()) {
-			CORE_WARN(
-				"Renderer Shader {0} does not contain requested descriptor set {1}", desc_set_name, desc_set_name);
+			CORE_WARN("Renderer Shader {0} does not contain requested descriptor set {1}", desc_set_name, desc_set_name);
 			return nullptr;
 		}
 		return &reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.at(desc_set_name);
@@ -505,17 +490,11 @@ namespace ForgottenEngine {
 		return result;
 	}
 
-	const std::unordered_map<std::string, ShaderResourceDeclaration>& VulkanShader::get_resources() const
-	{
-		return reflection_data.resources;
-	}
+	const std::unordered_map<std::string, ShaderResourceDeclaration>& VulkanShader::get_resources() const { return reflection_data.resources; }
 
 	void VulkanShader::add_shader_reloaded_callback(const ShaderReloadedCallback& callback) { }
 
-	void VulkanShader::set_reflection_data(const ForgottenEngine::VulkanShader::ReflectionData& reflectionData)
-	{
-		reflection_data = reflectionData;
-	}
+	void VulkanShader::set_reflection_data(const ForgottenEngine::VulkanShader::ReflectionData& reflectionData) { reflection_data = reflectionData; }
 
 	bool VulkanShader::try_read_reflection_data(StreamReader* serializer)
 	{

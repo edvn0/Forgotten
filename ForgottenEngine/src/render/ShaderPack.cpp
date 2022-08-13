@@ -9,10 +9,7 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		enum class ShaderStage : uint8_t { None = 0,
-			Vertex = 1,
-			Fragment = 2,
-			Compute = 3 };
+		enum class ShaderStage : uint8_t { None = 0, Vertex = 1, Fragment = 2, Compute = 3 };
 
 		VkShaderStageFlagBits ShaderStageToVkShaderStage(ShaderStage stage)
 		{
@@ -124,8 +121,7 @@ namespace ForgottenEngine {
 		return vulkanShader;
 	}
 
-	Reference<ShaderPack> ShaderPack::create_from_library(
-		Reference<ShaderLibrary> shaderLibrary, const std::filesystem::path& path)
+	Reference<ShaderPack> ShaderPack::create_from_library(Reference<ShaderLibrary> shaderLibrary, const std::filesystem::path& path)
 	{
 		Reference<ShaderPack> shaderPack = Reference<ShaderPack>::create();
 
@@ -179,8 +175,7 @@ namespace ForgottenEngine {
 			Reference<VulkanShader> vulkanShader = shader.as<VulkanShader>();
 
 			// Serialize reflection data
-			shaderPackFile.index.shader_programs[(uint32_t)vulkanShader->get_hash()].ReflectionDataOffset
-				= serializer.get_stream_position();
+			shaderPackFile.index.shader_programs[(uint32_t)vulkanShader->get_hash()].ReflectionDataOffset = serializer.get_stream_position();
 			vulkanShader->serialize_reflection_data(&serializer);
 
 			// Serialize SPIR-V data

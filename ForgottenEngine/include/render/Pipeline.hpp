@@ -8,13 +8,7 @@
 
 namespace ForgottenEngine {
 
-	enum class PrimitiveTopology { None = 0,
-		Points,
-		Lines,
-		Triangles,
-		LineStrip,
-		TriangleStrip,
-		TriangleFan };
+	enum class PrimitiveTopology { None = 0, Points, Lines, Triangles, LineStrip, TriangleStrip, TriangleFan };
 
 	enum class DepthCompareOperator {
 		None = 0,

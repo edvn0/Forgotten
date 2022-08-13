@@ -39,8 +39,7 @@ namespace ForgottenEngine {
 
 namespace std {
 
-	template <>
-	struct hash<ForgottenEngine::UUID> {
+	template <> struct hash<ForgottenEngine::UUID> {
 		std::size_t operator()(const ForgottenEngine::UUID& uuid) const
 		{
 			// uuid is already a randomly generated number, and is suitable as a hash key as-is.
@@ -49,11 +48,7 @@ namespace std {
 		}
 	};
 
-	template <>
-	struct hash<ForgottenEngine::UUID32> {
-		std::size_t operator()(const ForgottenEngine::UUID32& uuid) const
-		{
-			return hash<uint32_t>()((uint32_t)uuid);
-		}
+	template <> struct hash<ForgottenEngine::UUID32> {
+		std::size_t operator()(const ForgottenEngine::UUID32& uuid) const { return hash<uint32_t>()((uint32_t)uuid); }
 	};
 } // namespace std

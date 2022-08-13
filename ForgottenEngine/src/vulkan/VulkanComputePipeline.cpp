@@ -17,17 +17,13 @@ namespace ForgottenEngine {
 		: shader(computeShader.as<VulkanShader>())
 	{
 		Reference<VulkanComputePipeline> instance = this;
-		Renderer::submit([instance]() mutable {
-			instance->rt_create_pipeline();
-		});
+		Renderer::submit([instance]() mutable { instance->rt_create_pipeline(); });
 		Renderer::register_shader_dependency(computeShader, this);
 	}
 
 	void VulkanComputePipeline::create_pipeline()
 	{
-		Renderer::submit([instance = Reference(this)]() mutable {
-			instance->rt_create_pipeline();
-		});
+		Renderer::submit([instance = Reference(this)]() mutable { instance->rt_create_pipeline(); });
 	}
 
 	void VulkanComputePipeline::rt_create_pipeline()
@@ -76,7 +72,8 @@ namespace ForgottenEngine {
 		VK_CHECK(vkCreateComputePipelines(device, compute_cache, 1, &computePipelineCreateInfo, nullptr, &compute_pipeline));
 	}
 
-	void VulkanComputePipeline::execute(VkDescriptorSet* descriptorSets, uint32_t descriptorSetCount, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+	void VulkanComputePipeline::execute(
+		VkDescriptorSet* descriptorSets, uint32_t descriptorSetCount, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 	{
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 

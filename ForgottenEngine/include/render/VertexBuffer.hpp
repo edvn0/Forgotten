@@ -4,18 +4,7 @@
 
 namespace ForgottenEngine {
 
-	enum class ShaderDataType { None = 0,
-		Float,
-		Float2,
-		Float3,
-		Float4,
-		Mat3,
-		Mat4,
-		Int,
-		Int2,
-		Int3,
-		Int4,
-		Bool };
+	enum class ShaderDataType { None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool };
 
 	static uint32_t shader_data_type_size(ShaderDataType type)
 	{
@@ -136,9 +125,7 @@ namespace ForgottenEngine {
 		uint32_t stride = 0;
 	};
 
-	enum class VertexBufferUsage { None = 0,
-		Static = 1,
-		Dynamic = 2 };
+	enum class VertexBufferUsage { None = 0, Static = 1, Dynamic = 2 };
 
 	class VertexBuffer : public ReferenceCounted {
 	public:
@@ -151,8 +138,7 @@ namespace ForgottenEngine {
 		virtual unsigned int get_size() const = 0;
 		virtual RendererID get_renderer_id() const = 0;
 
-		static Reference<VertexBuffer> create(
-			void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
+		static Reference<VertexBuffer> create(void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
 		static Reference<VertexBuffer> create(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
 	};
 

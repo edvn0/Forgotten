@@ -42,8 +42,7 @@ namespace ForgottenEngine {
 					image_specification.Width = (uint32_t)(width * spec.Scale);
 					image_specification.Height = (uint32_t)(height * spec.Scale);
 					image_specification.DebugName = fmt::format("{0}-DepthAttachment{1}",
-						image_specification.DebugName.empty() ? "Unnamed FB" : image_specification.DebugName,
-						attachmentIndex);
+						image_specification.DebugName.empty() ? "Unnamed FB" : image_specification.DebugName, attachmentIndex);
 					depth_image = Image2D::create(image_specification);
 				} else {
 					ImageSpecification image_specification;
@@ -53,8 +52,7 @@ namespace ForgottenEngine {
 					image_specification.Width = (uint32_t)(width * spec.Scale);
 					image_specification.Height = (uint32_t)(height * spec.Scale);
 					image_specification.DebugName = fmt::format("{0}-ColorAttachment{1}",
-						image_specification.DebugName.empty() ? "Unnamed FB" : image_specification.DebugName,
-						attachmentIndex);
+						image_specification.DebugName.empty() ? "Unnamed FB" : image_specification.DebugName, attachmentIndex);
 					attachment_images.emplace_back(Image2D::create(image_specification));
 				}
 				attachmentIndex++;
@@ -85,16 +83,14 @@ namespace ForgottenEngine {
 
 					// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer
 					// invalidation
-					if (image->get_specification().Layers == 1
-						|| attachmentIndex == 0 && !image->get_layer_image_view(0))
+					if (image->get_specification().Layers == 1 || attachmentIndex == 0 && !image->get_layer_image_view(0))
 						image->release();
 					attachmentIndex++;
 				}
 
 				if (depth_image) {
 					// Do we own the depth image?
-					if (spec.ExistingImages.find((uint32_t)spec.Attachments.Attachments.size() - 1)
-						== spec.ExistingImages.end())
+					if (spec.ExistingImages.find((uint32_t)spec.Attachments.Attachments.size() - 1) == spec.ExistingImages.end())
 						depth_image->release();
 				}
 			}
@@ -122,10 +118,7 @@ namespace ForgottenEngine {
 			callback(this);
 	}
 
-	void VulkanFramebuffer::add_resize_callback(const std::function<void(Reference<Framebuffer>)>& func)
-	{
-		resize_callbacks.push_back(func);
-	}
+	void VulkanFramebuffer::add_resize_callback(const std::function<void(Reference<Framebuffer>)>& func) { resize_callbacks.push_back(func); }
 
 	void VulkanFramebuffer::invalidate()
 	{
@@ -161,13 +154,12 @@ namespace ForgottenEngine {
 				if (spec.ExistingImage) {
 					depth_image = spec.ExistingImage;
 				} else if (spec.ExistingFramebuffer) {
-					Reference<VulkanFramebuffer> existingFramebuffer
-						= spec.ExistingFramebuffer.as<VulkanFramebuffer>();
+					Reference<VulkanFramebuffer> existingFramebuffer = spec.ExistingFramebuffer.as<VulkanFramebuffer>();
 					depth_image = existingFramebuffer->get_depth_image();
 				} else if (spec.ExistingImages.find(attachmentIndex) != spec.ExistingImages.end()) {
 					Reference<Image2D> existingImage = spec.ExistingImages.at(attachmentIndex);
-					CORE_ASSERT(Utils::IsDepthFormat(existingImage->get_specification().Format),
-						"Trying to attach non-depth image as depth attachment");
+					CORE_ASSERT(
+						Utils::IsDepthFormat(existingImage->get_specification().Format), "Trying to attach non-depth image as depth attachment");
 					depth_image = existingImage;
 				} else {
 					Reference<VulkanImage2D> depthAttachmentImage = depth_image.as<VulkanImage2D>();
@@ -181,26 +173,21 @@ namespace ForgottenEngine {
 				attachmentDescription.flags = 0;
 				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.Format);
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp
-					= spec.ClearDepthOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+				attachmentDescription.loadOp = spec.ClearDepthOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store
 																			  // (otherwise DONT_CARE is fine)
 				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				attachmentDescription.initialLayout = spec.ClearDepthOnLoad
-					? VK_IMAGE_LAYOUT_UNDEFINED
-					: VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+				attachmentDescription.initialLayout
+					= spec.ClearDepthOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 				if (attachmentSpec.Format == ImageFormat::DEPTH24STENCIL8
 					|| true) // Separate layouts requires a "separate layouts" flag to be enabled
 				{
-					attachmentDescription.finalLayout
-						= VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
-					attachmentDescription.finalLayout
-						= VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // TODO: if sampling
+					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
+					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // TODO: if sampling
 					depthAttachmentReference = { attachmentIndex, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
 				} else {
-					attachmentDescription.finalLayout
-						= VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL; // TODO: if not sampling
+					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL; // TODO: if not sampling
 					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
 					depthAttachmentReference = { attachmentIndex, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 				}
@@ -210,14 +197,12 @@ namespace ForgottenEngine {
 
 				Reference<VulkanImage2D> colorAttachment;
 				if (spec.ExistingFramebuffer) {
-					Reference<VulkanFramebuffer> existingFramebuffer
-						= spec.ExistingFramebuffer.as<VulkanFramebuffer>();
+					Reference<VulkanFramebuffer> existingFramebuffer = spec.ExistingFramebuffer.as<VulkanFramebuffer>();
 					Reference<Image2D> existingImage = existingFramebuffer->get_image(attachmentIndex);
 					colorAttachment = attachment_images.emplace_back(existingImage).as<VulkanImage2D>();
 				} else if (spec.ExistingImages.find(attachmentIndex) != spec.ExistingImages.end()) {
 					Reference<Image2D> existingImage = spec.ExistingImages[attachmentIndex];
-					CORE_ASSERT(!Utils::IsDepthFormat(existingImage->get_specification().Format),
-						"Trying to attach depth image as color attachment");
+					CORE_ASSERT(!Utils::IsDepthFormat(existingImage->get_specification().Format), "Trying to attach depth image as color attachment");
 					colorAttachment = existingImage.as<VulkanImage2D>();
 					attachment_images[attachmentIndex] = existingImage;
 				} else {
@@ -228,8 +213,7 @@ namespace ForgottenEngine {
 						image_specification.Transfer = image_specification.Transfer;
 						image_specification.Width = (uint32_t)(width * spec.Scale);
 						image_specification.Height = (uint32_t)(height * spec.Scale);
-						colorAttachment
-							= attachment_images.emplace_back(Image2D::create(image_specification)).as<VulkanImage2D>();
+						colorAttachment = attachment_images.emplace_back(Image2D::create(image_specification)).as<VulkanImage2D>();
 					} else {
 						Reference<Image2D> image = attachment_images[attachmentIndex];
 						ImageSpecification& image_spec = image->get_specification();
@@ -239,8 +223,7 @@ namespace ForgottenEngine {
 						if (colorAttachment->get_specification().Layers == 1)
 							colorAttachment->rt_invalidate(); // Create immediately
 						else if (attachmentIndex == 0
-							&& spec.ExistingImageLayers[0]
-								== 0) // Only invalidate the first layer from only the first framebuffer
+							&& spec.ExistingImageLayers[0] == 0) // Only invalidate the first layer from only the first framebuffer
 						{
 							colorAttachment->rt_invalidate(); // Create immediately
 							colorAttachment->rt_create_per_specific_layer_image_views(spec.ExistingImageLayers);
@@ -254,20 +237,17 @@ namespace ForgottenEngine {
 				attachmentDescription.flags = 0;
 				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.Format);
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp
-					= spec.ClearColorOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+				attachmentDescription.loadOp = spec.ClearColorOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store
 																			  // (otherwise DONT_CARE is fine)
 				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				attachmentDescription.initialLayout
-					= spec.ClearColorOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				attachmentDescription.initialLayout = spec.ClearColorOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 				const auto& clearColor = spec.ClearColor;
 				clear_values[attachmentIndex].color = { { clearColor.r, clearColor.g, clearColor.b, clearColor.a } };
-				colorAttachmentReferences.emplace_back(
-					VkAttachmentReference { attachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+				colorAttachmentReferences.emplace_back(VkAttachmentReference { attachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 			}
 
 			attachmentIndex++;

@@ -58,8 +58,7 @@ namespace ForgottenEngine {
 		vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
 		if (extension_count > 0) {
 			std::vector<VkExtensionProperties> extensions(extension_count);
-			if (vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, &extensions.front())
-				== VK_SUCCESS) {
+			if (vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, &extensions.front()) == VK_SUCCESS) {
 				for (const auto& ext : extensions) {
 					supported_extensions.emplace(ext.extensionName);
 				}
@@ -96,8 +95,7 @@ namespace ForgottenEngine {
 
 		// Dedicated transfer queue
 		if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT) {
-			if ((queue_family_indices.transfer != queue_family_indices.graphics)
-				&& (queue_family_indices.transfer != queue_family_indices.compute)) {
+			if ((queue_family_indices.transfer != queue_family_indices.graphics) && (queue_family_indices.transfer != queue_family_indices.compute)) {
 				// If compute family index differs, we need an additional queue create info for the compute queue
 				VkDeviceQueueCreateInfo queueInfo {};
 				queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -118,8 +116,8 @@ namespace ForgottenEngine {
 	{
 		// Since all depth formats may be optional, we need to find a suitable depth format to use
 		// Start with the highest precision packed format
-		std::vector<VkFormat> depthFormats = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT,
-			VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
+		std::vector<VkFormat> depthFormats
+			= { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
 
 		for (auto& format : depthFormats) {
 			VkFormatProperties formatProps;
@@ -145,8 +143,7 @@ namespace ForgottenEngine {
 		if (flags & VK_QUEUE_COMPUTE_BIT) {
 			for (uint32_t i = 0; i < queue_family_properties.size(); i++) {
 				auto& queueFamilyProperties = queue_family_properties[i];
-				if ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT)
-					&& ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
+				if ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT) && ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
 					indices.compute = static_cast<int32_t>(i);
 					break;
 				}
@@ -158,8 +155,7 @@ namespace ForgottenEngine {
 		if (flags & VK_QUEUE_TRANSFER_BIT) {
 			for (uint32_t i = 0; i < queue_family_properties.size(); i++) {
 				auto& queueFamilyProperties = queue_family_properties[i];
-				if ((queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT)
-					&& ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)
+				if ((queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT) && ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)
 					&& ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
 					indices.transfer = static_cast<int32_t>(i);
 					break;
@@ -207,10 +203,7 @@ namespace ForgottenEngine {
 		return UINT32_MAX;
 	}
 
-	Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select()
-	{
-		return Reference<VulkanPhysicalDevice>::create();
-	}
+	Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select() { return Reference<VulkanPhysicalDevice>::create(); }
 
 	VulkanDevice::VulkanDevice(const Reference<VulkanPhysicalDevice>& p_device, VkPhysicalDeviceFeatures enabled)
 		: physical_device(p_device)
@@ -294,10 +287,7 @@ namespace ForgottenEngine {
 		return cmdBuffer;
 	}
 
-	void VulkanDevice::flush_command_buffer(VkCommandBuffer commandBuffer)
-	{
-		flush_command_buffer(commandBuffer, graphics_queue);
-	}
+	void VulkanDevice::flush_command_buffer(VkCommandBuffer commandBuffer) { flush_command_buffer(commandBuffer, graphics_queue); }
 
 	void VulkanDevice::flush_command_buffer(VkCommandBuffer commandBuffer, VkQueue queue)
 	{

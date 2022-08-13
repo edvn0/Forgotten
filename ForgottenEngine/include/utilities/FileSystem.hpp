@@ -7,12 +7,7 @@
 
 namespace ForgottenEngine {
 
-	enum class FileSystemAction {
-		Added,
-		Rename,
-		Modified,
-		Delete
-	};
+	enum class FileSystemAction { Added, Rename, Modified, Delete };
 
 	struct FileSystemChangedEvent {
 		FileSystemAction Action;

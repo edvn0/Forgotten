@@ -1,0 +1,17 @@
+{
+  "cSpell.words": [
+    "Framebuffer",
+    "fullscreen",
+    "Includer",
+    "MSDF",
+    "Serialiser",
+    "Serialisers",
+    "Swapchain",
+    "Wwindow"
+  ],
+  "files.associations": {
+    "*.module": "php",
+    "*.sass": "css",
+    "filesystem": "cpp"
+  }
+}

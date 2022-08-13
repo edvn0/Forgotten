@@ -25,16 +25,17 @@
 
 #ifdef FORGOTTEN_ENABLE_ASSERTS
 
-#define CORE_ASSERT_BOOL(x)                                                                                                 \
-	if (!(x)) {                                                                                                             \
-		::ForgottenEngine::Logger::get_core_logger()->error("Assetion failed at: file: {}, line:, {}", __FILE__, __LINE__); \
-		debug_break();                                                                                                      \
+#define CORE_ASSERT_BOOL(x)                                                                                                                          \
+	if (!(x)) {                                                                                                                                      \
+		::ForgottenEngine::Logger::get_core_logger()->error("Assetion failed at: file: {}, line:, {}", __FILE__, __LINE__);                          \
+		debug_break();                                                                                                                               \
 	}
 
-#define CORE_ASSERT(x, ...)                                                                                                                           \
-	if (!(x)) {                                                                                                                                       \
-		::ForgottenEngine::Logger::get_core_logger()->error("Assetion failed at: file: {}, line:, {}. Message: {}", __FILE__, __LINE__, __VA_ARGS__); \
-		debug_break();                                                                                                                                \
+#define CORE_ASSERT(x, ...)                                                                                                                          \
+	if (!(x)) {                                                                                                                                      \
+		::ForgottenEngine::Logger::get_core_logger()->error(                                                                                         \
+			"Assetion failed at: file: {}, line:, {}. Message: {}", __FILE__, __LINE__, __VA_ARGS__);                                                \
+		debug_break();                                                                                                                               \
 	}
 
 #else
@@ -43,10 +44,10 @@
 
 #ifdef FORGOTTEN_ENABLE_VERIFY
 
-#define CORE_VERIFY_BOOL(x)                                                                                                \
-	if (!(x)) {                                                                                                            \
-		::ForgottenEngine::Logger::get_core_logger()->warn("Assetion failed at: file: {}, line:, {}", __FILE__, __LINE__); \
-		debug_break();                                                                                                     \
+#define CORE_VERIFY_BOOL(x)                                                                                                                          \
+	if (!(x)) {                                                                                                                                      \
+		::ForgottenEngine::Logger::get_core_logger()->warn("Assetion failed at: file: {}, line:, {}", __FILE__, __LINE__);                           \
+		debug_break();                                                                                                                               \
 	}
 
 #define CORE_VERIFY(x, ...)                                                                                                                          \
@@ -65,13 +66,13 @@ namespace ForgottenEngine {
 
 	typedef unsigned char byte;
 
-#define VK_CHECK(x)                              \
-	do {                                         \
-		VkResult err = x;                        \
-		if (err) {                               \
-			CORE_ERROR("Vulkan Error: {}", err); \
-			debug_break();                       \
-		}                                        \
+#define VK_CHECK(x)                                                                                                                                  \
+	do {                                                                                                                                             \
+		VkResult err = x;                                                                                                                            \
+		if (err) {                                                                                                                                   \
+			CORE_ERROR("Vulkan Error: {}", err);                                                                                                     \
+			debug_break();                                                                                                                           \
+		}                                                                                                                                            \
 	} while (0)
 
 }; // namespace ForgottenEngine

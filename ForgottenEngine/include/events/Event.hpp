@@ -52,15 +52,13 @@ namespace ForgottenEngine {
 	};
 
 	class EventDispatcher {
-		template <typename T>
-		using EventFn = std::function<bool(T&)>;
+		template <typename T> using EventFn = std::function<bool(T&)>;
 
 	public:
 		explicit EventDispatcher(Event& event)
 			: event(event) {};
 
-		template <typename T = Event>
-		bool dispatch_event(EventFn<T> func)
+		template <typename T = Event> bool dispatch_event(EventFn<T> func)
 		{
 			if (event.get_event_type() == T::get_static_type()) {
 				event.handled = func(*(T*)&event);

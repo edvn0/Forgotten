@@ -25,8 +25,7 @@ namespace ForgottenEngine {
 		vai.usage = memory_usage;
 
 		// allocate the buffer
-		VK_CHECK(vmaCreateBuffer(
-			allocator, &bufferInfo, &vai, &allocated_buffer.buffer, &allocated_buffer.allocation, nullptr));
+		VK_CHECK(vmaCreateBuffer(allocator, &bufferInfo, &vai, &allocated_buffer.buffer, &allocated_buffer.allocation, nullptr));
 	}
 
 	void VulkanBuffer::destroy() { vmaDestroyBuffer(allocator, allocated_buffer.buffer, allocated_buffer.allocation); }
@@ -35,8 +34,7 @@ namespace ForgottenEngine {
 
 	void VulkanBuffer::set_data(void* data, size_t size)
 	{
-		MemoryMapper::effect_mmap(
-			allocator, allocated_buffer, [&data, &size](void* p) { std::memcpy(p, data, size); });
+		MemoryMapper::effect_mmap(allocator, allocated_buffer, [&data, &size](void* p) { std::memcpy(p, data, size); });
 	}
 
 } // namespace ForgottenEngine

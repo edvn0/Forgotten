@@ -46,10 +46,27 @@ namespace ForgottenEngine {
 		char Padding[3] { 0, 0, 0 };
 	};
 
+	struct SpotLight {
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		float Intensity = 0.0f;
+		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
+		float AngleAttenuation = 0.0f;
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
+		float Range = 0.1f;
+		float Angle = 0.0f;
+		float Falloff = 1.0f;
+		bool SoftShadows = true;
+		char Padding0[3] { 0, 0, 0 };
+		bool CastsShadows = true;
+		char Padding1[3] { 0, 0, 0 };
+	};
+
 	struct LightEnvironment {
 		DirectionalLight DirectionalLights[4];
 		std::vector<PointLight> PointLights;
+		std::vector<SpotLight> SpotLights;
 		[[nodiscard]] uint32_t GetPointLightsSize() const { return (uint32_t)(PointLights.size() * sizeof PointLight); }
+		[[nodiscard]] uint32_t GetSpotLightsSize() const { return (uint32_t)(SpotLights.size() * sizeof SpotLight); }
 	};
 
 	class Entity;
@@ -103,17 +120,16 @@ namespace ForgottenEngine {
 		void ResetTransformsToMesh(Entity entity, bool resetChildren);
 
 		Entity DuplicateEntity(Entity entity);
-		Entity CreatePrefabEntity(Entity entity, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
-		Entity CreatePrefabEntity(Entity entity, Entity parent, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
+		Entity CreatePrefabEntity(
+			Entity entity, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
+		Entity CreatePrefabEntity(Entity entity, Entity parent, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr,
+			const glm::vec3* scale = nullptr);
 
-		Entity Instantiate(Reference<Prefab> prefab, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
+		Entity Instantiate(
+			Reference<Prefab> prefab, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
 		Entity InstantiateMesh(Reference<Mesh> mesh, bool generateColliders);
 
-		template <typename... Components>
-		auto GetAllEntitiesWith()
-		{
-			return registry.view<Components...>();
-		}
+		template <typename... Components> auto GetAllEntitiesWith() { return m_Registry.view<Components...>(); }
 
 		// return entity with id as specified. entity is expected to exist (runtime error if it doesn't)
 		Entity GetEntityWithUUID(UUID id) const;
@@ -134,7 +150,7 @@ namespace ForgottenEngine {
 
 		void CopyTo(Reference<Scene>& target);
 
-		UUID GetUUID() const { return scene_id; }
+		UUID GetUUID() const { return m_SceneID; }
 
 		static Reference<Scene> GetScene(UUID uuid);
 
@@ -162,11 +178,10 @@ namespace ForgottenEngine {
 
 		const EntityMap& GetEntityMap() const { return m_EntityIDMap; }
 
-		template <typename TComponent>
-		void CopyComponentIfExists(entt::entity dst, entt::registry& dstRegistry, entt::entity src)
+		template <typename TComponent> void CopyComponentIfExists(entt::entity dst, entt::registry& dstRegistry, entt::entity src)
 		{
-			if (registry.has<TComponent>(src)) {
-				auto& srcComponent = registry.get<TComponent>(src);
+			if (m_Registry.any_of<TComponent>(src)) {
+				auto& srcComponent = m_Registry.get<TComponent>(src);
 				dstRegistry.emplace_or_replace<TComponent>(dst, srcComponent);
 			}
 		}
@@ -174,7 +189,7 @@ namespace ForgottenEngine {
 		template <typename TComponent>
 		static void CopyComponentFromScene(Entity dst, Reference<Scene> dstScene, Entity src, Reference<Scene> srcScene)
 		{
-			srcScene->CopyComponentIfExists<TComponent>((entt::entity)dst, dstScene->registry, (entt::entity)src);
+			srcScene->CopyComponentIfExists<TComponent>((entt::entity)dst, dstScene->m_Registry, (entt::entity)src);
 		}
 
 	public:
@@ -198,16 +213,12 @@ namespace ForgottenEngine {
 
 		void SortEntities();
 
-		template <typename Fn>
-		void SubmitPostUpdateFunc(Fn&& func)
-		{
-			m_PostUpdateQueue.emplace_back(func);
-		}
+		template <typename Fn> void SubmitPostUpdateFunc(Fn&& func) { m_PostUpdateQueue.emplace_back(func); }
 
 	private:
-		UUID scene_id;
-		entt::entity scene_entity = entt::null;
-		entt::registry registry;
+		UUID m_SceneID;
+		entt::entity m_SceneEntity = entt::null;
+		entt::registry m_Registry;
 
 		std::function<void(const std::string&)> m_OnSceneTransitionCallback;
 		std::function<void(Entity)> m_OnEntityDestroyedCallback;

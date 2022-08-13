@@ -44,9 +44,6 @@ namespace ForgottenEngine {
 		return {};
 	}
 
-	bool Assets::exists(const Path& p)
-	{
-		return std::filesystem::exists(p);
-	}
+	bool Assets::exists(const Path& p) { return std::filesystem::exists(p); }
 
 } // namespace ForgottenEngine

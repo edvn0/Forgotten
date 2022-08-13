@@ -10,6 +10,7 @@ if(WIN32)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
+
 find_package(
   Boost 1.79
   COMPONENTS program_options
@@ -82,29 +83,7 @@ endif()
 target_include_directories(
   ForgottenEngine
   PUBLIC . ${Boost_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS}
-  PRIVATE include
-          src
-          vendor/assimp/include
-          vendor/imgui
-          vendor/yaml-cpp/include
-          vendor/msdf-atlas-gen/msdf-atlas-gen
-          vendor/msdf-atlas-gen/msdfgen
-          /usr/local/include
-          /opt/homebrew/include
-          /opt/homebrew/Cellar
-          vendor/VulkanMemoryAllocator/include
-          vendor/glm
-          vendor/spdlog/include
-          vendor/vk_init
-          vendor/glfw/include
-          vendor/tinyobjloader
-          vendor/stb
-          vendor/spirv-cross
-          vendor/shaderc
-          vendor/shaderc/libshaderc/include
-          vendor/shaderc/libshaderc_util/include
-          vendor/entt/src/entt
-          vendor/entt/single_include)
+  PRIVATE include src ${Forgotten_INCLUDE_DIRS})
 
 target_link_libraries(
   ForgottenEngine
@@ -118,6 +97,7 @@ target_link_libraries(
           spirv-cross-glsl
           spirv-cross-core
           EnTT::EnTT
+          box2d
           Boost::program_options)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

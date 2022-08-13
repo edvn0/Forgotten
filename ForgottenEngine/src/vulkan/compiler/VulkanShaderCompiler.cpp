@@ -27,7 +27,8 @@ namespace ForgottenEngine {
 		static std::filesystem::path get_cache_directory()
 		{
 			// TODO: make sure the assets directory is valid
-			auto cache_dir_local = std::filesystem::path("resources") / std::filesystem::path("shaders") / std::filesystem::path("cache") / std::filesystem::path("vulkan");
+			auto cache_dir_local = std::filesystem::path("resources") / std::filesystem::path("shaders") / std::filesystem::path("cache")
+				/ std::filesystem::path("vulkan");
 
 			return Assets::get_base_directory() / cache_dir_local;
 		}
@@ -101,8 +102,7 @@ namespace ForgottenEngine {
 		shader_source = pre_process(source);
 		const VkShaderStageFlagBits changedStages = VulkanShaderCache::has_changed(this);
 
-		bool compileSucceeded
-			= compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, forceCompile);
+		bool compileSucceeded = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, forceCompile);
 		if (!compileSucceeded) {
 			CORE_ASSERT_BOOL(false);
 			return false;
@@ -136,8 +136,7 @@ namespace ForgottenEngine {
 
 	std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_glsl(const std::string& source)
 	{
-		auto shaderSources
-			= ShaderPreprocessor::PreprocessShader<ShaderUtils::SourceLang::GLSL>(source, acknowledged_macros);
+		auto shaderSources = ShaderPreprocessor::PreprocessShader<ShaderUtils::SourceLang::GLSL>(source, acknowledged_macros);
 
 		static shaderc::Compiler compiler;
 
@@ -163,14 +162,13 @@ namespace ForgottenEngine {
 				const char* file_path;
 				shaderc::CompileOptions options;
 			};
-			PreprocessorOptions preprocessor_options = {
-				.source = shader_source,
+			PreprocessorOptions preprocessor_options = { .source = shader_source,
 				.stage = ShaderUtils::ShaderStageToShaderC(stage),
 				.file_path = shader_source_path.string().c_str(),
-				.options = options
-			};
+				.options = options };
 
-			const auto result = compiler.PreprocessGlsl(preprocessor_options.source, preprocessor_options.stage, preprocessor_options.file_path, preprocessor_options.options);
+			const auto result = compiler.PreprocessGlsl(
+				preprocessor_options.source, preprocessor_options.stage, preprocessor_options.file_path, preprocessor_options.options);
 
 			if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 				CORE_ERROR("Renderer",
@@ -204,12 +202,12 @@ namespace ForgottenEngine {
 				shaderCOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
 
 			// compile shader
-			const shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(stageSource,
-				ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), shaderCOptions);
+			const shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(
+				stageSource, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), shaderCOptions);
 
 			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
-				return fmt::format("\n{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(),
-					shader_source_path.string(), ShaderUtils::ShaderStageToString(stage));
+				return fmt::format("\n{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(), shader_source_path.string(),
+					ShaderUtils::ShaderStageToString(stage));
 
 			outputBinary = std::vector<uint32_t>(module.begin(), module.end());
 			return {}; // Success
@@ -217,8 +215,7 @@ namespace ForgottenEngine {
 		return "Unknown language!";
 	}
 
-	Reference<VulkanShader> VulkanShaderCompiler::compile(
-		const std::filesystem::path& shader_source_path, bool forceCompile, bool disable_optim)
+	Reference<VulkanShader> VulkanShaderCompiler::compile(const std::filesystem::path& shader_source_path, bool forceCompile, bool disable_optim)
 	{
 		auto new_name = shader_source_path.filename().stem().string();
 
@@ -227,8 +224,7 @@ namespace ForgottenEngine {
 		shader->name = new_name;
 		shader->disable_optimisations = disable_optim;
 
-		Reference<VulkanShaderCompiler> compiler
-			= Reference<VulkanShaderCompiler>::create(shader_source_path, disable_optim);
+		Reference<VulkanShaderCompiler> compiler = Reference<VulkanShaderCompiler>::create(shader_source_path, disable_optim);
 		compiler->reload(forceCompile);
 
 		shader->load_and_create_shaders(compiler->get_spirv_data());
@@ -242,8 +238,7 @@ namespace ForgottenEngine {
 
 	bool VulkanShaderCompiler::try_recompile(Reference<VulkanShader> shader)
 	{
-		Reference<VulkanShaderCompiler> compiler
-			= Reference<VulkanShaderCompiler>::create(shader->asset_path, shader->disable_optimisations);
+		Reference<VulkanShaderCompiler> compiler = Reference<VulkanShaderCompiler>::create(shader->asset_path, shader->disable_optimisations);
 		bool compileSucceeded = compiler->reload(true);
 		if (!compileSucceeded)
 			return false;
@@ -260,10 +255,8 @@ namespace ForgottenEngine {
 		return true;
 	}
 
-	bool VulkanShaderCompiler::compile_or_get_vulkan_binaries(
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
-		const VkShaderStageFlagBits changedStages, const bool forceCompile)
+	bool VulkanShaderCompiler::compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
+		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages, const bool forceCompile)
 	{
 		for (auto&& [stage, source] : shader_source) {
 			auto compiled_debug = compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, forceCompile);
@@ -277,8 +270,8 @@ namespace ForgottenEngine {
 		return true;
 	}
 
-	bool VulkanShaderCompiler::compile_or_get_vulkan_binary(VkShaderStageFlagBits stage,
-		std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool forceCompile)
+	bool VulkanShaderCompiler::compile_or_get_vulkan_binary(
+		VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool forceCompile)
 	{
 		const std::filesystem::path cacheDirectory = Utils::get_cache_directory();
 
@@ -306,8 +299,8 @@ namespace ForgottenEngine {
 				if (outputBinary.empty()) {
 					CORE_ERROR("Failed to compile shader and couldn't find a cached version.");
 				} else {
-					CORE_ERROR("Failed to compile {}:{} so a cached version was loaded instead.",
-						shader_source_path.string(), ShaderUtils::ShaderStageToString(stage));
+					CORE_ERROR("Failed to compile {}:{} so a cached version was loaded instead.", shader_source_path.string(),
+						ShaderUtils::ShaderStageToString(stage));
 				}
 				return false;
 			} else // compile success
@@ -334,8 +327,8 @@ namespace ForgottenEngine {
 		reflection_data.push_constant_ranges.clear();
 	}
 
-	void VulkanShaderCompiler::try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory,
-		const std::string& extension, std::vector<uint32_t>& outputBinary) const
+	void VulkanShaderCompiler::try_get_vulkan_cached_binary(
+		const std::filesystem::path& cacheDirectory, const std::string& extension, std::vector<uint32_t>& outputBinary) const
 	{
 		const auto path = cacheDirectory / (shader_source_path.filename().string() + extension);
 		const std::string cachedFilePath = path.string();
@@ -423,8 +416,7 @@ namespace ForgottenEngine {
 		serializer->write_array(reflection_data.push_constant_ranges);
 	}
 
-	void VulkanShaderCompiler::reflect_all_shader_stages(
-		const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
+	void VulkanShaderCompiler::reflect_all_shader_stages(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
 	{
 		clear_reflection_data();
 
@@ -453,10 +445,8 @@ namespace ForgottenEngine {
 				if (descriptorSet >= reflection_data.shader_descriptor_sets.size())
 					reflection_data.shader_descriptor_sets.resize(descriptorSet + 1);
 
-				ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
-					= reflection_data.shader_descriptor_sets[descriptorSet];
-				if (compiler_uniform_buffers[descriptorSet].find(binding)
-					== compiler_uniform_buffers[descriptorSet].end()) {
+				ShaderResource::ShaderDescriptorSet& shaderDescriptorSet = reflection_data.shader_descriptor_sets[descriptorSet];
+				if (compiler_uniform_buffers[descriptorSet].find(binding) == compiler_uniform_buffers[descriptorSet].end()) {
 					ShaderResource::UniformBuffer uniformBuffer;
 					uniformBuffer.BindingPoint = binding;
 					uniformBuffer.Size = size;
@@ -464,8 +454,7 @@ namespace ForgottenEngine {
 					uniformBuffer.ShaderStage = VK_SHADER_STAGE_ALL;
 					compiler_uniform_buffers.at(descriptorSet)[binding] = uniformBuffer;
 				} else {
-					ShaderResource::UniformBuffer& uniformBuffer
-						= compiler_uniform_buffers.at(descriptorSet).at(binding);
+					ShaderResource::UniformBuffer& uniformBuffer = compiler_uniform_buffers.at(descriptorSet).at(binding);
 					if (size > uniformBuffer.Size)
 						uniformBuffer.Size = size;
 				}
@@ -487,10 +476,8 @@ namespace ForgottenEngine {
 				if (descriptorSet >= reflection_data.shader_descriptor_sets.size())
 					reflection_data.shader_descriptor_sets.resize(descriptorSet + 1);
 
-				ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
-					= reflection_data.shader_descriptor_sets[descriptorSet];
-				if (compiler_storage_buffers[descriptorSet].find(binding)
-					== compiler_storage_buffers[descriptorSet].end()) {
+				ShaderResource::ShaderDescriptorSet& shaderDescriptorSet = reflection_data.shader_descriptor_sets[descriptorSet];
+				if (compiler_storage_buffers[descriptorSet].find(binding) == compiler_storage_buffers[descriptorSet].end()) {
 					ShaderResource::StorageBuffer storageBuffer;
 					storageBuffer.BindingPoint = binding;
 					storageBuffer.Size = size;
@@ -498,8 +485,7 @@ namespace ForgottenEngine {
 					storageBuffer.ShaderStage = VK_SHADER_STAGE_ALL;
 					compiler_storage_buffers.at(descriptorSet)[binding] = storageBuffer;
 				} else {
-					ShaderResource::StorageBuffer& storageBuffer
-						= compiler_storage_buffers.at(descriptorSet).at(binding);
+					ShaderResource::StorageBuffer& storageBuffer = compiler_storage_buffers.at(descriptorSet).at(binding);
 					if (size > storageBuffer.Size)
 						storageBuffer.Size = size;
 				}
@@ -515,8 +501,7 @@ namespace ForgottenEngine {
 			uint32_t memberCount = uint32_t(bufferType.member_types.size());
 			uint32_t bufferOffset = 0;
 			if (!reflection_data.push_constant_ranges.empty())
-				bufferOffset = reflection_data.push_constant_ranges.back().Offset
-					+ reflection_data.push_constant_ranges.back().Size;
+				bufferOffset = reflection_data.push_constant_ranges.back().Offset + reflection_data.push_constant_ranges.back().Size;
 
 			auto& pushConstantRange = reflection_data.push_constant_ranges.emplace_back();
 			pushConstantRange.ShaderStage = shaderStage;
@@ -538,8 +523,7 @@ namespace ForgottenEngine {
 				auto offset = compiler.type_struct_member_offset(bufferType, i) - bufferOffset;
 
 				std::string uniformName = fmt::format("{}.{}", bufferName, memberName);
-				buffer.Uniforms[uniformName]
-					= ShaderUniform(uniformName, Utils::SPIRTypeToShaderUniformType(type), size, offset);
+				buffer.Uniforms[uniformName] = ShaderUniform(uniformName, Utils::SPIRTypeToShaderUniformType(type), size, offset);
 			}
 		}
 
@@ -556,8 +540,7 @@ namespace ForgottenEngine {
 			if (descriptorSet >= reflection_data.shader_descriptor_sets.size())
 				reflection_data.shader_descriptor_sets.resize(descriptorSet + 1);
 
-			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
-				= reflection_data.shader_descriptor_sets[descriptorSet];
+			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet = reflection_data.shader_descriptor_sets[descriptorSet];
 			auto& imageSampler = shaderDescriptorSet.image_samplers[binding];
 			imageSampler.BindingPoint = binding;
 			imageSampler.DescriptorSet = descriptorSet;
@@ -581,8 +564,7 @@ namespace ForgottenEngine {
 			if (descriptorSet >= reflection_data.shader_descriptor_sets.size())
 				reflection_data.shader_descriptor_sets.resize(descriptorSet + 1);
 
-			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
-				= reflection_data.shader_descriptor_sets[descriptorSet];
+			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet = reflection_data.shader_descriptor_sets[descriptorSet];
 			auto& imageSampler = shaderDescriptorSet.separate_textures[binding];
 			imageSampler.BindingPoint = binding;
 			imageSampler.DescriptorSet = descriptorSet;
@@ -605,8 +587,7 @@ namespace ForgottenEngine {
 			if (descriptorSet >= reflection_data.shader_descriptor_sets.size())
 				reflection_data.shader_descriptor_sets.resize(descriptorSet + 1);
 
-			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
-				= reflection_data.shader_descriptor_sets[descriptorSet];
+			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet = reflection_data.shader_descriptor_sets[descriptorSet];
 			auto& imageSampler = shaderDescriptorSet.separate_samplers[binding];
 			imageSampler.BindingPoint = binding;
 			imageSampler.DescriptorSet = descriptorSet;
@@ -629,8 +610,7 @@ namespace ForgottenEngine {
 			if (descriptorSet >= reflection_data.shader_descriptor_sets.size())
 				reflection_data.shader_descriptor_sets.resize(descriptorSet + 1);
 
-			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet
-				= reflection_data.shader_descriptor_sets[descriptorSet];
+			ShaderResource::ShaderDescriptorSet& shaderDescriptorSet = reflection_data.shader_descriptor_sets[descriptorSet];
 			auto& imageSampler = shaderDescriptorSet.storage_images[binding];
 			imageSampler.BindingPoint = binding;
 			imageSampler.DescriptorSet = descriptorSet;

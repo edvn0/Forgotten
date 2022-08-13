@@ -27,11 +27,9 @@ namespace ForgottenEngine {
 		void add_layer(std::unique_ptr<Layer> layer);
 		void add_overlay(std::unique_ptr<Layer> overlay);
 
-		template <typename Func>
-		inline void queue_event(Func&& f) { event_queue.push(f); }
+		template <typename Func> inline void queue_event(Func&& f) { event_queue.push(f); }
 
-		template <typename TEvent, bool DispatchImmediately = false, typename... TEventArgs>
-		inline void dispatch_event(TEventArgs&&... args)
+		template <typename TEvent, bool DispatchImmediately = false, typename... TEventArgs> inline void dispatch_event(TEventArgs&&... args)
 		{
 			static_assert(std::is_assignable_v<Event, TEvent>);
 

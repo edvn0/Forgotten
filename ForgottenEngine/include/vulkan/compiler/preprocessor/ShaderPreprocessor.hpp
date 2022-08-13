@@ -15,8 +15,7 @@ enum VkShaderStageFlagBits;
 namespace ForgottenEngine {
 
 	namespace PreprocessUtils {
-		template <bool RemoveHeaderGuard = false>
-		bool ContainsHeaderGuard(std::string& header)
+		template <bool RemoveHeaderGuard = false> bool ContainsHeaderGuard(std::string& header)
 		{
 			size_t pos = header.find('#');
 			while (pos != std::string::npos) {
@@ -37,14 +36,9 @@ namespace ForgottenEngine {
 		}
 
 		// From https://wandbox.org/permlink/iXC7DWaU8Tk8jrf3 and is modified.
-		enum class State : char { SlashOC,
-			StarIC,
-			SingleLineComment,
-			MultiLineComment,
-			NotAComment };
+		enum class State : char { SlashOC, StarIC, SingleLineComment, MultiLineComment, NotAComment };
 
-		template <typename InputIt, typename OutputIt>
-		void CopyWithoutComments(InputIt first, InputIt last, OutputIt out)
+		template <typename InputIt, typename OutputIt> void CopyWithoutComments(InputIt first, InputIt last, OutputIt out)
 		{
 			State state = State::NotAComment;
 
@@ -115,8 +109,7 @@ namespace ForgottenEngine {
 } // namespace ForgottenEngine
 
 namespace std {
-	template <>
-	struct hash<ForgottenEngine::IncludeData> {
+	template <> struct hash<ForgottenEngine::IncludeData> {
 		size_t operator()(const ForgottenEngine::IncludeData& data) const noexcept
 		{
 			return std::filesystem::hash_value(data.IncludedFilePath) ^ data.HashValue;
@@ -128,9 +121,8 @@ namespace ForgottenEngine {
 	class ShaderPreprocessor {
 	public:
 		template <ShaderUtils::SourceLang Lang>
-		static VkShaderStageFlagBits PreprocessHeader(std::string& contents, bool& isGuarded,
-			std::unordered_set<std::string>& specialMacros, const std::unordered_set<IncludeData>& includeData,
-			const std::filesystem::path& fullPath);
+		static VkShaderStageFlagBits PreprocessHeader(std::string& contents, bool& isGuarded, std::unordered_set<std::string>& specialMacros,
+			const std::unordered_set<IncludeData>& includeData, const std::filesystem::path& fullPath);
 
 		template <ShaderUtils::SourceLang Lang>
 		static std::map<VkShaderStageFlagBits, std::string> PreprocessShader(
@@ -138,13 +130,11 @@ namespace ForgottenEngine {
 	};
 
 	template <ShaderUtils::SourceLang Lang>
-	VkShaderStageFlagBits ShaderPreprocessor::PreprocessHeader(std::string& contents, bool& isGuarded,
-		std::unordered_set<std::string>& specialMacros, const std::unordered_set<IncludeData>& includeData,
-		const std::filesystem::path& fullPath)
+	VkShaderStageFlagBits ShaderPreprocessor::PreprocessHeader(std::string& contents, bool& isGuarded, std::unordered_set<std::string>& specialMacros,
+		const std::unordered_set<IncludeData>& includeData, const std::filesystem::path& fullPath)
 	{
 		std::stringstream sourceStream;
-		PreprocessUtils::CopyWithoutComments(
-			contents.begin(), contents.end(), std::ostream_iterator<char>(sourceStream));
+		PreprocessUtils::CopyWithoutComments(contents.begin(), contents.end(), std::ostream_iterator<char>(sourceStream));
 		contents = sourceStream.str();
 
 		VkShaderStageFlagBits stagesInHeader = {};
@@ -158,8 +148,7 @@ namespace ForgottenEngine {
 		while (startOfShaderStage != std::string::npos) {
 			const size_t endOfLine = contents.find_first_of("\r\n", startOfShaderStage) + 1;
 			// Parse stage. example: #pragma stage:vert
-			auto tokens = StringUtils::split_string_keep_delims(
-				contents.substr(startOfShaderStage, endOfLine - startOfShaderStage));
+			auto tokens = StringUtils::split_string_keep_delims(contents.substr(startOfShaderStage, endOfLine - startOfShaderStage));
 
 			uint32_t index = 0;
 			// Pre-processor directives
@@ -174,15 +163,14 @@ namespace ForgottenEngine {
 
 						// Skipped ':'
 						const std::string_view stage(tokens[++index]);
-						CORE_VERIFY(
-							stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
+						CORE_VERIFY(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
 						VkShaderStageFlagBits foundStage = ShaderUtils::StageToVKShaderStage(stage);
 
-						const bool alreadyIncluded = std::find_if(includeData.begin(), includeData.end(),
-														 [fullPath, foundStage](const IncludeData& data) {
-															 return data.IncludedFilePath == fullPath.string()
-																 && !bool(foundStage & data.IncludedStage);
-														 })
+						const bool alreadyIncluded
+							= std::find_if(includeData.begin(), includeData.end(),
+								  [fullPath, foundStage](const IncludeData& data) {
+									  return data.IncludedFilePath == fullPath.string() && !bool(foundStage & data.IncludedStage);
+								  })
 							!= includeData.end();
 
 						if (isGuarded && alreadyIncluded)
@@ -225,10 +213,9 @@ namespace ForgottenEngine {
 		if (stageCount)
 			contents.append("\n#endif");
 		else {
-			const bool alreadyIncluded
-				= std::find_if(includeData.begin(), includeData.end(),
-					  [fullPath](const IncludeData& data) { return data.IncludedFilePath == fullPath; })
-				!= includeData.end();
+			const bool alreadyIncluded = std::find_if(includeData.begin(), includeData.end(), [fullPath](const IncludeData& data) {
+				return data.IncludedFilePath == fullPath;
+			}) != includeData.end();
 			if (isGuarded && alreadyIncluded)
 				contents.clear();
 			else if (!isGuarded && alreadyIncluded)
@@ -256,18 +243,15 @@ namespace ForgottenEngine {
 		// Check first #version
 		if constexpr (Lang == ShaderUtils::SourceLang::GLSL) {
 			const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
-			const std::vector<std::string> tokens
-				= StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
-			CORE_VERIFY(tokens.size() >= 3 && tokens[1] == "version",
-				"Invalid #version encountered or #version is NOT encounted first.");
+			const std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
+			CORE_VERIFY(tokens.size() >= 3 && tokens[1] == "version", "Invalid #version encountered or #version is NOT encounted first.");
 			pos = newSource.find('#', pos + 1);
 		}
 
 		while (pos != std::string::npos) {
 
 			const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
-			std::vector<std::string> tokens
-				= StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
+			std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
 
 			size_t index = 1; // Skip #
 
@@ -281,8 +265,7 @@ namespace ForgottenEngine {
 					++index;
 
 					const std::string_view stage = tokens[index];
-					CORE_VERIFY(
-						stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
+					CORE_VERIFY(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
 					auto shaderStage = ShaderUtils::ShaderTypeFromString(stage);
 
 					stagePositions.emplace_back(shaderStage, startOfStage);

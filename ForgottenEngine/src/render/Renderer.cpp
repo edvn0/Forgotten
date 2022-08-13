@@ -10,6 +10,7 @@
 #include "render/RenderCommandQueue.hpp"
 #include "render/RenderPass.hpp"
 #include "render/RendererAPI.hpp"
+#include "render/SceneEnvironment.hpp"
 #include "render/Shader.hpp"
 #include "render/StorageBufferSet.hpp"
 #include "render/Texture.hpp"
@@ -19,12 +20,8 @@
 #include "vulkan/VulkanSwapchain.hpp"
 
 namespace std {
-	template <>
-	struct hash<ForgottenEngine::WeakReference<ForgottenEngine::Shader>> {
-		size_t operator()(const ForgottenEngine::WeakReference<ForgottenEngine::Shader>& shader) const noexcept
-		{
-			return shader->get_hash();
-		}
+	template <> struct hash<ForgottenEngine::WeakReference<ForgottenEngine::Shader>> {
+		size_t operator()(const ForgottenEngine::WeakReference<ForgottenEngine::Shader>& shader) const noexcept { return shader->get_hash(); }
 	};
 } // namespace std
 
@@ -41,6 +38,11 @@ namespace ForgottenEngine {
 		size_t* temp { nullptr };
 		Reference<ShaderLibrary> shader_library;
 		Reference<Texture2D> white_texture;
+		Reference<Texture2D> black_texture;
+		Reference<Texture2D> brdf_lut;
+		Reference<Texture2D> hilbert_lut;
+		Reference<SceneEnvironment> empty_env;
+		Reference<TextureCube> black_cube;
 		std::unordered_map<std::string, std::string> global_shader_macros;
 	};
 
@@ -103,7 +105,59 @@ namespace ForgottenEngine {
 		// Compile shaders
 		Renderer::compile_shaders();
 
-		//		ShaderPack::create_from_library(Renderer::get_shader_library(), "shader_pack.fgsp");
+		uint32_t white_data = 0xffffffff;
+		renderer_data->white_texture = Texture2D::create(ImageFormat::RGBA, 1, 1, &white_data);
+
+		constexpr uint32_t black_data = 0xff000000;
+		renderer_data->black_texture = Texture2D::create(ImageFormat::RGBA, 1, 1, &black_data);
+
+		{
+			TextureProperties props;
+			props.SamplerWrap = TextureWrap::Clamp;
+			renderer_data->brdf_lut = Texture2D::create(Assets::slashed_string_to_filepath("resources/renderer/brdf_lut.tga").string(), props);
+		}
+		constexpr uint32_t black_cube_data[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
+		renderer_data->black_cube = TextureCube::create(ImageFormat::RGBA, 1, 1, &black_cube_data);
+		renderer_data->empty_env = Reference<SceneEnvironment>::create(renderer_data->black_cube, renderer_data->black_texture);
+
+		// Hilbert look-up texture! It's a 64 x 64 uint16 texture
+		{
+			TextureProperties props;
+			props.SamplerWrap = TextureWrap::Clamp;
+			props.SamplerFilter = TextureFilter::Nearest;
+
+			constexpr auto HilbertIndex = [](uint32_t posX, uint32_t posY) {
+				uint16_t index = 0u;
+				for (uint16_t curLevel = 64 / 2u; curLevel > 0u; curLevel /= 2u) {
+					const uint16_t regionX = (posX & curLevel) > 0u;
+					const uint16_t regionY = (posY & curLevel) > 0u;
+					index += curLevel * curLevel * ((3u * regionX) ^ regionY);
+					if (regionY == 0u) {
+						if (regionX == 1u) {
+							posX = uint16_t((64 - 1u)) - posX;
+							posY = uint16_t((64 - 1u)) - posY;
+						}
+
+						std::swap(posX, posY);
+					}
+				}
+				return index;
+			};
+
+			uint16_t* data = new uint16_t[(size_t)(64 * 64)];
+			for (int x = 0; x < 64; x++) {
+				for (int y = 0; y < 64; y++) {
+					const uint16_t r2index = HilbertIndex(x, y);
+					CORE_ASSERT_BOOL(r2index < 65536);
+					data[x + 64 * y] = r2index;
+				}
+			}
+			renderer_data->hilbert_lut = Texture2D::create(ImageFormat::RED16UI, 64, 64, data, props);
+			delete[] data;
+		}
+
+		if (!config.shader_pack_path.empty())
+			ShaderPack::create_from_library(Renderer::get_shader_library(), "shader_pack.fgsp");
 
 		Renderer::wait_and_render();
 
@@ -130,40 +184,33 @@ namespace ForgottenEngine {
 
 	void Renderer::begin_frame() { renderer_api->begin_frame(); }
 
-	void Renderer::begin_render_pass(
-		const Reference<RenderCommandBuffer>& command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
+	void Renderer::begin_render_pass(const Reference<RenderCommandBuffer>& command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
 	{
 		CORE_ASSERT(render_pass, "Render pass cannot be null!");
 
 		renderer_api->begin_render_pass(command_buffer, render_pass, explicit_clear);
 	}
 
-	void Renderer::end_render_pass(const Reference<RenderCommandBuffer>& command_buffer)
-	{
-		renderer_api->end_render_pass(command_buffer);
-	}
+	void Renderer::end_render_pass(const Reference<RenderCommandBuffer>& command_buffer) { renderer_api->end_render_pass(command_buffer); }
 
 	void Renderer::end_frame() { renderer_api->end_frame(); }
 
 	// Submits
-	void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer,
-		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& ubs,
-		const Reference<StorageBufferSet>& sbs, const Reference<Material>& material, const Reference<VertexBuffer>& vb,
-		const Reference<IndexBuffer>& ib, const glm::mat4& transform, uint32_t index_count)
+	void Renderer::render_geometry(const Reference<RenderCommandBuffer>& cmd_buffer, const Reference<Pipeline>& pipeline,
+		const Reference<UniformBufferSet>& ubs, const Reference<StorageBufferSet>& sbs, const Reference<Material>& material,
+		const Reference<VertexBuffer>& vb, const Reference<IndexBuffer>& ib, const glm::mat4& transform, uint32_t index_count)
 	{
 		return renderer_api->render_geometry(cmd_buffer, pipeline, ubs, sbs, material, vb, ib, transform, index_count);
 	}
 
-	void Renderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
-		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
-		const Reference<Material>& material)
+	void Renderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,
+		const Reference<UniformBufferSet>& uniformBufferSet, const Reference<Material>& material)
 	{
 		return renderer_api->submit_fullscreen_quad(command_buffer, pipeline, uniformBufferSet, material);
 	}
 
-	void Renderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
-		const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
-		const Reference<StorageBufferSet>& sb, const Reference<Material>& material)
+	void Renderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,
+		const Reference<UniformBufferSet>& uniformBufferSet, const Reference<StorageBufferSet>& sb, const Reference<Material>& material)
 	{
 		return renderer_api->submit_fullscreen_quad(command_buffer, pipeline, uniformBufferSet, sb, material);
 	}
@@ -199,8 +246,7 @@ namespace ForgottenEngine {
 		}
 	}
 
-	void Renderer::acknowledge_parsed_global_macros(
-		const std::unordered_set<std::string>& macros, Reference<Shader> shader)
+	void Renderer::acknowledge_parsed_global_macros(const std::unordered_set<std::string>& macros, Reference<Shader> shader)
 	{
 		for (const std::string& macro : macros) {
 			global_shaders.shader_global_macros_map[macro][shader->get_hash()] = shader;
@@ -227,8 +273,7 @@ namespace ForgottenEngine {
 			return;
 		}
 
-		CORE_ASSERT(
-			global_shaders.shader_global_macros_map.find(name) != global_shaders.shader_global_macros_map.end(),
+		CORE_ASSERT(global_shaders.shader_global_macros_map.find(name) != global_shaders.shader_global_macros_map.end(),
 			"Macro has not been passed from any shader!");
 		for (auto& [hash, shader] : global_shaders.shader_global_macros_map.at(name)) {
 			CORE_ASSERT(shader.is_valid(), "Shader is deleted!");
@@ -248,10 +293,7 @@ namespace ForgottenEngine {
 		return updated_any_shader;
 	}
 
-	const std::unordered_map<std::string, std::string>& Renderer::get_global_shader_macros()
-	{
-		return renderer_data->global_shader_macros;
-	}
+	const std::unordered_map<std::string, std::string>& Renderer::get_global_shader_macros() { return renderer_data->global_shader_macros; }
 	// end Registrations
 
 	RenderCommandQueue& Renderer::get_render_resource_free_queue(uint32_t index) { return resource_free_queue[index]; }
@@ -264,11 +306,16 @@ namespace ForgottenEngine {
 
 	Reference<ShaderLibrary> Renderer::get_shader_library() { return renderer_data->shader_library; }
 
-	uint32_t Renderer::get_current_frame_index()
-	{
-		return Application::the().get_window().get_swapchain().get_current_buffer_index();
-	}
+	uint32_t Renderer::get_current_frame_index() { return Application::the().get_window().get_swapchain().get_current_buffer_index(); }
 
 	Reference<Texture2D> Renderer::get_white_texture() { return renderer_data->white_texture; }
+
+	Reference<Texture2D> Renderer::get_black_texture() { return renderer_data->black_texture; }
+
+	Reference<Texture2D> Renderer::get_brdf_lut() { return renderer_data->brdf_lut; }
+
+	Reference<TextureCube> Renderer::get_black_cube() { return renderer_data->black_cube; }
+
+	Reference<Texture2D> Renderer::get_hilbert_lut() { return renderer_data->hilbert_lut; }
 
 } // namespace ForgottenEngine

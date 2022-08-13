@@ -6,9 +6,7 @@
 
 namespace ForgottenEngine {
 
-	enum class AssetFlag : uint16_t { None = 0,
-		Missing = BIT(0),
-		Invalid = BIT(1) };
+	enum class AssetFlag : uint16_t { None = 0, Missing = BIT(0), Invalid = BIT(1) };
 
 	enum class AssetType : uint16_t {
 		None = 0,

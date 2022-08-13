@@ -9,8 +9,7 @@
 
 namespace YAML {
 
-	template <>
-	struct convert<glm::vec2> {
+	template <> struct convert<glm::vec2> {
 		static Node encode(const glm::vec2& rhs)
 		{
 			Node node;
@@ -30,8 +29,7 @@ namespace YAML {
 		}
 	};
 
-	template <>
-	struct convert<glm::vec3> {
+	template <> struct convert<glm::vec3> {
 		static Node encode(const glm::vec3& rhs)
 		{
 			Node node;
@@ -53,8 +51,7 @@ namespace YAML {
 		}
 	};
 
-	template <>
-	struct convert<glm::vec4> {
+	template <> struct convert<glm::vec4> {
 		static Node encode(const glm::vec4& rhs)
 		{
 			Node node;
@@ -78,8 +75,7 @@ namespace YAML {
 		}
 	};
 
-	template <>
-	struct convert<glm::quat> {
+	template <> struct convert<glm::quat> {
 		static Node encode(const glm::quat& rhs)
 		{
 			Node node;
@@ -103,8 +99,7 @@ namespace YAML {
 		}
 	};
 
-	template <>
-	struct convert<ForgottenEngine::AssetHandle> {
+	template <> struct convert<ForgottenEngine::AssetHandle> {
 		static Node encode(const ForgottenEngine::AssetHandle& rhs)
 		{
 			Node node;

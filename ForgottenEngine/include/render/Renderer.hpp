@@ -1,25 +1,15 @@
 #pragma once
 
 #include "ApplicationProperties.hpp"
+#include "Forward.hpp"
 #include "Reference.hpp"
 #include "render/RenderCommandQueue.hpp"
 #include "render/Shader.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
 
-namespace ForgottenEngine {
+#include <glm/glm.hpp>
 
-	class RendererContext;
-	class ShaderLibrary;
-	class Pipeline;
-	class ComputePipeline;
-	class UniformBufferSet;
-	class StorageBufferSet;
-	class Material;
-	class VertexBuffer;
-	class IndexBuffer;
-	class Texture2D;
-	class RenderPass;
-	class Shader;
+namespace ForgottenEngine {
 
 	class Renderer {
 	public:
@@ -41,25 +31,23 @@ namespace ForgottenEngine {
 
 		static void begin_frame();
 
-		static void begin_render_pass(const Reference<RenderCommandBuffer>& command_buffer,
-			Reference<RenderPass> render_pass, bool explicit_clean);
+		static void begin_render_pass(const Reference<RenderCommandBuffer>& command_buffer, Reference<RenderPass> render_pass, bool explicit_clean);
 		static void end_render_pass(const Reference<RenderCommandBuffer>& command_buffer);
 		static void end_frame();
 
 		// Submits
-		static void render_geometry(const Reference<RenderCommandBuffer>&, const Reference<Pipeline>&,
-			const Reference<UniformBufferSet>&, const Reference<StorageBufferSet>&, const Reference<Material>&,
-			const Reference<VertexBuffer>&, const Reference<IndexBuffer>&, const glm::mat4& transform,
-			uint32_t index_count);
+		static void render_geometry(const Reference<RenderCommandBuffer>&, const Reference<Pipeline>&, const Reference<UniformBufferSet>&,
+			const Reference<StorageBufferSet>&, const Reference<Material>&, const Reference<VertexBuffer>&, const Reference<IndexBuffer>&,
+			const glm::mat4& transform, uint32_t index_count);
 
-		static void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
-			const Reference<Pipeline>& pipeline, const Reference<UniformBufferSet>& uniformBufferSet,
-			const Reference<Material>& material);
+		static void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,
+			const Reference<UniformBufferSet>& uniformBufferSet, const Reference<Material>& material);
 
-		void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer,
-			const Reference<Pipeline>& pipeline_in, const Reference<UniformBufferSet>& ub,
-			const Reference<StorageBufferSet>& sb, const Reference<Material>& material);
-		// end submits
+		static void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline_in,
+			const Reference<UniformBufferSet>& ub, const Reference<StorageBufferSet>& sb, const Reference<Material>& material);
+
+		static void set_scene_environment(
+			const Reference<SceneRenderer>&, const Reference<SceneEnvironment>&, const Reference<Image2D>&, const Reference<Image2D>&);
 
 		// Registrations
 		static void register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline);
@@ -72,11 +60,9 @@ namespace ForgottenEngine {
 
 		static const std::unordered_map<std::string, std::string>& get_global_shader_macros();
 
-		static void acknowledge_parsed_global_macros(
-			const std::unordered_set<std::string>& macros, Reference<Shader> shader);
+		static void acknowledge_parsed_global_macros(const std::unordered_set<std::string>& macros, Reference<Shader> shader);
 
-		static void set_macro_in_shader(
-			Reference<Shader> shader, const std::string& name, const std::string& value = "");
+		static void set_macro_in_shader(Reference<Shader> shader, const std::string& name, const std::string& value = "");
 
 		static void set_global_macro_in_shaders(const std::string& name, const std::string& value = "");
 
@@ -84,14 +70,23 @@ namespace ForgottenEngine {
 		// end shaders and macros
 
 		static Reference<Texture2D> get_white_texture();
+		static Reference<Texture2D> get_black_texture();
+		static Reference<Texture2D> get_hilbert_lut();
+		static Reference<Texture2D> get_brdf_lut();
+		static Reference<TextureCube> get_black_cube();
 
 		static RendererConfig& get_config();
 
 		static Reference<ShaderLibrary> get_shader_library();
 
+		static void RT_BeginGPUPerfMarker(
+			Reference<RenderCommandBuffer> renderCommandBuffer, const std::string& label, const glm::vec4& markerColor = {});
+		static void RT_InsertGPUPerfMarker(
+			Reference<RenderCommandBuffer> renderCommandBuffer, const std::string& label, const glm::vec4& markerColor = {});
+		static void RT_EndGPUPerfMarker(Reference<RenderCommandBuffer> renderCommandBuffer);
+
 	public:
-		template <typename SubmittedFunction>
-		static void submit(SubmittedFunction&& func)
+		template <typename SubmittedFunction> static void submit(SubmittedFunction&& func)
 		{
 			auto render_command = [](void* ptr) {
 				auto function_pointer = (SubmittedFunction*)ptr;
@@ -107,8 +102,7 @@ namespace ForgottenEngine {
 			new (storage_buffer) SubmittedFunction(std::forward<SubmittedFunction>(func));
 		}
 
-		template <typename SubmittedFunction>
-		static void submit_resource_free(SubmittedFunction&& func)
+		template <typename SubmittedFunction> static void submit_resource_free(SubmittedFunction&& func)
 		{
 			auto render_command = [](void* ptr) {
 				auto function_pointer = (SubmittedFunction*)ptr;

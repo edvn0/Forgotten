@@ -1,8 +1,16 @@
 #pragma once
 
+#include "UUID.hpp"
+#include "maths/Mathematics.hpp"
+#include "render/MaterialAsset.hpp"
+#include "render/Mesh.hpp"
+#include "render/SceneEnvironment.hpp"
+#include "render/Texture.hpp"
+#include "scene/SceneCamera.hpp"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include "Asset.hpp"
-#include "UUID.hpp"
+#include "maths/Mathematics.hpp"
 #include "render/MaterialAsset.hpp"
 #include "render/Mesh.hpp"
 #include "render/SceneEnvironment.hpp"
@@ -56,9 +64,30 @@ namespace ForgottenEngine {
 
 	struct TransformComponent {
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
+	private:
+		// These are private so that you are forced to set them via
+		// SetRotation() or SetRotationEuler()
+		// This avoids situation where one of them gets set and the other is forgotten.
+		//
+		// Why do we need both a quat and Euler angle representation for rotation?
+		// Because Euler suffers from gimbal lock -> rotations should be stored as quaternions.
+		//
+		// BUT: quaternions are confusing, and humans like to work with Euler angles.
+		// We cannot store just the quaternions and translate to/from Euler because the conversion
+		// Euler -> quat -> Euler is not invariant.
+		//
+		// It's also sometimes useful to be able to store rotations > 360 degrees which
+		// quats do not support.
+		//
+		// Accordingly, we store Euler for "editor" stuff that humans work with,
+		// and quats for everything else.  The two are maintained in-sync via the SetRotation()
+		// methods.
+		glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
+		glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
+
+	public:
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent& other) = default;
 		TransformComponent(const glm::vec3& translation)
@@ -68,27 +97,46 @@ namespace ForgottenEngine {
 
 		glm::mat4 GetTransform() const
 		{
-			return glm::translate(glm::mat4(1.0f), Translation)
-				* glm::toMat4(glm::quat(Rotation))
-				* glm::scale(glm::mat4(1.0f), Scale);
+			return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.0f), Scale);
 		}
 
 		void SetTransform(const glm::mat4& transform)
 		{
-			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
+			Maths::decompose_transform(transform, Translation, Rotation, Scale);
+			RotationEuler = glm::eulerAngles(Rotation);
 		}
+
+		glm::vec3 GetRotationEuler() const { return RotationEuler; }
+
+		void SetRotationEuler(const glm::vec3& euler)
+		{
+			RotationEuler = euler;
+			Rotation = glm::quat(RotationEuler);
+		}
+
+		glm::quat GetRotation() const { return Rotation; }
+
+		void SetRotation(const glm::quat& quat)
+		{
+			Rotation = quat;
+			RotationEuler = glm::eulerAngles(Rotation);
+		}
+
+		friend class SceneSerializer;
 	};
 
 	struct MeshComponent {
 		AssetHandle Mesh;
 		uint32_t SubmeshIndex = 0;
 		Reference<ForgottenEngine::MaterialTable> MaterialTable = Reference<ForgottenEngine::MaterialTable>::create();
+		std::vector<UUID> BoneEntityIds; // If mesh is rigged, these are the entities whose transforms will used to "skin" the rig.
 
 		MeshComponent() = default;
 		MeshComponent(const MeshComponent& other)
 			: Mesh(other.Mesh)
 			, SubmeshIndex(other.SubmeshIndex)
 			, MaterialTable(Reference<ForgottenEngine::MaterialTable>::create(other.MaterialTable))
+			, BoneEntityIds(other.BoneEntityIds)
 		{
 		}
 		MeshComponent(AssetHandle mesh, uint32_t submeshIndex = 0)
@@ -110,6 +158,21 @@ namespace ForgottenEngine {
 		}
 		StaticMeshComponent(AssetHandle staticMesh)
 			: StaticMesh(staticMesh)
+		{
+		}
+	};
+
+	struct ScriptComponent {
+		AssetHandle ScriptClassHandle = 0;
+		std::vector<uint32_t> FieldIDs;
+
+		// NOTE(Peter): Get's set to true when OnCreate has been called for this entity
+		bool IsRuntimeInitialized = false;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent& other) = default;
+		ScriptComponent(AssetHandle scriptClassHandle)
+			: ScriptClassHandle(scriptClassHandle)
 		{
 		}
 	};
@@ -152,10 +215,7 @@ namespace ForgottenEngine {
 	};
 
 	struct RigidBody2DComponent {
-		enum class Type { None = -1,
-			Static,
-			Dynamic,
-			Kinematic };
+		enum class Type { None = -1, Static, Dynamic, Kinematic };
 		Type BodyType;
 		bool FixedRotation = false;
 		float Mass = 1.0f;
@@ -199,9 +259,7 @@ namespace ForgottenEngine {
 	};
 
 	struct RigidBodyComponent {
-		enum class Type { None = -1,
-			Static,
-			Dynamic };
+		enum class Type { None = -1, Static, Dynamic };
 
 		Type BodyType = Type::Static;
 		uint32_t LayerID = 0;
@@ -211,8 +269,6 @@ namespace ForgottenEngine {
 		float AngularDrag = 0.05f;
 		bool DisableGravity = false;
 		bool IsKinematic = false;
-		//		CollisionDetectionType CollisionDetection = CollisionDetectionType::Discrete;
-
 		uint8_t LockFlags = 0;
 
 		RigidBodyComponent() = default;
@@ -278,7 +334,6 @@ namespace ForgottenEngine {
 		bool IsTrigger = false;
 		bool UseSharedShape = false;
 		AssetHandle OverrideMaterial = 0;
-		// ECollisionComplexity CollisionComplexity = ECollisionComplexity::Default;
 
 		MeshColliderComponent() = default;
 		MeshColliderComponent(const MeshColliderComponent& other) = default;
@@ -289,12 +344,7 @@ namespace ForgottenEngine {
 		}
 	};
 
-	enum class LightType {
-		None = 0,
-		Directional = 1,
-		Point = 2,
-		Spot = 3
-	};
+	enum class LightType { None = 0, Directional = 1, Point = 2, Spot = 3 };
 
 	struct DirectionalLightComponent {
 		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
@@ -310,10 +360,21 @@ namespace ForgottenEngine {
 		float Intensity = 1.0f;
 		float LightSize = 0.5f; // For PCSS
 		float MinRadius = 1.f;
-		float Radius = 10.f;
+		float Radius = 10.0f;
 		bool CastsShadows = true;
 		bool SoftShadows = true;
-		float Falloff = 1.f;
+		float Falloff = 1.0f;
+	};
+
+	struct SpotLightComponent {
+		glm::vec3 Radiance { 1.0f };
+		float Intensity = 1.0f;
+		float Range = 10.0f;
+		float Angle = 60.0f;
+		float AngleAttenuation = 5.0f;
+		bool CastsShadows = false;
+		bool SoftShadows = false;
+		float Falloff = 1.0f;
 	};
 
 	struct SkyLightComponent {
