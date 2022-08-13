@@ -20,10 +20,7 @@ namespace ForgottenEngine {
 			return hash;
 		}
 
-		static constexpr uint32_t generate_fnv_hash(std::string_view string)
-		{
-			return generate_fnv_hash(string.data());
-		}
+		static constexpr uint32_t generate_fnv_hash(std::string_view string) { return generate_fnv_hash(string.data()); }
 
 		static uint32_t crc_32(const char* str);
 		static uint32_t crc_32(const std::string& string);

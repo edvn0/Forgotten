@@ -26,10 +26,7 @@ namespace ForgottenEngine {
 		static EventType get_static_type() { return EventType::MouseMoved; };
 		[[nodiscard]] [[nodiscard]] EventType get_event_type() const override { return get_static_type(); };
 		[[nodiscard]] [[nodiscard]] const char* get_name() const override { return "MouseMoved"; };
-		[[nodiscard]] int get_category() const override
-		{
-			return EventCategory::EventCategoryMouse | EventCategory::EventCategoryInput;
-		}
+		[[nodiscard]] int get_category() const override { return EventCategory::EventCategoryMouse | EventCategory::EventCategoryInput; }
 
 	private:
 		float mouse_x, mouse_y;
@@ -56,10 +53,7 @@ namespace ForgottenEngine {
 		static EventType get_static_type() { return EventType::MouseScrolled; };
 		[[nodiscard]] EventType get_event_type() const override { return get_static_type(); };
 		[[nodiscard]] const char* get_name() const override { return "MouseScrolled"; };
-		[[nodiscard]] int get_category() const override
-		{
-			return EventCategory::EventCategoryMouse | EventCategory::EventCategoryInput;
-		}
+		[[nodiscard]] int get_category() const override { return EventCategory::EventCategoryMouse | EventCategory::EventCategoryInput; }
 
 	private:
 		float offset_x, offset_y;
@@ -87,10 +81,7 @@ namespace ForgottenEngine {
 		static EventType get_static_type() { return EventType::MouseButtonPressed; };
 		[[nodiscard]] EventType get_event_type() const override { return get_static_type(); };
 		[[nodiscard]] const char* get_name() const override { return "MouseButtonPressed"; };
-		[[nodiscard]] int get_category() const override
-		{
-			return EventCategory::EventCategoryMouseButton | EventCategory::EventCategoryInput;
-		}
+		[[nodiscard]] int get_category() const override { return EventCategory::EventCategoryMouseButton | EventCategory::EventCategoryInput; }
 
 	private:
 		MouseCode mouse_button;
@@ -119,10 +110,7 @@ namespace ForgottenEngine {
 		static EventType get_static_type() { return EventType::MouseButtonReleased; };
 		[[nodiscard]] EventType get_event_type() const override { return get_static_type(); };
 		[[nodiscard]] const char* get_name() const override { return "MouseButtonReleased"; };
-		[[nodiscard]] int get_category() const override
-		{
-			return EventCategory::EventCategoryMouseButton | EventCategory::EventCategoryInput;
-		}
+		[[nodiscard]] int get_category() const override { return EventCategory::EventCategoryMouseButton | EventCategory::EventCategoryInput; }
 
 	private:
 		MouseCode mouse_button;

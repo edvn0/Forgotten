@@ -21,8 +21,7 @@ namespace ForgottenEngine {
 
 		Reference<Shader> load_shader(std::string_view name);
 
-		static Reference<ShaderPack> create_from_library(
-			Reference<ShaderLibrary> shaderLibrary, const std::filesystem::path& path);
+		static Reference<ShaderPack> create_from_library(Reference<ShaderLibrary> shaderLibrary, const std::filesystem::path& path);
 
 	private:
 		bool loaded = false;

@@ -97,8 +97,7 @@ namespace ForgottenEngine {
 			VkCommandBuffer commandBuffer = this->command_buffers[frameIndex];
 			submitInfo.pCommandBuffers = &commandBuffer;
 
-			VK_CHECK(
-				vkWaitForFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex], VK_TRUE, UINT64_MAX));
+			VK_CHECK(vkWaitForFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex], VK_TRUE, UINT64_MAX));
 			VK_CHECK(vkResetFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex]));
 			VK_CHECK(vkQueueSubmit(device->get_graphics_queue(), 1, &submitInfo, this->wait_fences[frameIndex]));
 		});

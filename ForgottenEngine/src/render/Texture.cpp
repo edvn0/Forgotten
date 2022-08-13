@@ -12,8 +12,7 @@
 
 namespace ForgottenEngine {
 
-	Reference<Texture2D> Texture2D::create(
-		ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+	Reference<Texture2D> Texture2D::create(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
 	{
 		switch (RendererAPI::current()) {
 		case RendererAPIType::None:
@@ -35,8 +34,7 @@ namespace ForgottenEngine {
 		CORE_ASSERT(false, "Unknown RendererAPI");
 	}
 
-	Reference<TextureCube> TextureCube::create(
-		ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+	Reference<TextureCube> TextureCube::create(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
 	{
 		switch (RendererAPI::current()) {
 		case RendererAPIType::None:

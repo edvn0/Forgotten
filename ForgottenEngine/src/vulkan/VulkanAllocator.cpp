@@ -20,8 +20,7 @@ namespace ForgottenEngine {
 
 	VulkanAllocator::~VulkanAllocator() { }
 
-	VmaAllocation VulkanAllocator::allocate_buffer(
-		VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage, VkBuffer& outBuffer)
+	VmaAllocation VulkanAllocator::allocate_buffer(VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage, VkBuffer& outBuffer)
 	{
 		VmaAllocationCreateInfo allocCreateInfo = {};
 		allocCreateInfo.usage = usage;
@@ -39,8 +38,7 @@ namespace ForgottenEngine {
 		return allocation;
 	}
 
-	VmaAllocation VulkanAllocator::allocate_image(
-		VkImageCreateInfo imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage)
+	VmaAllocation VulkanAllocator::allocate_image(VkImageCreateInfo imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage)
 	{
 		VmaAllocationCreateInfo allocCreateInfo = {};
 		allocCreateInfo.usage = usage;

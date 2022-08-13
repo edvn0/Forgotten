@@ -98,8 +98,7 @@ namespace ForgottenEngine {
 				return false;
 			}
 
-			window->get_swapchain().on_resize(
-				static_cast<uint32_t>(e.get_width()), static_cast<uint32_t>(e.get_height()));
+			window->get_swapchain().on_resize(static_cast<uint32_t>(e.get_width()), static_cast<uint32_t>(e.get_height()));
 			return false;
 		});
 

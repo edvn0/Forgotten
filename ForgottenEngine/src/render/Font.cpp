@@ -40,10 +40,7 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		static std::filesystem::path get_cache_directory()
-		{
-			return Assets::slashed_string_to_filepath("resources/fonts/cache/font_atlases");
-		}
+		static std::filesystem::path get_cache_directory() { return Assets::slashed_string_to_filepath("resources/fonts/cache/font_atlases"); }
 
 		static void create_cache_directory_if_needed()
 		{
@@ -92,8 +89,8 @@ namespace ForgottenEngine {
 	}
 
 	template <typename T, typename S, int N, GeneratorFunction<S, N> GEN_FN>
-	static Reference<Texture2D> create_cache_atlas(const std::string& font_name, float font_size,
-		const std::vector<GlyphGeometry>& glyphs, const FontGeometry& fontGeometry, const Configuration& config)
+	static Reference<Texture2D> create_cache_atlas(const std::string& font_name, float font_size, const std::vector<GlyphGeometry>& glyphs,
+		const FontGeometry& fontGeometry, const Configuration& config)
 	{
 		ImmediateAtlasGenerator<S, N, GEN_FN, BitmapAtlasStorage<T, N>> generator(config.width, config.height);
 		generator.setAttributes(config.generator_attributes);
@@ -111,8 +108,7 @@ namespace ForgottenEngine {
 		props.GenerateMips = false;
 		props.SamplerWrap = TextureWrap::Clamp;
 		props.DebugName = "FontAtlas";
-		Reference<Texture2D> texture
-			= Texture2D::create(ImageFormat::RGBA32F, header.Width, header.Height, bitmap.pixels, props);
+		Reference<Texture2D> texture = Texture2D::create(ImageFormat::RGBA32F, header.Width, header.Height, bitmap.pixels, props);
 		return texture;
 	}
 
@@ -122,8 +118,7 @@ namespace ForgottenEngine {
 		props.GenerateMips = false;
 		props.SamplerWrap = TextureWrap::Clamp;
 		props.DebugName = "FontAtlas";
-		Reference<Texture2D> texture
-			= Texture2D::create(ImageFormat::RGBA32F, header.Width, header.Height, pixels, props);
+		Reference<Texture2D> texture = Texture2D::create(ImageFormat::RGBA32F, header.Width, header.Height, pixels, props);
 		return texture;
 	}
 
@@ -146,8 +141,7 @@ namespace ForgottenEngine {
 		config.generator_attributes.scanlinePass = true;
 		double minEmSize = 0;
 		double rangeValue = 2.0;
-		TightAtlasPacker::DimensionsConstraint atlasSizeConstraint
-			= TightAtlasPacker::DimensionsConstraint::MULTIPLE_OF_FOUR_SQUARE;
+		TightAtlasPacker::DimensionsConstraint atlasSizeConstraint = TightAtlasPacker::DimensionsConstraint::MULTIPLE_OF_FOUR_SQUARE;
 		config.angle_threshold = DEFAULT_ANGLE_THRESHOLD;
 		config.miter_limit = DEFAULT_MITER_LIMIT;
 		config.image_type = ImageType::MTSDF;
@@ -275,8 +269,7 @@ namespace ForgottenEngine {
 			if (remaining < 0) {
 				CORE_ASSERT_BOOL(false);
 			} else {
-				CORE_ERROR("Error: Could not fit {0} out of {1} glyphs into the atlas.", remaining,
-					(int)msdf_data->glyphs.size());
+				CORE_ERROR("Error: Could not fit {0} out of {1} glyphs into the atlas.", remaining, (int)msdf_data->glyphs.size());
 				CORE_ASSERT_BOOL(false);
 			}
 		}
@@ -294,8 +287,7 @@ namespace ForgottenEngine {
 			if (config.expensive_colouring) {
 				Workload(
 					[&glyphs = msdf_data->glyphs, &config](int i, int threadNo) -> bool {
-						unsigned long long glyphSeed
-							= (LCG_MULTIPLIER * (config.colouring_seed ^ i) + LCG_INCREMENT) * !!config.colouring_seed;
+						unsigned long long glyphSeed = (LCG_MULTIPLIER * (config.colouring_seed ^ i) + LCG_INCREMENT) * !!config.colouring_seed;
 						glyphs[i].edgeColoring(config.edgeColoring, config.angle_threshold, glyphSeed);
 						return true;
 					},

@@ -16,8 +16,8 @@ namespace ForgottenEngine {
 
 		~GlslIncluder() override;
 
-		shaderc_include_result* GetInclude(const char* requestedPath, shaderc_include_type type,
-			const char* requestingPath, size_t includeDepth) override;
+		shaderc_include_result* GetInclude(
+			const char* requestedPath, shaderc_include_type type, const char* requestingPath, size_t includeDepth) override;
 
 		void ReleaseInclude(shaderc_include_result* data) override;
 

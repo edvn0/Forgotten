@@ -42,10 +42,7 @@ namespace ForgottenEngine {
 
 		const std::string& get_name() const override { return name; }
 
-		const std::unordered_map<std::string, ShaderBuffer>& get_shader_buffers() const override
-		{
-			return reflection_data.constant_buffers;
-		}
+		const std::unordered_map<std::string, ShaderBuffer>& get_shader_buffers() const override { return reflection_data.constant_buffers; }
 
 		const std::unordered_map<std::string, ShaderResourceDeclaration>& get_resources() const override;
 
@@ -54,10 +51,7 @@ namespace ForgottenEngine {
 		void add_shader_reloaded_callback(const ShaderReloadedCallback& callback) override;
 
 		// Vulkan-specific
-		const std::vector<VkPipelineShaderStageCreateInfo>& get_pipeline_shader_stage_create_infos() const
-		{
-			return stage_create_infos;
-		}
+		const std::vector<VkPipelineShaderStageCreateInfo>& get_pipeline_shader_stage_create_infos() const { return stage_create_infos; }
 
 		bool try_read_reflection_data(StreamReader* serializer);
 
@@ -83,17 +77,11 @@ namespace ForgottenEngine {
 			return static_cast<uint32_t>(reflection_data.shader_descriptor_sets[set].uniform_buffers.size());
 		}
 
-		const std::vector<ShaderResource::ShaderDescriptorSet>& get_shader_descriptor_sets() const
-		{
-			return reflection_data.shader_descriptor_sets;
-		}
+		const std::vector<ShaderResource::ShaderDescriptorSet>& get_shader_descriptor_sets() const { return reflection_data.shader_descriptor_sets; }
 
 		bool has_descriptor_set(uint32_t set) const { return type_counts.find(set) != type_counts.end(); }
 
-		const std::vector<ShaderResource::PushConstantRange>& get_push_constant_ranges() const
-		{
-			return reflection_data.push_constant_ranges;
-		}
+		const std::vector<ShaderResource::PushConstantRange>& get_push_constant_ranges() const { return reflection_data.push_constant_ranges; }
 
 		struct ShaderMaterialDescriptorSet {
 			VkDescriptorPool pool = nullptr;

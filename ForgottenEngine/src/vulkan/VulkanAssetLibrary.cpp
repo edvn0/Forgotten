@@ -4,8 +4,7 @@
 
 namespace ForgottenEngine {
 
-	const std::shared_ptr<RenderMaterial>& VulkanAssetLibrary::create_material(
-		VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
+	const std::shared_ptr<RenderMaterial>& VulkanAssetLibrary::create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
 	{
 		RenderMaterial mat;
 		mat.pipeline = pipeline;

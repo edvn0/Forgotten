@@ -57,8 +57,7 @@ namespace ForgottenEngine {
 				info.create_info.size = size;
 			}
 			auto& b = get_buffer();
-			VK_CHECK(vmaCreateBuffer(
-				allocator, &info.create_info, &info.allocation_info, &b.buffer, &b.allocation, nullptr));
+			VK_CHECK(vmaCreateBuffer(allocator, &info.create_info, &info.allocation_info, &b.buffer, &b.allocation, nullptr));
 		};
 	};
 

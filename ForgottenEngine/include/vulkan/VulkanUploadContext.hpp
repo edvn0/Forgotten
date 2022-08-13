@@ -21,8 +21,7 @@ namespace ForgottenEngine {
 
 			// begin the command buffer recording. We will use this command buffer exactly once before resetting, so we
 			// tell vulkan that
-			VkCommandBufferBeginInfo bi
-				= VI::Upload::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+			VkCommandBufferBeginInfo bi = VI::Upload::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 			VK_CHECK(vkBeginCommandBuffer(cmd, &bi));
 
@@ -35,11 +34,9 @@ namespace ForgottenEngine {
 
 			// submit command buffer to the queue and execute it.
 			//  _uploadFence will now block until the graphic commands finish execution
-			VK_CHECK(
-				vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submit, upload_fence));
+			VK_CHECK(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submit, upload_fence));
 
-			vkWaitForFences(
-				VulkanContext::get_current_device()->get_vulkan_device(), 1, &upload_fence, true, 9999999999);
+			vkWaitForFences(VulkanContext::get_current_device()->get_vulkan_device(), 1, &upload_fence, true, 9999999999);
 			vkResetFences(VulkanContext::get_current_device()->get_vulkan_device(), 1, &upload_fence);
 
 			// reset the command buffers inside the command pool

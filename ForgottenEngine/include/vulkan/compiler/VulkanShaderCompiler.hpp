@@ -16,10 +16,7 @@ namespace ForgottenEngine {
 	struct StageData {
 		std::unordered_set<IncludeData> Headers;
 		uint32_t HashValue = 0;
-		bool operator==(const StageData& other) const noexcept
-		{
-			return this->Headers == other.Headers && this->HashValue == other.HashValue;
-		}
+		bool operator==(const StageData& other) const noexcept { return this->Headers == other.Headers && this->HashValue == other.HashValue; }
 		bool operator!=(const StageData& other) const noexcept { return !(*this == other); }
 	};
 
@@ -34,8 +31,8 @@ namespace ForgottenEngine {
 
 		static void clear_uniform_buffers();
 
-		static Reference<VulkanShader> compile(const std::filesystem::path& shader_source_path,
-			bool forceCompile = false, bool disableOptimization = false);
+		static Reference<VulkanShader> compile(
+			const std::filesystem::path& shader_source_path, bool forceCompile = false, bool disableOptimization = false);
 		static bool try_recompile(Reference<VulkanShader> shader);
 
 	private:
@@ -47,22 +44,20 @@ namespace ForgottenEngine {
 			bool Optimize = true;
 		};
 
-		std::string compile(
-			std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
+		std::string compile(std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
 
 		bool compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
-			std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary,
-			const VkShaderStageFlagBits changedStages, const bool forceCompile);
+			std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages, const bool forceCompile);
 
-		bool compile_or_get_vulkan_binary(VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug,
-			VkShaderStageFlagBits changedStages, bool forceCompile);
+		bool compile_or_get_vulkan_binary(
+			VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool forceCompile);
 
 		void clear_reflection_data();
 		void serialize_reflection_data();
 		void serialize_reflection_data(StreamWriter* serializer);
 
-		void try_get_vulkan_cached_binary(const std::filesystem::path& cacheDirectory, const std::string& extension,
-			std::vector<uint32_t>& outputBinary) const;
+		void try_get_vulkan_cached_binary(
+			const std::filesystem::path& cacheDirectory, const std::string& extension, std::vector<uint32_t>& outputBinary) const;
 
 		bool try_read_cached_reflection_data();
 

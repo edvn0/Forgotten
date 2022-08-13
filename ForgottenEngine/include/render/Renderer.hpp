@@ -46,9 +46,6 @@ namespace ForgottenEngine {
 		static void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline_in,
 			const Reference<UniformBufferSet>& ub, const Reference<StorageBufferSet>& sb, const Reference<Material>& material);
 
-		static void set_scene_environment(
-			const Reference<SceneRenderer>&, const Reference<SceneEnvironment>&, const Reference<Image2D>&, const Reference<Image2D>&);
-
 		// Registrations
 		static void register_shader_dependency(const Reference<Shader>& shader, Reference<Pipeline> pipeline);
 		static void register_shader_dependency(const Reference<Shader>& shader, Reference<Material> material);

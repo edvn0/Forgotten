@@ -46,30 +46,24 @@ namespace ForgottenEngine {
 
 		void draw_quad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		void draw_quad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-		void draw_quad(const glm::vec2& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
-		void draw_quad(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
-			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
+		void draw_quad(const glm::vec2& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
+			const glm::vec4& tint_color = glm::vec4(1.0f));
+		void draw_quad(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
+			const glm::vec4& tint_color = glm::vec4(1.0f));
 
 		void draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-		void draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture,
+		void draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
+			const glm::vec4& tint_color = glm::vec4(1.0f));
+
+		void draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+		void draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+		void draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation, const Reference<Texture2D>& texture,
+			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
+		void draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const Reference<Texture2D>& texture,
 			float tiling_factor = 1.0f, const glm::vec4& tint_color = glm::vec4(1.0f));
 
-		void draw_rotated_quad(
-			const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		void draw_rotated_quad(
-			const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		void draw_rotated_quad(const glm::vec2& position, const glm::vec2& size, float rotation,
-			const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
-			const glm::vec4& tint_color = glm::vec4(1.0f));
-		void draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation,
-			const Reference<Texture2D>& texture, float tiling_factor = 1.0f,
-			const glm::vec4& tint_color = glm::vec4(1.0f));
-
-		void draw_rotated_rect(
-			const glm::vec2& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);
-		void draw_rotated_rect(
-			const glm::vec3& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);
+		void draw_rotated_rect(const glm::vec2& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);
+		void draw_rotated_rect(const glm::vec3& position, const glm::vec2& size, float rot_radians, const glm::vec4& color);
 
 		// Thickness is between 0 and 1
 		void draw_circle(const glm::vec3& p0, const glm::vec3& rotation, float radius, const glm::vec4& color);
@@ -82,13 +76,11 @@ namespace ForgottenEngine {
 		void draw_aabb(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 		void draw_aabb(Reference<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 
-		void draw_string(const std::string& string, const glm::vec3& position, float maxWidth,
+		void draw_string(const std::string& string, const glm::vec3& position, float maxWidth, const glm::vec4& color = glm::vec4(1.0f));
+		void draw_string(const std::string& string, const Reference<Font>& font, const glm::vec3& position, float maxWidth,
 			const glm::vec4& color = glm::vec4(1.0f));
-		void draw_string(const std::string& string, const Reference<Font>& font, const glm::vec3& position,
-			float maxWidth, const glm::vec4& color = glm::vec4(1.0f));
-		void draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform,
-			float maxWidth, const glm::vec4& color = glm::vec4(1.0f), float lineHeightOffset = 0.0f,
-			float kerningOffset = 0.0f);
+		void draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform, float maxWidth,
+			const glm::vec4& color = glm::vec4(1.0f), float lineHeightOffset = 0.0f, float kerningOffset = 0.0f);
 
 		void set_line_width(float lineWidth);
 

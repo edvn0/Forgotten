@@ -10,8 +10,7 @@ namespace ForgottenEngine {
 	class VulkanTexture2D : public Texture2D {
 	public:
 		VulkanTexture2D(const std::string& path, TextureProperties properties);
-		VulkanTexture2D(
-			ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
+		VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
 		~VulkanTexture2D() override;
 		void resize(const glm::uvec2& size) override;
 		void resize(uint32_t width, uint32_t height) override;
@@ -25,10 +24,7 @@ namespace ForgottenEngine {
 		bool is_loaded() const override { return image_data; };
 		const std::string& get_path() const override;
 
-		const VkDescriptorImageInfo& get_vulkan_descriptor_info() const
-		{
-			return image.as<VulkanImage2D>()->get_descriptor_info();
-		}
+		const VkDescriptorImageInfo& get_vulkan_descriptor_info() const { return image.as<VulkanImage2D>()->get_descriptor_info(); }
 
 		ImageFormat get_format() const override { return format; }
 		uint32_t get_width() const override { return width; }
@@ -62,8 +58,7 @@ namespace ForgottenEngine {
 
 	class VulkanTextureCube : public TextureCube {
 	public:
-		VulkanTextureCube(
-			ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
+		VulkanTextureCube(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
 		VulkanTextureCube(const std::string& path, TextureProperties properties);
 		void release();
 		~VulkanTextureCube() override;

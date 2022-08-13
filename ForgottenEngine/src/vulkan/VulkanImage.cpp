@@ -10,7 +10,9 @@ namespace ForgottenEngine {
 	VulkanImage2D::VulkanImage2D(const ImageSpecification& specification)
 		: specification(specification)
 	{
-		CORE_VERIFY(specification.Width > 0 && specification.Height > 0, "");
+		CORE_TRACE("{},{}", specification.Width, specification.Height);
+
+		CORE_VERIFY_BOOL(specification.Width > 0 && specification.Height > 0);
 	}
 
 	VulkanImage2D::~VulkanImage2D()
@@ -45,23 +47,22 @@ namespace ForgottenEngine {
 		if (info.image == nullptr)
 			return;
 
-		Renderer::submit_resource_free(
-			[info = this->info, mip_views = per_mip_image_views, layer_views = per_layer_image_views]() mutable {
-				const auto vk_device = VulkanContext::get_current_device()->get_vulkan_device();
-				vkDestroyImageView(vk_device, info.image_view, nullptr);
-				vkDestroySampler(vk_device, info.sampler, nullptr);
+		Renderer::submit_resource_free([info = this->info, mip_views = per_mip_image_views, layer_views = per_layer_image_views]() mutable {
+			const auto vk_device = VulkanContext::get_current_device()->get_vulkan_device();
+			vkDestroyImageView(vk_device, info.image_view, nullptr);
+			vkDestroySampler(vk_device, info.sampler, nullptr);
 
-				for (auto& view : mip_views) {
-					if (view.second)
-						vkDestroyImageView(vk_device, view.second, nullptr);
-				}
-				for (auto& view : layer_views) {
-					if (view)
-						vkDestroyImageView(vk_device, view, nullptr);
-				}
-				VulkanAllocator allocator("VulkanImage2D");
-				allocator.destroy_image(info.image, info.memory_alloc);
-			});
+			for (auto& view : mip_views) {
+				if (view.second)
+					vkDestroyImageView(vk_device, view.second, nullptr);
+			}
+			for (auto& view : layer_views) {
+				if (view)
+					vkDestroyImageView(vk_device, view, nullptr);
+			}
+			VulkanAllocator allocator("VulkanImage2D");
+			allocator.destroy_image(info.image, info.memory_alloc);
+		});
 		info.image = nullptr;
 		info.image_view = nullptr;
 		info.sampler = nullptr;
@@ -93,15 +94,13 @@ namespace ForgottenEngine {
 			usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
 
-		VkImageAspectFlags aspectMask
-			= Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		if (specification.Format == ImageFormat::DEPTH24STENCIL8)
 			aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
 		VkFormat vulkanFormat = Utils::VulkanImageFormat(specification.Format);
 
-		VmaMemoryUsage memoryUsage
-			= specification.Usage == ImageUsage::HostRead ? VMA_MEMORY_USAGE_GPU_TO_CPU : VMA_MEMORY_USAGE_GPU_ONLY;
+		VmaMemoryUsage memoryUsage = specification.Usage == ImageUsage::HostRead ? VMA_MEMORY_USAGE_GPU_TO_CPU : VMA_MEMORY_USAGE_GPU_ONLY;
 
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -113,8 +112,7 @@ namespace ForgottenEngine {
 		imageCreateInfo.mipLevels = specification.Mips;
 		imageCreateInfo.arrayLayers = specification.Layers;
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageCreateInfo.tiling
-			= specification.Usage == ImageUsage::HostRead ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
+		imageCreateInfo.tiling = specification.Usage == ImageUsage::HostRead ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
 		imageCreateInfo.usage = usage;
 		info.memory_alloc = allocator.allocate_image(imageCreateInfo, memoryUsage, info.image);
 
@@ -167,9 +165,8 @@ namespace ForgottenEngine {
 			subresourceRange.levelCount = specification.Mips;
 			subresourceRange.layerCount = specification.Layers;
 
-			Utils::insert_image_memory_barrier(commandBuffer, info.image, 0, 0, VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-				subresourceRange);
+			Utils::insert_image_memory_barrier(commandBuffer, info.image, 0, 0, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
+				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, subresourceRange);
 
 			VulkanContext::get_current_device()->flush_command_buffer(commandBuffer);
 		} else if (specification.Usage == ImageUsage::HostRead) {
@@ -182,9 +179,8 @@ namespace ForgottenEngine {
 			subresourceRange.levelCount = specification.Mips;
 			subresourceRange.layerCount = specification.Layers;
 
-			Utils::insert_image_memory_barrier(commandBuffer, info.image, 0, 0, VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, subresourceRange);
+			Utils::insert_image_memory_barrier(commandBuffer, info.image, 0, 0, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, subresourceRange);
 
 			VulkanContext::get_current_device()->flush_command_buffer(commandBuffer);
 		}
@@ -203,8 +199,7 @@ namespace ForgottenEngine {
 
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 
-		VkImageAspectFlags aspectMask
-			= Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		if (specification.Format == ImageFormat::DEPTH24STENCIL8)
 			aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
@@ -243,8 +238,7 @@ namespace ForgottenEngine {
 		if (per_mip_image_views.find(mip) == per_mip_image_views.end()) {
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 
-			VkImageAspectFlags aspectMask
-				= Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+			VkImageAspectFlags aspectMask = Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 			if (specification.Format == ImageFormat::DEPTH24STENCIL8)
 				aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
@@ -292,8 +286,7 @@ namespace ForgottenEngine {
 
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 
-		VkImageAspectFlags aspectMask
-			= Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		if (specification.Format == ImageFormat::DEPTH24STENCIL8)
 			aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 

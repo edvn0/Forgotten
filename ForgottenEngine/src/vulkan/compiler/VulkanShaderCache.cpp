@@ -23,8 +23,7 @@ namespace ForgottenEngine {
 		for (const auto& [stage, stageSource] : shader->shader_source) {
 			// Keep in mind that we're using the [] operator.
 			// Which means that we add the stage if it's not already there.
-			if (shaderNotCached
-				|| shader->stages_metadata.at(stage) != shaderCache[shader->shader_source_path.string()][stage]) {
+			if (shaderNotCached || shader->stages_metadata.at(stage) != shaderCache[shader->shader_source_path.string()][stage]) {
 				shaderCache[shader->shader_source_path.string()][stage] = shader->stages_metadata.at(stage);
 				*(int*)&changedStages |= stage;
 			}
@@ -40,8 +39,7 @@ namespace ForgottenEngine {
 		return changedStages;
 	}
 
-	void VulkanShaderCache::serialize(
-		const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shaderCache)
+	void VulkanShaderCache::serialize(const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shaderCache)
 	{
 		YAML::Emitter out;
 
@@ -135,8 +133,7 @@ namespace ForgottenEngine {
 					FG_DESERIALIZE_PROPERTY("IsGuarded", isGuarded, header, false);
 					FG_DESERIALIZE_PROPERTY("HashValue", hashValue, header, 0u);
 
-					stageCache.Headers.emplace(
-						IncludeData { headerPath, includeDepth, isRelative, isGuarded, hashValue });
+					stageCache.Headers.emplace(IncludeData { headerPath, includeDepth, isRelative, isGuarded, hashValue });
 				}
 			}
 		}

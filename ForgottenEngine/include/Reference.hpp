@@ -6,6 +6,12 @@
 
 namespace ForgottenEngine {
 
+	namespace RefUtils {
+		void add_to_live_references(void* instance);
+		void remove_from_live_references(void* instance);
+		bool is_live(void* instance);
+	} // namespace RefUtils
+
 	class ReferenceCounted {
 	public:
 		void inc_ref_count() const { ++ref_count; }
@@ -17,15 +23,7 @@ namespace ForgottenEngine {
 		mutable std::atomic<uint32_t> ref_count = 0;
 	};
 
-	namespace RefUtils {
-		void add_to_live_references(void* instance);
-		void remove_from_live_references(void* instance);
-		bool is_live(void* instance);
-	} // namespace RefUtils
-
-	template <typename T>
-	requires std::derived_from<T, ReferenceCounted>
-	class Reference {
+	template <typename T> class Reference {
 	public:
 		Reference()
 			: instance(nullptr)
@@ -159,7 +157,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <class T2> friend class Reference;
+		template <typename OtherT> friend class Reference;
 		mutable T* instance;
 	};
 

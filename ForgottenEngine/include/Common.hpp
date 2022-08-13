@@ -27,14 +27,13 @@
 
 #define CORE_ASSERT_BOOL(x)                                                                                                                          \
 	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->error("Assetion failed at: file: {}, line:, {}", __FILE__, __LINE__);                          \
+		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}", __FILE__, __LINE__);                                 \
 		debug_break();                                                                                                                               \
 	}
 
 #define CORE_ASSERT(x, ...)                                                                                                                          \
 	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->error(                                                                                         \
-			"Assetion failed at: file: {}, line:, {}. Message: {}", __FILE__, __LINE__, __VA_ARGS__);                                                \
+		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, __VA_ARGS__);       \
 		debug_break();                                                                                                                               \
 	}
 
@@ -46,13 +45,13 @@
 
 #define CORE_VERIFY_BOOL(x)                                                                                                                          \
 	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->warn("Assetion failed at: file: {}, line:, {}", __FILE__, __LINE__);                           \
+		::ForgottenEngine::Logger::get_core_logger()->warn("Assertion failed at: file: {}:{}", __FILE__, __LINE__);                                  \
 		debug_break();                                                                                                                               \
 	}
 
 #define CORE_VERIFY(x, ...)                                                                                                                          \
 	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->warn("Assetion failed at: file: {}, line:, {}. Message: {}", __FILE__, __LINE__, __VA_ARGS__); \
+		::ForgottenEngine::Logger::get_core_logger()->warn("Assertion failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, __VA_ARGS__);        \
 		debug_break();                                                                                                                               \
 	}
 

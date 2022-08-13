@@ -37,8 +37,7 @@ namespace ForgottenEngine::StringUtils {
 		return count;
 	}
 
-	template <size_t N>
-	constexpr std::array<std::string_view, N> split_string(std::string_view source, std::string_view delimiter)
+	template <size_t N> constexpr std::array<std::string_view, N> split_string(std::string_view source, std::string_view delimiter)
 	{
 		std::array<std::string_view, N> tokens;
 
@@ -84,8 +83,7 @@ namespace ForgottenEngine::StringUtils {
 			return name.substr(first + 1);
 	}
 
-	template <size_t N>
-	static constexpr std::array<std::string_view, N>& remove_namespace(std::array<std::string_view, N>& memberList)
+	template <size_t N> static constexpr std::array<std::string_view, N>& remove_namespace(std::array<std::string_view, N>& memberList)
 	{
 		for (std::string_view& fullName : memberList)
 			fullName = remove_namespace(fullName);

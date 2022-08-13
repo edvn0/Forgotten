@@ -2,7 +2,6 @@
 
 #include "fg.hpp"
 #include "imgui/CoreUserInterface.hpp"
-#include "render/SceneRenderer.hpp"
 
 // Note: Switch this to true to enable dockspace
 static auto is_dockspace_open = true;
@@ -29,8 +28,7 @@ void ForgottenLayer::on_attach()
 	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
 
 	PipelineSpecification pipeline_spec;
-	pipeline_spec.Layout
-		= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
+	pipeline_spec.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
 	pipeline_spec.BackfaceCulling = false;
 	pipeline_spec.Shader = Renderer::get_shader_library()->get("TexturePass");
 
@@ -134,8 +132,7 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 		ImGui::SetNextWindowViewport(viewport->ID);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove;
+		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 	}
 
@@ -200,10 +197,8 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 				auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
 				auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
 				auto viewportOffset = ImGui::GetWindowPos();
-				viewport_bounds[0]
-					= { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-				viewport_bounds[1]
-					= { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+				viewport_bounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+				viewport_bounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
 				viewport_focused = ImGui::IsWindowFocused();
 				viewport_hovered = ImGui::IsWindowHovered();
@@ -215,9 +210,8 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				// UI::image(swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0), vp_size, { 0, 1 }, { 1, 0 });
-				// ImTextureID texture_id = 0;
-				// ImGui::Image(
+				// UI::image(swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0), vp_size, { 0, 1
+				// }, { 1, 0 }); ImTextureID texture_id = 0; ImGui::Image(
 				//	texture_id, ImVec2{ viewport_size.x, viewport_size.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 				ImGui::End();
 			}
@@ -240,8 +234,7 @@ void ForgottenLayer::ui_toolbar()
 	const auto& buttonActive = colors[ImGuiCol_ButtonActive];
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
 
-	ImGui::Begin("##toolbar", nullptr,
-		ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+	ImGui::Begin("##toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 	float size = ImGui::GetWindowHeight() - 4.0f;
 	ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
@@ -322,8 +315,7 @@ void ForgottenLayer::draw_debug_stats()
 	renderer->end_scene();
 }
 
-void ForgottenLayer::draw_string(
-	const std::string& string, const glm::vec2& position, const glm::vec4& color, float size)
+void ForgottenLayer::draw_string(const std::string& string, const glm::vec2& position, const glm::vec4& color, float size)
 {
 	glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(size));
 	glm::mat4 transform = glm::translate(glm::mat4(1.0f), { position.x, position.y, -0.2f }) * scale;

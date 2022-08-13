@@ -46,3 +46,6 @@
 [submodule "ForgottenEngine/vendor/box2d"]
 	path = ForgottenEngine/vendor/box2d
 	url = https://github.com/edvn0/box2d
+[submodule "ForgottenEngine/vendor/freetype"]
+	path = ForgottenEngine/vendor/freetype
+	url = https://github.com/freetype/freetype.git

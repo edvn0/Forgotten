@@ -28,8 +28,7 @@ namespace ForgottenEngine {
 			bci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferAllocation
-				= allocator.allocate_buffer(bci, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(bci, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
@@ -40,8 +39,7 @@ namespace ForgottenEngine {
 			indexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			indexBufferCreateInfo.size = instance->size;
 			indexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-			instance->memory_allocation
-				= allocator.allocate_buffer(indexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->vulkan_buffer);
+			instance->memory_allocation = allocator.allocate_buffer(indexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->vulkan_buffer);
 
 			VkCommandBuffer copyCmd = device->get_command_buffer(true);
 

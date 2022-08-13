@@ -23,10 +23,7 @@ namespace ForgottenEngine {
 		uint32_t get_height() const override { return height; };
 		RendererID get_renderer_id() const override { return renderer_id; };
 
-		Reference<Image2D> get_image(uint32_t attachmentIndex) const override
-		{
-			return attachment_images[attachmentIndex];
-		};
+		Reference<Image2D> get_image(uint32_t attachmentIndex) const override { return attachment_images[attachmentIndex]; };
 		Reference<Image2D> get_depth_image() const override { return depth_image; };
 
 		VkRenderPass get_render_pass() const { return render_pass; }

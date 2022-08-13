@@ -80,6 +80,30 @@ if(APPLE)
                                                 -fcolor-diagnostics)
 endif()
 
+set(Forgotten_INCLUDE_DIRS
+    CACHE vendor/assimp/include
+          vendor/imgui
+          vendor/yaml-cpp/include
+          vendor/msdf-atlas-gen/msdf-atlas-gen
+          vendor/msdf-atlas-gen/msdfgen
+          /usr/local/include
+          /opt/homebrew/include
+          /opt/homebrew/Cellar
+          vendor/VulkanMemoryAllocator/include
+          vendor/glm
+          vendor/spdlog/include
+          vendor/vk_init
+          vendor/glfw/include
+          vendor/tinyobjloader
+          vendor/stb
+          vendor/spirv-cross
+          vendor/shaderc
+          vendor/shaderc/libshaderc/include
+          vendor/shaderc/libshaderc_util/include
+          vendor/entt/src/entt
+          vendor/entt/single_include
+          vendor/box2d/include)
+
 target_include_directories(
   ForgottenEngine
   PUBLIC . ${Boost_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS}
@@ -98,12 +122,15 @@ target_link_libraries(
           spirv-cross-core
           EnTT::EnTT
           box2d
+          freetype
           Boost::program_options)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_definitions(ForgottenEngine PUBLIC -fcolor-diagnostics)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_definitions(ForgottenEngine PUBLIC -fdiagnostics-color=always)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  target_compile_definitions(ForgottenEngine PUBLIC /wd4715)
 endif()
 
 target_precompile_headers(ForgottenEngine PUBLIC fg_pch.hpp)

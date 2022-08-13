@@ -16,8 +16,8 @@ namespace ForgottenEngine {
 
 	GlslIncluder::~GlslIncluder() = default;
 
-	shaderc_include_result* GlslIncluder::GetInclude(const char* requestedPath, const shaderc_include_type type,
-		const char* requestingPath, const size_t includeDepth)
+	shaderc_include_result* GlslIncluder::GetInclude(
+		const char* requestedPath, const shaderc_include_type type, const char* requestingPath, const size_t includeDepth)
 	{
 		const std::filesystem::path requestedFullPath = (type == shaderc_include_type_relative)
 			? file_finder.FindRelativeReadableFilepath(requestingPath, requestedPath)
@@ -39,8 +39,7 @@ namespace ForgottenEngine {
 		}
 
 		// Does not emplace if it finds the same include path and same header hash value.
-		include_data.emplace(IncludeData {
-			requestedFullPath, includeDepth, type == shaderc_include_type_relative, isGuarded, sourceHash, stages });
+		include_data.emplace(IncludeData { requestedFullPath, includeDepth, type == shaderc_include_type_relative, isGuarded, sourceHash, stages });
 
 		auto* const container = new std::array<std::string, 2>;
 		(*container)[0] = requestedPath;

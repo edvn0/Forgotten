@@ -20,21 +20,7 @@ namespace ForgottenEngine {
 		};
 	}
 
-	enum class ShaderUniformType {
-		None = 0,
-		Bool,
-		Int,
-		UInt,
-		Float,
-		Vec2,
-		Vec3,
-		Vec4,
-		Mat3,
-		Mat4,
-		IVec2,
-		IVec3,
-		IVec4
-	};
+	enum class ShaderUniformType { None = 0, Bool, Int, UInt, Float, Vec2, Vec3, Vec4, Mat3, Mat4, IVec2, IVec3, IVec4 };
 
 	class ShaderUniform {
 	public:
@@ -124,8 +110,7 @@ namespace ForgottenEngine {
 
 		virtual void set_macro(const std::string& name, const std::string& value) = 0;
 
-		static Reference<Shader> create(
-			const std::string& filepath, bool force_compile = false, bool disable_optimisations = false);
+		static Reference<Shader> create(const std::string& filepath, bool force_compile = false, bool disable_optimisations = false);
 
 		virtual const std::unordered_map<std::string, ShaderBuffer>& get_shader_buffers() const = 0;
 		virtual const std::unordered_map<std::string, ShaderResourceDeclaration>& get_resources() const = 0;

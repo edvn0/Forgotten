@@ -35,8 +35,7 @@ namespace ForgottenEngine::VI {
 
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info();
 
-		VkPipelineDepthStencilStateCreateInfo depth_stencil_create_info(
-			bool depth_test, bool depth_write, VkCompareOp compare_op);
+		VkPipelineDepthStencilStateCreateInfo depth_stencil_create_info(bool depth_test, bool depth_write, VkCompareOp compare_op);
 
 	} // namespace Pipeline
 
@@ -46,8 +45,7 @@ namespace ForgottenEngine::VI {
 
 		VkImageViewCreateInfo image_view_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags);
 
-		VkSamplerCreateInfo sampler_create_info(
-			VkFilter filters, VkSamplerAddressMode sampler_address_mode = VK_SAMPLER_ADDRESS_MODE_REPEAT);
+		VkSamplerCreateInfo sampler_create_info(VkFilter filters, VkSamplerAddressMode sampler_address_mode = VK_SAMPLER_ADDRESS_MODE_REPEAT);
 
 		VkWriteDescriptorSet write_descriptor_image(
 			VkDescriptorType type, VkDescriptorSet dst_set, VkDescriptorImageInfo* image_info, uint32_t binding);
@@ -56,8 +54,7 @@ namespace ForgottenEngine::VI {
 
 	namespace Descriptor {
 
-		VkDescriptorSetLayoutBinding descriptor_set_layout_binding(
-			VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding);
+		VkDescriptorSetLayoutBinding descriptor_set_layout_binding(VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding);
 
 		VkWriteDescriptorSet write_descriptor_buffer(
 			VkDescriptorType type, VkDescriptorSet dst_set, VkDescriptorBufferInfo* buffer_info, uint32_t binding);

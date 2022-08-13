@@ -78,8 +78,7 @@ namespace ForgottenEngine {
 		}
 	}
 
-	ShaderUniform::ShaderUniform(
-		std::string name, const ShaderUniformType type, const uint32_t size, const uint32_t offset)
+	ShaderUniform::ShaderUniform(std::string name, const ShaderUniformType type, const uint32_t size, const uint32_t offset)
 		: name(std::move(name))
 		, type(type)
 		, size(size)

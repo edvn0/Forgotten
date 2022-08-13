@@ -24,10 +24,7 @@ namespace ForgottenEngine {
 
 		template <typename T>
 		requires arithmetic<T>
-		[[nodiscard]] inline std::pair<T, T> get_size() const
-		{
-			return { static_cast<T>(get_width()), static_cast<T>(get_height()) };
-		};
+		[[nodiscard]] inline std::pair<T, T> get_size() const { return { static_cast<T>(get_width()), static_cast<T>(get_height()) }; };
 
 		virtual void on_update() = 0;
 

@@ -10,8 +10,6 @@ namespace ForgottenEngine {
 	class AssetTypes;
 	class Buffer;
 	class Clock;
-	class KeyCode;
-	class MouseCode;
 	class Common;
 	class DeletionQueue;
 	class EntryPoint;
@@ -31,7 +29,6 @@ namespace ForgottenEngine {
 	class LogCustomFormatters;
 	class Logger;
 	class Mathematics;
-	class Memory;
 	class MemoryMapper;
 	class PlatformSpecific;
 	class Camera;
@@ -39,6 +36,7 @@ namespace ForgottenEngine {
 	class Font;
 	class Framebuffer;
 	class Image;
+	class Image2D;
 	class IndexBuffer;
 	class Material;
 	class MaterialAsset;
@@ -60,6 +58,8 @@ namespace ForgottenEngine {
 	class StorageBuffer;
 	class StorageBufferSet;
 	class Texture;
+	class TextureCube;
+	class Texture2D;
 	class UniformBuffer;
 	class UniformBufferSet;
 	class VertexBuffer;
@@ -79,7 +79,6 @@ namespace ForgottenEngine {
 	class Casts;
 	class FileSystem;
 	class SerializationMacros;
-	class StringUtils;
 	class YAMLSerialisers;
 	class UUID;
 	class VertexBuffer;

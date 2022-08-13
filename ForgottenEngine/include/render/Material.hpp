@@ -9,13 +9,7 @@
 
 namespace ForgottenEngine {
 
-	enum class MaterialFlag {
-		None = BIT(0),
-		DepthTest = BIT(1),
-		Blend = BIT(2),
-		TwoSided = BIT(3),
-		DisableShadowCasting = BIT(4)
-	};
+	enum class MaterialFlag { None = BIT(0), DepthTest = BIT(1), Blend = BIT(2), TwoSided = BIT(3), DisableShadowCasting = BIT(4) };
 
 	class Material : public ReferenceCounted {
 	public:

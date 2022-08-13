@@ -12,8 +12,7 @@
 
 namespace ForgottenEngine::MemoryMapper {
 
-	template <typename T, typename Func>
-	static void effect_mmap(VmaAllocator& allocator, AllocatedBuffer& buffer, Func&& effect)
+	template <typename T, typename Func> static void effect_mmap(VmaAllocator& allocator, AllocatedBuffer& buffer, Func&& effect)
 	{
 		void* object_data;
 		vmaMapMemory(allocator, buffer.allocation, &object_data);

@@ -15,10 +15,7 @@ namespace ForgottenEngine {
 	public:
 		[[nodiscard]] inline KeyCode get_key_code() const { return key_code; }
 
-		[[nodiscard]] int get_category() const override
-		{
-			return EventCategory::EventCategoryKeyboard | EventCategory::EventCategoryInput;
-		};
+		[[nodiscard]] int get_category() const override { return EventCategory::EventCategoryKeyboard | EventCategory::EventCategoryInput; };
 
 	protected:
 		KeyCode key_code;

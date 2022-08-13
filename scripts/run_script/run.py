@@ -105,13 +105,13 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
 
 
 def build_project(build_folder: str, generator: str):
-    if generator.count("Visual Studio") > 0:
-        log_success(
-            "Usage of Visual Studio generator detected, this script will not build the solution.")
-        exit(0)
+    # if generator.count("Visual Studio") > 0:
+    #    log_success(
+    #        "Usage of Visual Studio generator detected, this script will not build the solution.")
+    #    exit(0)
 
     try:
-        build_call = f"ninja -j{multiprocessing.cpu_count()}"
+        build_call = f"cmake --build . --parallel 6"
         if in_directory_call_process(
                 build_folder, lambda: check_call(build_call.split(" "))):
             log_success("Built Forgotten.")
@@ -223,8 +223,15 @@ def main():
             f"--width={cli_results.width}",
             f"--name={cli_results.name}",
             f"--height={cli_results.height}",
+        ] if cli_results.os != "Windows" else [
+            "./ForgottenApp",
+            f"--width={cli_results.width}",
+            f"--name={cli_results.name}",
+            f"--height={cli_results.height}",
         ]
         run_folder = f"{forgotten_root}/{build_folder}/{cli_results.build_type}/ForgottenApp"
+        if cli_results.os == "Windows":
+            run_folder += "/Debug"
 
         if in_directory_call_process(run_folder, lambda: check_call(run_call)):
             log_success("Running Forgotten...")

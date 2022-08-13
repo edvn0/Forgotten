@@ -42,8 +42,7 @@ namespace ForgottenEngine {
 
 			static uint64_t CalculateSizeRequirements(uint32_t programCount, uint32_t moduleCount)
 			{
-				return (sizeof(uint32_t) + sizeof(ShaderProgramInfo)) * programCount
-					+ sizeof(ShaderModuleInfo) * moduleCount;
+				return (sizeof(uint32_t) + sizeof(ShaderProgramInfo)) * programCount + sizeof(ShaderModuleInfo) * moduleCount;
 			}
 		};
 

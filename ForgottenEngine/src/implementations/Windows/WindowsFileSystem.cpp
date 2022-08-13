@@ -42,8 +42,7 @@ namespace ForgottenEngine {
 		BOOL result = TRUE;
 
 		HANDLE directoryHandle = CreateFile(dirStr.c_str(), GENERIC_READ | FILE_LIST_DIRECTORY,
-			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-			FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
+			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
 
 		if (directoryHandle == INVALID_HANDLE_VALUE) {
 			CORE_VERIFY(false, "Failed to open directory!");
@@ -59,8 +58,7 @@ namespace ForgottenEngine {
 
 		while (s_Watching && result) {
 			result = ReadDirectoryChangesW(directoryHandle, &buf, sizeof(buf), TRUE,
-				FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE, &bytesReturned,
-				&pollingOverlap, NULL);
+				FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE, &bytesReturned, &pollingOverlap, NULL);
 
 			WaitForSingleObject(pollingOverlap.hEvent, INFINITE);
 

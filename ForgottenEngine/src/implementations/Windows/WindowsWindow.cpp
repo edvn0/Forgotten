@@ -71,8 +71,7 @@ namespace ForgottenEngine {
 			is_glfw_initialized = true;
 		}
 
-		glfw_window
-			= glfwCreateWindow((int)props.width, (int)props.height, window_data.title.c_str(), nullptr, nullptr);
+		glfw_window = glfwCreateWindow((int)props.width, (int)props.height, window_data.title.c_str(), nullptr, nullptr);
 
 		glfwGetWindowContentScale(glfw_window, &pixel_size_x, &pixel_size_y);
 		CORE_INFO("Pixel density: [{0} X {1}]", pixel_size_x, pixel_size_y);
