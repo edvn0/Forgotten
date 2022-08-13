@@ -145,7 +145,7 @@ namespace ForgottenEngine {
 			format = ImageFormat::RGBA;
 		}
 
-		CORE_ASSERT(image_data.data, std::format("Failed to load image from path: {}.", path));
+		CORE_ASSERT(image_data.data, fmt::format("Failed to load image from path: {}.", path));
 		if (!image_data.data)
 			return false;
 
