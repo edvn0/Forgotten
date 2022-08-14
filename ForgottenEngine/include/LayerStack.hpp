@@ -24,14 +24,11 @@ namespace ForgottenEngine {
 		stack_it_rev rbegin() { return layer_stack.rbegin(); };
 		stack_it_rev rend() { return layer_stack.rend(); };
 
-		const std::unique_ptr<Layer>& get_imgui_layer()
+		Layer* get_imgui_layer()
 		{
-			for (const auto& l : layer_stack) {
-				if (l->get_name() == "ImGui") {
-					return l;
-				}
-			}
-			CORE_ASSERT(false, "Could not find an ImGui layer.");
+			// Technically we as programmers are the only ones who can change if imgui is not the first...
+			// Must be changed if we add overlays...
+			return layer_stack.back().get();
 		}
 
 	private:

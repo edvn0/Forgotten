@@ -242,6 +242,8 @@ def main():
         log_failure(f"Could not run Forgotten, reason: \n\t\t{str(e)}")
         exit(e.returncode)
 
+    log_success("Closed Forgotten.")
+
 
 if __name__ == "__main__":
     try:

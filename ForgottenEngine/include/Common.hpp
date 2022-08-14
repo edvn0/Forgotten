@@ -16,6 +16,8 @@
 #include <unordered_map>
 #include <vector>
 
+#define BIT(x) (1u << x)
+
 #define FORGOTTEN_ENABLE_ASSERTS
 #define FORGOTTEN_ENABLE_VERIFY
 #define FORGOTTEN_ENABLE_CORE_BREAK
@@ -25,17 +27,21 @@
 
 #ifdef FORGOTTEN_ENABLE_ASSERTS
 
-#define CORE_ASSERT_BOOL(x)                                                                                                                          \
-	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}", __FILE__, __LINE__);                                 \
-		debug_break();                                                                                                                               \
+template <typename Condition = bool> [[noreturn]] static constexpr inline void CORE_ASSERT_BOOL(Condition&& x)
+{
+	if (!(x)) {
+		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}", __FILE__, __LINE__);
+		debug_break();
 	}
+}
 
-#define CORE_ASSERT(x, ...)                                                                                                                          \
-	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, __VA_ARGS__);       \
-		debug_break();                                                                                                                               \
+template <typename Condition = bool, typename... T> [[noreturn]] static constexpr inline void CORE_ASSERT(Condition&& x, T&&... args...)
+{
+	if (!(x)) {
+		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, args...);
+		debug_break();
 	}
+}
 
 #else
 #define CORE_ASSERT(condition, ...)
@@ -43,17 +49,21 @@
 
 #ifdef FORGOTTEN_ENABLE_VERIFY
 
-#define CORE_VERIFY_BOOL(x)                                                                                                                          \
-	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->warn("Assertion failed at: file: {}:{}", __FILE__, __LINE__);                                  \
-		debug_break();                                                                                                                               \
+template <typename Condition = bool> [[noreturn]] static constexpr inline void CORE_VERIFY_BOOL(Condition&& x)
+{
+	if (!(x)) {
+		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed at: file: {}:{}", __FILE__, __LINE__);
+		debug_break();
 	}
+}
 
-#define CORE_VERIFY(x, ...)                                                                                                                          \
-	if (!(x)) {                                                                                                                                      \
-		::ForgottenEngine::Logger::get_core_logger()->warn("Assertion failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, __VA_ARGS__);        \
-		debug_break();                                                                                                                               \
+template <typename Condition = bool, typename... T> [[noreturn]] static constexpr inline void CORE_VERIFY(Condition&& x, T&&... args...)
+{
+	if (!(x)) {
+		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, args...);
+		debug_break();
 	}
+}
 
 #else
 #define CORE_VERIFY(condition, ...)

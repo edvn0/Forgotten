@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Pipeline.hpp"
 #include "Reference.hpp"
 
 namespace ForgottenEngine {

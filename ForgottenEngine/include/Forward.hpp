@@ -76,7 +76,6 @@ namespace ForgottenEngine {
 	class StreamWriter;
 	class TimeStep;
 	class UserCamera;
-	class Casts;
 	class FileSystem;
 	class SerializationMacros;
 	class YAMLSerialisers;

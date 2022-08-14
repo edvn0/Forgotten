@@ -107,7 +107,7 @@ namespace ForgottenEngine {
 		}
 
 		depth_format = find_depth_format();
-		CORE_ASSERT(depth_format, "");
+		CORE_ASSERT_BOOL(depth_format);
 	}
 
 	VulkanPhysicalDevice::~VulkanPhysicalDevice() = default;
@@ -211,14 +211,11 @@ namespace ForgottenEngine {
 	{
 		std::vector<const char*> device_exts;
 
-		CORE_ASSERT(physical_device->is_extension_supported(VK_KHR_SWAPCHAIN_EXTENSION_NAME), "");
+		CORE_ASSERT_BOOL(physical_device->is_extension_supported(VK_KHR_SWAPCHAIN_EXTENSION_NAME));
 		device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
 #ifdef FORGOTTEN_MACOS
 		device_exts.push_back("VK_KHR_portability_subset");
-#endif
-#ifdef FORGOTTEN_WINDOWS
-		CORE_INFO("Windows chosen.");
 #endif
 
 		VkDeviceCreateInfo dci = {};

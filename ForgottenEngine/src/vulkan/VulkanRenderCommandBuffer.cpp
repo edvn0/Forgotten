@@ -40,13 +40,59 @@ namespace ForgottenEngine {
 			VK_CHECK(vkCreateFence(device->get_vulkan_device(), &fci, nullptr, &wait_fence));
 		}
 
-		VkQueryPoolCreateInfo queryPoolCreateInfo = {};
-		queryPoolCreateInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-		queryPoolCreateInfo.pNext = nullptr;
+		create_performance_queries();
 	}
 
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer()
-		: owned_by_swapchain(true) {};
+		: owned_by_swapchain(true)
+	{
+		create_performance_queries();
+	};
+
+	void VulkanRenderCommandBuffer::create_performance_queries()
+	{
+#ifdef FORGOTTEN_WINDOWS
+		auto frames_in_flight = Renderer::get_config().frames_in_flight;
+		auto device = VulkanContext::get_current_device()->get_vulkan_device();
+
+		VkQueryPoolCreateInfo queryPoolCreateInfo = {};
+		queryPoolCreateInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+		queryPoolCreateInfo.pNext = nullptr;
+
+		// Timestamp queries
+		const uint32_t maxUserQueries = 16;
+		timestamp_query_count = 2 + 2 * maxUserQueries;
+
+		queryPoolCreateInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+		queryPoolCreateInfo.queryCount = timestamp_query_count;
+		timestamp_query_pools.resize(frames_in_flight);
+		for (auto& tqp : timestamp_query_pools)
+			VK_CHECK(vkCreateQueryPool(device, &queryPoolCreateInfo, nullptr, &tqp));
+
+		timestamp_query_results.resize(frames_in_flight);
+		for (auto& timestampQueryResults : timestamp_query_results)
+			timestampQueryResults.resize(timestamp_query_count);
+
+		gpu_execution_times.resize(frames_in_flight);
+		for (auto& executionGPUTimes : gpu_execution_times)
+			executionGPUTimes.resize(timestamp_query_count / 2);
+
+		// Pipeline statistics queries
+		pipeline_query_count = 7;
+		queryPoolCreateInfo.queryType = VK_QUERY_TYPE_PIPELINE_STATISTICS;
+		queryPoolCreateInfo.queryCount = pipeline_query_count;
+		queryPoolCreateInfo.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
+			| VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT | VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
+			| VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT | VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT
+			| VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT | VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT;
+
+		pipeline_statistics_query_pools.resize(frames_in_flight);
+		for (auto& pipelineStatisticsQueryPools : pipeline_statistics_query_pools)
+			VK_CHECK(vkCreateQueryPool(device, &queryPoolCreateInfo, nullptr, &pipelineStatisticsQueryPools));
+
+		pipeline_statistics_query_results.resize(frames_in_flight);
+#endif
+	}
 
 	void VulkanRenderCommandBuffer::begin()
 	{

@@ -7,11 +7,11 @@
 
 #pragma once
 
+#include "Common.hpp"
+
 #include <filesystem>
 #include <optional>
 #include <vector>
-
-#define BIT(x) (1u << x)
 
 namespace ForgottenEngine {
 

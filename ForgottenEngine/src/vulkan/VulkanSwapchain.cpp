@@ -116,10 +116,12 @@ namespace ForgottenEngine {
 			for (size_t i = 0; i < presentModeCount; i++) {
 				if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 					sc_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
+					CORE_DEBUG("Chose Mailbox as present mode.");
 					break;
 				}
 				if ((sc_present_mode != VK_PRESENT_MODE_MAILBOX_KHR) && (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
 					sc_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+					CORE_DEBUG("Chose Immediate as present mode.");
 				}
 			}
 		}
@@ -436,7 +438,6 @@ namespace ForgottenEngine {
 			presentInfo.pWaitSemaphores = &semaphores.render_complete_semaphore;
 			presentInfo.waitSemaphoreCount = 1;
 			result = vkQueuePresentKHR(VulkanContext::get_current_device()->get_graphics_queue(), &presentInfo);
-			CORE_INFO("{}", result);
 		}
 
 		if (result != VK_SUCCESS) {
@@ -462,6 +463,7 @@ namespace ForgottenEngine {
 		uint32_t imageIndex;
 		VK_CHECK(vkAcquireNextImageKHR(VulkanContext::get_current_device()->get_vulkan_device(), swapchain, UINT64_MAX,
 			semaphores.present_complete_semaphore, (VkFence) nullptr, &imageIndex));
+		CORE_DEBUG("{}", imageIndex);
 		return imageIndex;
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.hpp"
+#include "utilities/Casts.hpp"
 
 namespace ForgottenEngine {
 
@@ -61,7 +62,8 @@ namespace ForgottenEngine {
 		template <typename T = Event> bool dispatch_event(EventFn<T> func)
 		{
 			if (event.get_event_type() == T::get_static_type()) {
-				event.handled = func(*(T*)&event);
+				auto& ev = Cast::as<T>(&event);
+				event.handled = func(ev);
 				return true;
 			}
 			return false;

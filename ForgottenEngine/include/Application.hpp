@@ -44,7 +44,7 @@ namespace ForgottenEngine {
 
 		static inline Application& the() { return *instance; }
 		Window& get_window();
-		inline const auto& get_imgui_layer() { return stack.get_imgui_layer(); }
+		inline Layer* get_imgui_layer() { return stack.get_imgui_layer(); }
 		[[nodiscard]] inline float get_frametime() const { return frame_time; };
 
 		inline bool exit()
@@ -72,7 +72,7 @@ namespace ForgottenEngine {
 		std::queue<std::function<void()>> event_queue;
 		std::vector<EventCallbackFn> event_callbacks;
 
-		ImGuiLayer* imgui_layer() { return dynamic_cast<ImGuiLayer*>(get_imgui_layer().get()); }
+		ImGuiLayer* imgui_layer() { return dynamic_cast<ImGuiLayer*>(get_imgui_layer()); }
 
 		void render_imgui(TimeStep step);
 		void process_events();

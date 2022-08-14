@@ -202,7 +202,7 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				viewport_focused = ImGui::IsWindowFocused();
 				viewport_hovered = ImGui::IsWindowHovered();
-				const auto& imgui_layer = dynamic_cast<ImGuiLayer*>(Application::the().get_imgui_layer().get());
+				const auto& imgui_layer = dynamic_cast<ImGuiLayer*>(Application::the().get_imgui_layer());
 				imgui_layer->should_block(!viewport_focused && !viewport_hovered);
 
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();

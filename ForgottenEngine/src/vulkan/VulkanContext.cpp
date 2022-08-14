@@ -288,11 +288,16 @@ namespace ForgottenEngine {
 		exts.insert("VK_EXT_debug_report");
 		exts.insert("VK_KHR_portability_enumeration");
 		exts.insert("VK_KHR_get_physical_device_properties2");
+		exts.insert(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		std::vector<const char*> out(exts.begin(), exts.end());
+
+		for (auto& inst : out) {
+			CORE_INFO("{}", inst);
+		}
 
 		VkInstanceCreateInfo instanceCreateInfo = {};
 		instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		instanceCreateInfo.pNext = &features;
+		instanceCreateInfo.pNext = nullptr; //;&features;
 		instanceCreateInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 		instanceCreateInfo.pApplicationInfo = &appInfo;
 		instanceCreateInfo.enabledExtensionCount = (uint32_t)out.size();
@@ -328,6 +333,11 @@ namespace ForgottenEngine {
 		enabledFeatures.samplerAnisotropy = true;
 		enabledFeatures.fillModeNonSolid = true;
 		enabledFeatures.independentBlend = true;
+
+#ifdef FORGOTTEN_WINDOWS
+		enabledFeatures.pipelineStatisticsQuery = true;
+		enabledFeatures.wideLines = true;
+#endif
 
 		device = Reference<VulkanDevice>::create(physical_device, enabledFeatures);
 
