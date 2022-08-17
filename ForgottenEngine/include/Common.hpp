@@ -14,9 +14,18 @@
 #include <memory>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-#define BIT(x) (1u << x)
+template <typename T>
+concept MapType = std::same_as<T,
+	std::map<typename T::key_type, typename T::mapped_type, typename T::key_compare, typename T::allocator_type>> || std::same_as<T,
+	std::unordered_map<typename T::key_type, typename T::mapped_type, typename T::hasher, typename T::key_equal, typename T::allocator_type>> || std::
+	same_as<T, std::unordered_set<typename T::key_type, typename T::hasher, typename T::key_equal, typename T::allocator_type>>;
+
+template <MapType T, typename ToFind> static constexpr bool is_in_map(const T& map, const ToFind& to_find) { return map.find(to_find) != map.end(); }
+
+#define BIT(x) (1u << (x))
 
 #define FORGOTTEN_ENABLE_ASSERTS
 #define FORGOTTEN_ENABLE_VERIFY
@@ -27,18 +36,18 @@
 
 #ifdef FORGOTTEN_ENABLE_ASSERTS
 
-template <typename Condition = bool> [[noreturn]] static constexpr inline void CORE_ASSERT_BOOL(Condition&& x)
+template <typename PositiveCondition = bool> static constexpr inline void CORE_ASSERT_BOOL(PositiveCondition&& x)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}", __FILE__, __LINE__);
+		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed.");
 		debug_break();
 	}
 }
 
-template <typename Condition = bool, typename... T> [[noreturn]] static constexpr inline void CORE_ASSERT(Condition&& x, T&&... args...)
+template <typename PositiveCondition = bool, typename... T> static constexpr inline void CORE_ASSERT(PositiveCondition&& x, T&&... args)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, args...);
+		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed. Message: {}", args...);
 		debug_break();
 	}
 }
@@ -49,18 +58,18 @@ template <typename Condition = bool, typename... T> [[noreturn]] static constexp
 
 #ifdef FORGOTTEN_ENABLE_VERIFY
 
-template <typename Condition = bool> [[noreturn]] static constexpr inline void CORE_VERIFY_BOOL(Condition&& x)
+template <typename PositiveCondition = bool> static constexpr inline void CORE_VERIFY_BOOL(PositiveCondition&& x)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed at: file: {}:{}", __FILE__, __LINE__);
+		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed.");
 		debug_break();
 	}
 }
 
-template <typename Condition = bool, typename... T> [[noreturn]] static constexpr inline void CORE_VERIFY(Condition&& x, T&&... args...)
+template <typename PositiveCondition = bool, typename... T> static constexpr inline void CORE_VERIFY(PositiveCondition&& x, T&&... args)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed at: file: {}:{}. Message: {}", __FILE__, __LINE__, args...);
+		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed. Message: {}", args...);
 		debug_break();
 	}
 }

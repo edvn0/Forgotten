@@ -111,24 +111,4 @@ namespace ForgottenEngine {
 		return path.extension().string();
 	}
 
-	Path Assets::slashed_string_to_filepath(const std::string& slashed_string)
-	{
-		auto vector = [&slashed_string]() {
-			std::stringstream stream(slashed_string);
-			std::string item;
-			std::vector<std::string> split_strings;
-			while (std::getline(stream, item, '/')) {
-				split_strings.push_back(item); // if C++11 (based on comment from @mchiasson)
-			}
-			return split_strings;
-		}();
-
-		std::filesystem::path result;
-		for (auto&& subpath : vector) {
-			result /= subpath;
-		}
-
-		return result;
-	}
-
 } // namespace ForgottenEngine

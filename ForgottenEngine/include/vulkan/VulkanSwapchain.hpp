@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Badge.hpp"
 #include "Common.hpp"
 #include "render/RenderCommandBuffer.hpp"
 #include "vk_mem_alloc.h"
@@ -73,8 +74,8 @@ namespace ForgottenEngine {
 		Reference<VulkanDevice> device;
 		bool is_vsync = false;
 
-		VkFormat color_format;
-		VkColorSpaceKHR color_space;
+		VkFormat color_format = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+		VkColorSpaceKHR color_space = VkColorSpaceKHR::VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 
 		VkSwapchainKHR swapchain = nullptr;
 		uint32_t image_count = 0;
@@ -106,7 +107,7 @@ namespace ForgottenEngine {
 			// Command buffer
 			VkSemaphore render_complete_semaphore = nullptr;
 		} semaphores;
-		VkSubmitInfo submit_info;
+		VkSubmitInfo submit_info {};
 
 		std::vector<VkFence> wait_fences;
 

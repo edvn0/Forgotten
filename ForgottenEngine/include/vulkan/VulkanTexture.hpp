@@ -40,13 +40,14 @@ namespace ForgottenEngine {
 		void generate_mips();
 
 	private:
-		bool load_image(const std::string& path);
+		bool load_image(const std::string& in_path);
 		bool load_image(const void* data, uint32_t size);
 
 	private:
 		std::string path;
 		uint32_t width;
 		uint32_t height;
+		uint32_t channels;
 		TextureProperties properties;
 
 		Buffer image_data;

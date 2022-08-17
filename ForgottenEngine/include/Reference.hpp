@@ -114,10 +114,10 @@ namespace ForgottenEngine {
 		T* raw() { return instance; }
 		const T* raw() const { return instance; }
 
-		void reset(T* instance = nullptr)
+		void reset(T* in_instance = nullptr)
 		{
 			dec_ref();
-			instance = instance;
+			instance = in_instance;
 		}
 
 		template <typename T2> Reference<T2> as() const { return Reference<T2>(*this); }
@@ -167,7 +167,7 @@ namespace ForgottenEngine {
 
 		WeakReference(Reference<T> reference) { instance = reference.raw(); }
 
-		WeakReference(T* instance) { instance = instance; }
+		WeakReference(T* in_instance) { instance = in_instance; }
 
 		T* operator->() { return instance; }
 		const T* operator->() const { return instance; }
@@ -175,7 +175,7 @@ namespace ForgottenEngine {
 		T& operator*() { return *instance; }
 		const T& operator*() const { return *instance; }
 
-		bool is_valid() const { return instance ? RefUtils::is_live(instance) : false; }
+		[[nodiscard]] bool is_valid() const { return instance && RefUtils::is_live(instance); }
 		operator bool() const { return is_valid(); }
 
 	private:

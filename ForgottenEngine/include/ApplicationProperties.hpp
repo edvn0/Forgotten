@@ -22,7 +22,7 @@ namespace ForgottenEngine {
 		uint32_t width;
 		uint32_t height;
 		bool full_screen = false;
-		bool v_sync = false;
+		bool v_sync = true;
 		RendererConfig renderer_config;
 
 		explicit ApplicationProperties(std::string title = "Engine", uint32_t w = 1280, uint32_t h = 720, bool full_screen = false,

@@ -36,6 +36,7 @@ namespace ForgottenEngine {
 
 		bool owned_by_swapchain = false;
 
+#ifdef FORGOTTEN_WINDOWS
 		uint32_t timestamp_query_count = 0;
 		uint32_t timestamp_next_available_query = 2;
 		std::vector<VkQueryPool> timestamp_query_pools;
@@ -45,6 +46,7 @@ namespace ForgottenEngine {
 
 		uint32_t pipeline_query_count = 0;
 		std::vector<PipelineStatistics> pipeline_statistics_query_results;
+#endif
 	};
 
 } // namespace ForgottenEngine

@@ -6,6 +6,7 @@
 #include "render/Renderer.hpp"
 #include "vulkan/VulkanContext.hpp"
 
+#include <Badge.hpp>
 #include <GLFW/glfw3.h>
 
 namespace ForgottenEngine {
@@ -116,21 +117,41 @@ namespace ForgottenEngine {
 			for (size_t i = 0; i < presentModeCount; i++) {
 				if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 					sc_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
-					CORE_DEBUG("Chose Mailbox as present mode.");
 					break;
 				}
-				if ((sc_present_mode != VK_PRESENT_MODE_MAILBOX_KHR) && (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+				if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
 					sc_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-					CORE_DEBUG("Chose Immediate as present mode.");
 				}
 			}
 		}
+
+		constexpr auto present_mode_to_string = [](const VkPresentModeKHR& present_mode) {
+			switch (present_mode) {
+			case VK_PRESENT_MODE_IMMEDIATE_KHR:
+				return "Immediate";
+			case VK_PRESENT_MODE_MAILBOX_KHR:
+				return "Mailbox";
+			case VK_PRESENT_MODE_FIFO_KHR:
+				return "Fifo";
+			case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+				return "Fifo Relaxed";
+			case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+				return "Shared Demand Refresh";
+			case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+				return "Shared Continuous Refresh";
+			case VK_PRESENT_MODE_MAX_ENUM_KHR:
+				return "Max enum";
+			}
+		};
+		CORE_DEBUG("Chose [{}] as present mode.", present_mode_to_string(sc_present_mode));
 
 		// Determine the number of images
 		uint32_t asked_sc_images = surfCaps.minImageCount + 1;
 		if ((surfCaps.maxImageCount > 0) && (asked_sc_images > surfCaps.maxImageCount)) {
 			asked_sc_images = surfCaps.maxImageCount;
 		}
+
+		CORE_DEBUG("Asked Swapchain for [{}] images.", asked_sc_images);
 
 		// Find the transformation of the surface
 		VkSurfaceTransformFlagsKHR pre_transform;

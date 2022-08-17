@@ -130,27 +130,28 @@ namespace ForgottenEngine {
 		image_data.release();
 	}
 
-	bool VulkanTexture2D::load_image(const std::string& path)
+	bool VulkanTexture2D::load_image(const std::string& in_path)
 	{
-		int width, height, channels;
+		int stbi_w, stbi_h, stbi_channels;
 
-		if (stbi_is_hdr(path.c_str())) {
-			image_data.data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, 4);
-			image_data.size = width * height * 4 * sizeof(float);
+		if (stbi_is_hdr(in_path.c_str())) {
+			image_data.data = (byte*)stbi_loadf(in_path.c_str(), &stbi_w, &stbi_h, &stbi_channels, 4);
+			image_data.size = stbi_w * stbi_h * 4 * sizeof(float);
 			format = ImageFormat::RGBA32F;
 		} else {
 			// stbi_set_flip_vertically_on_load(1);
-			image_data.data = stbi_load(path.c_str(), &width, &height, &channels, 4);
-			image_data.size = width * height * 4;
+			image_data.data = stbi_load(in_path.c_str(), &stbi_w, &stbi_h, &stbi_channels, 4);
+			image_data.size = stbi_w * stbi_h * 4;
 			format = ImageFormat::RGBA;
 		}
 
-		CORE_ASSERT(image_data.data, fmt::format("Failed to load image from path: {}.", path));
+		CORE_ASSERT(image_data.data, fmt::format("Failed to load image from in_path: {}.", in_path));
 		if (!image_data.data)
 			return false;
 
-		this->width = width;
-		this->height = height;
+		this->width = static_cast<uint32_t>(stbi_w);
+		this->height = static_cast<uint32_t>(stbi_h);
+		this->channels = static_cast<uint32_t>(stbi_channels);
 		return true;
 	}
 

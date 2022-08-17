@@ -21,8 +21,8 @@ namespace ForgottenEngine {
 
 	OptionalPath Assets::find_resources_by_path(const Path& path, const std::string& subdirectory)
 	{
-		if (exists(path))
-			return path;
+		if (exists(subdirectory))
+			return subdirectory / path;
 
 		std::filesystem::path try_path;
 		if (subdirectory.empty())
@@ -39,6 +39,26 @@ namespace ForgottenEngine {
 		}
 
 		return {};
+	}
+
+	Path Assets::slashed_string_to_filepath(const std::string& slashed_string)
+	{
+		auto vector = [&slashed_string]() {
+			std::stringstream stream(slashed_string);
+			std::string item;
+			std::vector<std::string> split_strings;
+			while (std::getline(stream, item, '/')) {
+				split_strings.push_back(item); // if C++11 (based on comment from @mchiasson)
+			}
+			return split_strings;
+		}();
+
+		std::filesystem::path result;
+		for (auto&& subpath : vector) {
+			result /= subpath;
+		}
+
+		return result;
 	}
 
 	bool Assets::exists(const Path& p) { return std::filesystem::exists(p); }

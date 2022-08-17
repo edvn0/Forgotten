@@ -114,7 +114,7 @@ namespace ForgottenEngine {
 		{
 			TextureProperties props;
 			props.SamplerWrap = TextureWrap::Clamp;
-			renderer_data->brdf_lut = Texture2D::create(Assets::slashed_string_to_filepath("resources/renderer/brdf_lut.tga").string(), props);
+			renderer_data->brdf_lut = Texture2D::create(Assets::slashed_string_to_filepath("renderer/brdf_lut.tga").string(), props);
 		}
 		constexpr uint32_t black_cube_data[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
 		renderer_data->black_cube = TextureCube::create(ImageFormat::RGBA, 1, 1, &black_cube_data);

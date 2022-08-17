@@ -88,7 +88,7 @@ namespace ForgottenEngine {
 		language = ShaderUtils::ShaderLangFromExtension(shader_source_path.extension().string());
 	}
 
-	bool VulkanShaderCompiler::reload(bool forceCompile)
+	bool VulkanShaderCompiler::reload(bool force_compile)
 	{
 		shader_source.clear();
 		stages_metadata.clear();
@@ -102,14 +102,14 @@ namespace ForgottenEngine {
 		shader_source = pre_process(source);
 		const VkShaderStageFlagBits changedStages = VulkanShaderCache::has_changed(this);
 
-		bool compileSucceeded = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, forceCompile);
+		bool compileSucceeded = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, force_compile);
 		if (!compileSucceeded) {
 			CORE_ASSERT_BOOL(false);
 			return false;
 		}
 
 		// Reflection
-		if (forceCompile || changedStages || !try_read_cached_reflection_data()) {
+		if (force_compile || changedStages || !try_read_cached_reflection_data()) {
 			reflect_all_shader_stages(spirv_debug_data);
 			serialize_reflection_data();
 		}
@@ -193,7 +193,11 @@ namespace ForgottenEngine {
 		if (language == ShaderUtils::SourceLang::GLSL) {
 			static shaderc::Compiler compiler;
 			shaderc::CompileOptions shaderCOptions;
-			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+#ifdef FORGOTTEN_WINDOWS
+			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+#elif defined(FORGOTTEN_MACOS)
+			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
+#endif
 			shaderCOptions.SetWarningsAsErrors();
 			if (options.GenerateDebugInfo)
 				shaderCOptions.SetGenerateDebugInfo();
@@ -215,7 +219,7 @@ namespace ForgottenEngine {
 		return "Unknown language!";
 	}
 
-	Reference<VulkanShader> VulkanShaderCompiler::compile(const std::filesystem::path& shader_source_path, bool forceCompile, bool disable_optim)
+	Reference<VulkanShader> VulkanShaderCompiler::compile(const std::filesystem::path& shader_source_path, bool force_compile, bool disable_optim)
 	{
 		auto new_name = shader_source_path.filename().stem().string();
 
@@ -225,7 +229,7 @@ namespace ForgottenEngine {
 		shader->disable_optimisations = disable_optim;
 
 		Reference<VulkanShaderCompiler> compiler = Reference<VulkanShaderCompiler>::create(shader_source_path, disable_optim);
-		compiler->reload(forceCompile);
+		compiler->reload(force_compile);
 
 		shader->load_and_create_shaders(compiler->get_spirv_data());
 		shader->set_reflection_data(compiler->reflection_data);
@@ -256,14 +260,14 @@ namespace ForgottenEngine {
 	}
 
 	bool VulkanShaderCompiler::compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages, const bool forceCompile)
+		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages, const bool force_compile)
 	{
 		for (auto&& [stage, source] : shader_source) {
-			auto compiled_debug = compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, forceCompile);
+			auto compiled_debug = compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, force_compile);
 			if (!compiled_debug)
 				return false;
 
-			auto compiled = compile_or_get_vulkan_binary(stage, outputBinary[stage], false, changedStages, forceCompile);
+			auto compiled = compile_or_get_vulkan_binary(stage, outputBinary[stage], false, changedStages, force_compile);
 			if (!compiled)
 				return false;
 		}
@@ -271,13 +275,13 @@ namespace ForgottenEngine {
 	}
 
 	bool VulkanShaderCompiler::compile_or_get_vulkan_binary(
-		VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool forceCompile)
+		VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool force_compile)
 	{
 		const std::filesystem::path cacheDirectory = Utils::get_cache_directory();
 
 		// compile shader with debug info so we can reflect
 		const auto extension = ShaderUtils::ShaderStageCachedFileExtension(stage, debug);
-		if (!forceCompile && stage & ~changedStages) // Per-stage cache is found and is unchanged
+		if (!force_compile && stage & ~changedStages) // Per-stage cache is found and is unchanged
 		{
 			try_get_vulkan_cached_binary(cacheDirectory, extension, outputBinary);
 		}

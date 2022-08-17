@@ -22,6 +22,27 @@ namespace ForgottenEngine {
 		return working_directory;
 	}
 
+	Path Assets::slashed_string_to_filepath(const std::string& slashed_string)
+	{
+		auto vector = [&slashed_string]() {
+			std::stringstream stream(slashed_string);
+			std::string item;
+			std::vector<std::string> split_strings;
+			split_strings.push_back("resources");
+			while (std::getline(stream, item, '/')) {
+				split_strings.push_back(item);
+			}
+			return split_strings;
+		}();
+
+		std::filesystem::path result;
+		for (auto&& subpath : vector) {
+			result /= subpath;
+		}
+
+		return result;
+	}
+
 	OptionalPath Assets::find_resources_by_path(const Path& path, const std::string& subdirectory)
 	{
 		if (exists(path))
