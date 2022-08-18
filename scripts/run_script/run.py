@@ -230,7 +230,7 @@ def main():
             f"--height={cli_results.height}",
         ]
         run_folder = f"{forgotten_root}/{build_folder}/{cli_results.build_type}/ForgottenApp"
-        if cli_results.os == "Windows":
+        if cli_results.generator != "Ninja":
             run_folder += "/Debug"
 
         if in_directory_call_process(run_folder, lambda: check_call(run_call)):

@@ -146,8 +146,6 @@ namespace ForgottenEngine {
 		}
 
 		CORE_ASSERT(image_data.data, fmt::format("Failed to load image from in_path: {}.", in_path));
-		if (!image_data.data)
-			return false;
 
 		this->width = static_cast<uint32_t>(stbi_w);
 		this->height = static_cast<uint32_t>(stbi_h);
