@@ -21,12 +21,7 @@ namespace ForgottenEngine {
 
 		~ImGuiLayer() override = default;
 
-		void begin()
-		{
-			ImGui_ImplVulkan_NewFrame();
-			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
-		}
+		void begin();
 
 		void end();
 

@@ -16,11 +16,11 @@ namespace ForgottenEngine {
 		auto device = VulkanContext::get_current_device();
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 
-		VkCommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		cmdPoolInfo.queueFamilyIndex = device->get_physical_device()->get_queue_family_indices().graphics;
-		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		VK_CHECK(vkCreateCommandPool(device->get_vulkan_device(), &cmdPoolInfo, nullptr, &command_pool));
+		VkCommandPoolCreateInfo cpci = {};
+		cpci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cpci.queueFamilyIndex = device->get_physical_device()->get_queue_family_indices().graphics;
+		cpci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		VK_CHECK(vkCreateCommandPool(device->get_vulkan_device(), &cpci, nullptr, &command_pool));
 
 		VkCommandBufferAllocateInfo cbai {};
 		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -96,34 +96,35 @@ namespace ForgottenEngine {
 
 	void VulkanRenderCommandBuffer::begin()
 	{
-		Renderer::submit([this]() mutable {
-			uint32_t frameIndex = Renderer::get_current_frame_index();
+		Reference<VulkanRenderCommandBuffer> instance = this;
+		Renderer::submit([instance]() mutable {
+			uint32_t frame_index = Renderer::get_current_frame_index();
 
-			VkCommandBufferBeginInfo cmdBufInfo = {};
-			cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			cmdBufInfo.pNext = nullptr;
+			VkCommandBufferBeginInfo cbi = {};
+			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			cbi.pNext = nullptr;
 
-			VkCommandBuffer commandBuffer = nullptr;
-			if (this->owned_by_swapchain) {
-				auto& swapChain = Application::the().get_window().get_swapchain();
-				commandBuffer = swapChain.get_drawbuffer(frameIndex);
+			VkCommandBuffer cmd_buffer = nullptr;
+			if (instance->owned_by_swapchain) {
+				auto& swapchain = Application::the().get_window().get_swapchain();
+				cmd_buffer = swapchain.get_drawbuffer(frame_index);
 			} else {
-				commandBuffer = this->command_buffers[frameIndex];
+				cmd_buffer = instance->command_buffers[frame_index];
 			}
-			this->active_command_buffer = commandBuffer;
-			VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufInfo));
+			instance->active_command_buffer = cmd_buffer;
+			VK_CHECK(vkBeginCommandBuffer(cmd_buffer, &cbi));
 		});
 	}
 
 	void VulkanRenderCommandBuffer::end()
 	{
-		Renderer::submit([this]() mutable {
-			uint32_t frameIndex = Renderer::get_current_frame_index();
-			VkCommandBuffer commandBuffer = this->active_command_buffer;
-			VK_CHECK(vkEndCommandBuffer(commandBuffer));
+		Reference<VulkanRenderCommandBuffer> instance = this;
+		Renderer::submit([instance]() mutable {
+			VkCommandBuffer cmd_buffer = instance->active_command_buffer;
+			VK_CHECK(vkEndCommandBuffer(cmd_buffer));
 
-			this->active_command_buffer = nullptr;
+			instance->active_command_buffer = nullptr;
 		});
 	}
 
@@ -131,21 +132,21 @@ namespace ForgottenEngine {
 	{
 		if (owned_by_swapchain)
 			return;
-
-		Renderer::submit([this]() mutable {
+		Reference<VulkanRenderCommandBuffer> instance = this;
+		Renderer::submit([instance]() mutable {
 			auto device = VulkanContext::get_current_device();
 
-			uint32_t frameIndex = Renderer::get_current_frame_index();
+			uint32_t frame_index = Renderer::get_current_frame_index();
 
-			VkSubmitInfo submitInfo {};
-			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-			submitInfo.commandBufferCount = 1;
-			VkCommandBuffer commandBuffer = this->command_buffers[frameIndex];
-			submitInfo.pCommandBuffers = &commandBuffer;
+			VkSubmitInfo submit_info {};
+			submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			submit_info.commandBufferCount = 1;
+			VkCommandBuffer cmd_buffer = instance->command_buffers[frame_index];
+			submit_info.pCommandBuffers = &cmd_buffer;
 
-			VK_CHECK(vkWaitForFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex], VK_TRUE, UINT64_MAX));
-			VK_CHECK(vkResetFences(device->get_vulkan_device(), 1, &this->wait_fences[frameIndex]));
-			VK_CHECK(vkQueueSubmit(device->get_graphics_queue(), 1, &submitInfo, this->wait_fences[frameIndex]));
+			VK_CHECK(vkWaitForFences(device->get_vulkan_device(), 1, &instance->wait_fences[frame_index], VK_TRUE, UINT64_MAX));
+			VK_CHECK(vkResetFences(device->get_vulkan_device(), 1, &instance->wait_fences[frame_index]));
+			VK_CHECK(vkQueueSubmit(device->get_graphics_queue(), 1, &submit_info, instance->wait_fences[frame_index]));
 		});
 	}
 

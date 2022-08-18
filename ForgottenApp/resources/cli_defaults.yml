@@ -14,6 +14,10 @@
   default:
       type: str
       value: ForgottenEngine
+- name: vsync
+  type: Positional
+  default:
+    type: bool
 - name: clean
   type: Positional
   default:

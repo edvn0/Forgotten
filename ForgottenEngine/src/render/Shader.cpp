@@ -46,7 +46,7 @@ namespace ForgottenEngine {
 			if (shader_pack->contains(path))
 				shader = shader_pack->load_shader((*found_path).string());
 		} else {
-			// Try compile from source
+			// Try to compile from source
 			// Unavailable at runtime
 			shader = VulkanShaderCompiler::compile(*found_path, force_compile, disable_optimizations);
 		}

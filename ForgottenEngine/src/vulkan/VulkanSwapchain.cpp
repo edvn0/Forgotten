@@ -6,7 +6,6 @@
 #include "render/Renderer.hpp"
 #include "vulkan/VulkanContext.hpp"
 
-#include <Badge.hpp>
 #include <GLFW/glfw3.h>
 
 namespace ForgottenEngine {
@@ -24,18 +23,18 @@ namespace ForgottenEngine {
 		glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
 		// Get available queue family properties
-		uint32_t queueCount;
-		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, nullptr);
-		CORE_ASSERT(queueCount >= 1, "Could not create families");
+		uint32_t queue_count;
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_count, nullptr);
+		CORE_ASSERT(queue_count >= 1, "Could not create families");
 
-		std::vector<VkQueueFamilyProperties> queue_props(queueCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, queue_props.data());
+		std::vector<VkQueueFamilyProperties> queue_props(queue_count);
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_count, queue_props.data());
 
 		// Iterate over each queue to learn whether it supports presenting:
 		// Find a queue with present support
 		// Will be used to present the swap chain images to the windowing system
-		std::vector<VkBool32> supportsPresent(queueCount);
-		for (uint32_t i = 0; i < queueCount; i++) {
+		std::vector<VkBool32> supportsPresent(queue_count);
+		for (uint32_t i = 0; i < queue_count; i++) {
 			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent[i]);
 		}
 
@@ -43,7 +42,7 @@ namespace ForgottenEngine {
 		// families, try to find one that supports both
 		uint32_t graphics_queue_index = UINT32_MAX;
 		uint32_t present_queue_index = UINT32_MAX;
-		for (uint32_t i = 0; i < queueCount; i++) {
+		for (uint32_t i = 0; i < queue_count; i++) {
 			if (queue_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				graphics_queue_index = i;
 			}
@@ -51,7 +50,7 @@ namespace ForgottenEngine {
 		if (present_queue_index == UINT32_MAX) {
 			// If there's no queue that supports both present and graphics
 			// try to find a separate present queue
-			for (uint32_t i = 0; i < queueCount; ++i) {
+			for (uint32_t i = 0; i < queue_count; ++i) {
 				if (supportsPresent[i] == VK_TRUE) {
 					present_queue_index = i;
 					break;
@@ -247,13 +246,13 @@ namespace ForgottenEngine {
 
 		// Create command buffers
 		{
-			for (auto& commandBuffer : command_buffers)
-				vkDestroyCommandPool(device->get_vulkan_device(), commandBuffer.command_pool, nullptr);
+			for (auto& cmd_buffer : command_buffers)
+				vkDestroyCommandPool(device->get_vulkan_device(), cmd_buffer.command_pool, nullptr);
 
-			VkCommandPoolCreateInfo cmdPoolInfo = {};
-			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdPoolInfo.queueFamilyIndex = queue_node_index;
-			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+			VkCommandPoolCreateInfo pci = {};
+			pci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			pci.queueFamilyIndex = queue_node_index;
+			pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo {};
 			commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -261,11 +260,11 @@ namespace ForgottenEngine {
 			commandBufferAllocateInfo.commandBufferCount = 1;
 
 			command_buffers.resize(image_count);
-			for (auto& commandBuffer : command_buffers) {
-				VK_CHECK(vkCreateCommandPool(device->get_vulkan_device(), &cmdPoolInfo, nullptr, &commandBuffer.command_pool));
+			for (auto& cmd_buffer : command_buffers) {
+				VK_CHECK(vkCreateCommandPool(device->get_vulkan_device(), &pci, nullptr, &cmd_buffer.command_pool));
 
-				commandBufferAllocateInfo.commandPool = commandBuffer.command_pool;
-				VK_CHECK(vkAllocateCommandBuffers(device->get_vulkan_device(), &commandBufferAllocateInfo, &commandBuffer.buffer));
+				commandBufferAllocateInfo.commandPool = cmd_buffer.command_pool;
+				VK_CHECK(vkAllocateCommandBuffers(device->get_vulkan_device(), &commandBufferAllocateInfo, &cmd_buffer.buffer));
 			}
 		}
 
@@ -384,8 +383,8 @@ namespace ForgottenEngine {
 		for (auto& image : images)
 			vkDestroyImageView(vk_device, image.view, nullptr);
 
-		for (auto& commandBuffer : command_buffers)
-			vkDestroyCommandPool(vk_device, commandBuffer.command_pool, nullptr);
+		for (auto& cmd_buffer : command_buffers)
+			vkDestroyCommandPool(vk_device, cmd_buffer.command_pool, nullptr);
 
 		if (render_pass)
 			vkDestroyRenderPass(vk_device, render_pass, nullptr);
@@ -430,23 +429,19 @@ namespace ForgottenEngine {
 
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.pWaitDstStageMask = &waitStageMask;
-		submitInfo.pWaitSemaphores = &semaphores.present_complete_semaphore;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &semaphores.render_complete_semaphore;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pCommandBuffers = &command_buffers[current_buffer_index].buffer;
-		submitInfo.commandBufferCount = 1;
+		VkSubmitInfo submit_info = {};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.pWaitDstStageMask = &waitStageMask;
+		submit_info.pWaitSemaphores = &semaphores.present_complete_semaphore;
+		submit_info.waitSemaphoreCount = 1;
+		submit_info.pSignalSemaphores = &semaphores.render_complete_semaphore;
+		submit_info.signalSemaphoreCount = 1;
+		submit_info.pCommandBuffers = &command_buffers[current_buffer_index].buffer;
+		submit_info.commandBufferCount = 1;
 
 		VK_CHECK(vkResetFences(VulkanContext::get_current_device()->get_vulkan_device(), 1, &wait_fences[current_buffer_index]));
-		VK_CHECK(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submitInfo, wait_fences[current_buffer_index]));
+		VK_CHECK(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submit_info, wait_fences[current_buffer_index]));
 
-		// Present the current buffer to the swap chain
-		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for
-		// swap chain presentation This ensures that the image is not presented to the windowing system until all
-		// commands have been submitted
 		VkResult result;
 		{
 			VkPresentInfoKHR presentInfo = {};
@@ -465,6 +460,7 @@ namespace ForgottenEngine {
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 				CORE_INFO("RESIZE");
 				on_resize(width, height);
+				return;
 			} else {
 				VK_CHECK(result);
 			}

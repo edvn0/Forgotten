@@ -117,6 +117,13 @@ namespace ForgottenEngine {
 		}
 	}
 
+	void ImGuiLayer::begin()
+	{
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+	}
+
 	void ImGuiLayer::end()
 	{
 		ImGui::Render();
@@ -134,13 +141,13 @@ namespace ForgottenEngine {
 
 		uint32_t commandBufferIndex = swapchain.get_current_buffer_index();
 
-		VkCommandBufferBeginInfo drawCmdBufInfo = {};
-		drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		drawCmdBufInfo.pNext = nullptr;
+		VkCommandBufferBeginInfo cmd_bbi = {};
+		cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		cmd_bbi.pNext = nullptr;
 
 		VkCommandBuffer draw_command_buffer = swapchain.get_current_drawbuffer();
-		VK_CHECK(vkBeginCommandBuffer(draw_command_buffer, &drawCmdBufInfo));
+		VK_CHECK(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
 
 		VkRenderPassBeginInfo renderPassBeginInfo = {};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

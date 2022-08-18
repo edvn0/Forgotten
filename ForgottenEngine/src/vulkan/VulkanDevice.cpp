@@ -264,24 +264,23 @@ namespace ForgottenEngine {
 
 	VkCommandBuffer VulkanDevice::get_command_buffer(bool begin, bool compute)
 	{
-		VkCommandBuffer cmdBuffer;
+		VkCommandBuffer cmd_buffer;
 
-		VkCommandBufferAllocateInfo cmdBufAllocateInfo = {};
-		cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmdBufAllocateInfo.commandPool = compute ? compute_command_pool : command_pool;
-		cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		cmdBufAllocateInfo.commandBufferCount = 1;
+		VkCommandBufferAllocateInfo cbai = {};
+		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cbai.commandPool = compute ? compute_command_pool : command_pool;
+		cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		cbai.commandBufferCount = 1;
 
-		VK_CHECK(vkAllocateCommandBuffers(logical_device, &cmdBufAllocateInfo, &cmdBuffer));
+		VK_CHECK(vkAllocateCommandBuffers(logical_device, &cbai, &cmd_buffer));
 
-		// If requested, also start the new command buffer
 		if (begin) {
 			VkCommandBufferBeginInfo cmdBufferBeginInfo {};
 			cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			VK_CHECK(vkBeginCommandBuffer(cmdBuffer, &cmdBufferBeginInfo));
+			VK_CHECK(vkBeginCommandBuffer(cmd_buffer, &cmdBufferBeginInfo));
 		}
 
-		return cmdBuffer;
+		return cmd_buffer;
 	}
 
 	void VulkanDevice::flush_command_buffer(VkCommandBuffer commandBuffer) { flush_command_buffer(commandBuffer, graphics_queue); }
@@ -290,7 +289,7 @@ namespace ForgottenEngine {
 	{
 		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 
-		CORE_ASSERT(commandBuffer != VK_NULL_HANDLE, "");
+		CORE_ASSERT_BOOL(commandBuffer != VK_NULL_HANDLE);
 
 		VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
@@ -317,16 +316,16 @@ namespace ForgottenEngine {
 
 	VkCommandBuffer VulkanDevice::get_secondary_buffer() const
 	{
-		VkCommandBuffer cmdBuffer;
+		VkCommandBuffer cmd_buffer;
 
-		VkCommandBufferAllocateInfo cmdBufAllocateInfo = {};
-		cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmdBufAllocateInfo.commandPool = command_pool;
-		cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-		cmdBufAllocateInfo.commandBufferCount = 1;
+		VkCommandBufferAllocateInfo cbai = {};
+		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cbai.commandPool = command_pool;
+		cbai.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+		cbai.commandBufferCount = 1;
 
-		VK_CHECK(vkAllocateCommandBuffers(logical_device, &cmdBufAllocateInfo, &cmdBuffer));
-		return cmdBuffer;
+		VK_CHECK(vkAllocateCommandBuffers(logical_device, &cbai, &cmd_buffer));
+		return cmd_buffer;
 	}
 
 } // namespace ForgottenEngine

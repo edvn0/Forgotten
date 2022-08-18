@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "Badge.hpp"
 #include "Common.hpp"
 #include "render/RenderCommandBuffer.hpp"
 #include "vk_mem_alloc.h"

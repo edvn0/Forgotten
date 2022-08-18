@@ -81,12 +81,8 @@ namespace ForgottenEngine {
 		Path path = input;
 
 		auto short_circuit = [&exceptions](const Path& p) {
-			for (const auto& exception : exceptions) {
-				if (p.extension() == exception) {
-					return true;
-				}
-			}
-			return false;
+			auto ext = p.extension();
+			return std::any_of(exceptions.begin(), exceptions.end(), [&ext](const std::string& in) { return in == ext; });
 		};
 
 		if (short_circuit(path)) {
