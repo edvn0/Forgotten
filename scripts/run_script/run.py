@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-import multiprocessing
 import os
-import signal
 from subprocess import check_call, CalledProcessError
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from tabnanny import check
 from typing import Callable, List
 
 import yaml
@@ -46,7 +43,7 @@ def log_info(message: str, with_time=True):
     print(__message_to_coloured(message, Color.WARNING, with_time), file=sys.stdout)
 
 
-def in_directory_call_process(directory: str, process_func: Callable[[None], bool]):
+def in_directory_call_process(directory: str, process_func: Callable[[], bool]):
     wd = os.getcwd()
     os.chdir(directory)
     try:
@@ -104,12 +101,7 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
     return parsed
 
 
-def build_project(build_folder: str, generator: str):
-    # if generator.count("Visual Studio") > 0:
-    #    log_success(
-    #        "Usage of Visual Studio generator detected, this script will not build the solution.")
-    #    exit(0)
-
+def build_project(build_folder: str):
     try:
         build_call = f"cmake --build . --parallel 6"
         if in_directory_call_process(
@@ -206,7 +198,7 @@ def main():
             exit(e.returncode)
 
     build_project(
-        f"{forgotten_root}/{build_folder}/{cli_results.build_type}", cli_results.generator)
+        f"{forgotten_root}/{build_folder}/{cli_results.build_type}")
 
     try:
         symlink_call = f"cmake -E create_symlink {forgotten_root}/{build_folder}/{cli_results.build_type}/compile_commands.json {forgotten_root}/compile_commands.json"

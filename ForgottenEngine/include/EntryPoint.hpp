@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 	auto cwd = std::filesystem::current_path();
 	CORE_INFO("{}", cwd);
 
-	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
+	std::filesystem::path defaults_path = cwd / std::filesystem::path { "cli_defaults.yml" };
 
 	YAML::Node config;
 	try {

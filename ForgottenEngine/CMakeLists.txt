@@ -76,8 +76,9 @@ if(FORGOTTEN_OS STREQUAL "Linux")
 endif()
 
 if(APPLE)
-  target_compile_options(ForgottenEngine PUBLIC -Wno-nullability-completeness
-                                                -fcolor-diagnostics)
+  target_compile_options(
+    ForgottenEngine PUBLIC -Wno-return-type -Wno-nullability-completeness
+                           -fcolor-diagnostics)
 endif()
 
 set(Forgotten_INCLUDE_DIRS
@@ -111,10 +112,10 @@ target_include_directories(
 
 target_link_libraries(
   ForgottenEngine
+  PUBLIC imgui
   PRIVATE Vulkan::Vulkan
           glfw
           tinyobjloader
-          imgui
           msdf-atlas-gen
           assimp
           shaderc

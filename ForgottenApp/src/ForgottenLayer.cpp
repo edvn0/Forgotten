@@ -6,7 +6,7 @@
 // Note: Switch this to true to enable dockspace
 static auto is_dockspace_open = true;
 
-static bool should_show_debug_stats = false;
+static bool should_show_debug_stats = true;
 
 ForgottenLayer::ForgottenLayer()
 	: Layer("Sandbox 2D")
@@ -23,7 +23,7 @@ void ForgottenLayer::on_attach()
 	compFramebufferSpec.DebugName = "SceneComposite";
 	compFramebufferSpec.ClearColor = { 0.1f, 0.9f, 0.1f, 1.0f };
 	compFramebufferSpec.SwapChainTarget = true;
-	compFramebufferSpec.Attachments = { ImageFormat::RGBA };
+	compFramebufferSpec.attachments = { ImageFormat::RGBA };
 
 	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
 
@@ -210,9 +210,10 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				// UI::image(swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0), vp_size, { 0, 1
-				// }, { 1, 0 }); ImTextureID texture_id = 0; ImGui::Image(
-				//	texture_id, ImVec2{ viewport_size.x, viewport_size.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+				UI::image(swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0), vp_size, { 0, 1 },
+					{ 1, 0 });
+				ImTextureID texture_id = 0;
+				ImGui::Image(texture_id, ImVec2 { viewport_size.x, viewport_size.y }, ImVec2 { 0, 1 }, ImVec2 { 1, 0 });
 				ImGui::End();
 			}
 		}

@@ -192,7 +192,7 @@ namespace ForgottenEngine {
 					if (!framebuffer->get_specification().Blend)
 						break;
 
-					const auto& attachmentSpec = framebuffer->get_specification().Attachments.Attachments[i];
+					const auto& attachmentSpec = framebuffer->get_specification().attachments.texture_attachments[i];
 					FramebufferBlendMode blendMode = framebuffer->get_specification().BlendMode == FramebufferBlendMode::None
 						? attachmentSpec.BlendMode
 						: framebuffer->get_specification().BlendMode;

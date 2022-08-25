@@ -25,7 +25,7 @@ namespace ForgottenEngine {
 		// elsewhere
 		uint32_t attachmentIndex = 0;
 		if (!spec.ExistingFramebuffer) {
-			for (auto& attachmentSpec : spec.Attachments.Attachments) {
+			for (auto& attachmentSpec : spec.attachments.texture_attachments) {
 				if (spec.ExistingImage && spec.ExistingImage->get_specification().Layers > 1) {
 					if (Utils::IsDepthFormat(attachmentSpec.Format))
 						depth_image = spec.ExistingImage;
@@ -59,7 +59,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_ASSERT_BOOL(specification.Attachments.Attachments.size());
+		CORE_ASSERT_BOOL(specification.attachments.texture_attachments.size());
 		resize(width, height, true);
 	}
 
@@ -83,14 +83,14 @@ namespace ForgottenEngine {
 
 					// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer
 					// invalidation
-					if (image->get_specification().Layers == 1 || attachmentIndex == 0 && !image->get_layer_image_view(0))
+					if (image->get_specification().Layers == 1 || (attachmentIndex == 0 && !image->get_layer_image_view(0)))
 						image->release();
 					attachmentIndex++;
 				}
 
 				if (depth_image) {
 					// Do we own the depth image?
-					if (spec.ExistingImages.find((uint32_t)spec.Attachments.Attachments.size() - 1) == spec.ExistingImages.end())
+					if (spec.ExistingImages.find((uint32_t)spec.attachments.texture_attachments.size() - 1) == spec.ExistingImages.end())
 						depth_image->release();
 				}
 			}
@@ -107,8 +107,8 @@ namespace ForgottenEngine {
 		if (!spec.SwapChainTarget) {
 			invalidate();
 		} else {
-			auto& swapChain = Application::the().get_window().get_swapchain();
-			render_pass = swapChain.get_render_pass();
+			auto& sc = Application::the().get_window().get_swapchain();
+			render_pass = sc.get_render_pass();
 
 			clear_values.clear();
 			clear_values.emplace_back().color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -128,8 +128,6 @@ namespace ForgottenEngine {
 
 	void VulkanFramebuffer::rt_invalidate()
 	{
-		// CORE_TRACE("VulkanFramebuffer::rt_invalidate ({})", spec.DebugName);
-
 		auto device = VulkanContext::get_current_device()->get_vulkan_device();
 
 		release();
@@ -141,7 +139,7 @@ namespace ForgottenEngine {
 		std::vector<VkAttachmentReference> colorAttachmentReferences;
 		VkAttachmentReference depthAttachmentReference;
 
-		clear_values.resize(spec.Attachments.Attachments.size());
+		clear_values.resize(spec.attachments.texture_attachments.size());
 
 		bool createImages = attachment_images.empty();
 
@@ -149,7 +147,7 @@ namespace ForgottenEngine {
 			attachment_images.clear();
 
 		uint32_t attachmentIndex = 0;
-		for (auto attachmentSpec : spec.Attachments.Attachments) {
+		for (auto attachmentSpec : spec.attachments.texture_attachments) {
 			if (Utils::IsDepthFormat(attachmentSpec.Format)) {
 				if (spec.ExistingImage) {
 					depth_image = spec.ExistingImage;

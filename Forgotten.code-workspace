@@ -123,7 +123,9 @@
             "xtree": "cpp",
             "xutility": "cpp",
             "stop_token": "cpp",
-            "xmemory": "cpp"
+            "xmemory": "cpp",
+            "*.tcc": "cpp",
+            "*.inc": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,

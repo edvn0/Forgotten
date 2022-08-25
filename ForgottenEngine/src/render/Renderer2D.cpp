@@ -42,8 +42,10 @@ namespace ForgottenEngine {
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 
 		FramebufferSpecification framebufferSpec;
-		framebufferSpec.Attachments
-			= { FramebufferTextureSpecification { ImageFormat::RGBA32F }, FramebufferTextureSpecification { ImageFormat::Depth } };
+		framebufferSpec.attachments = {
+			ImageFormat::RGBA32F,
+			ImageFormat::Depth,
+		};
 		framebufferSpec.Samples = 1;
 		framebufferSpec.ClearColorOnLoad = true;
 		framebufferSpec.ClearColor = { 0.1f, 0.9f, 0.5f, 1.0f };
@@ -208,7 +210,7 @@ namespace ForgottenEngine {
 			FramebufferSpecification preDepthFramebufferSpec;
 			preDepthFramebufferSpec.DebugName = "PreDepth-Opaque";
 			// Linear depth, reversed device depth
-			preDepthFramebufferSpec.Attachments = { /*ImageFormat::RED32F, */ ImageFormat::DEPTH32FSTENCIL8UINT };
+			preDepthFramebufferSpec.attachments = { /*ImageFormat::RED32F, */ ImageFormat::DEPTH32FSTENCIL8UINT };
 			preDepthFramebufferSpec.ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 			preDepthFramebufferSpec.DepthClearValue = 0.0f;
 
@@ -231,7 +233,7 @@ namespace ForgottenEngine {
 			FramebufferSpecification compFramebufferSpec;
 			compFramebufferSpec.DebugName = "SceneComposite";
 			compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
-			compFramebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
+			compFramebufferSpec.attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
 			compFramebufferSpec.Transfer = true;
 
 			Reference<Framebuffer> fb = Framebuffer::create(compFramebufferSpec);
@@ -254,7 +256,7 @@ namespace ForgottenEngine {
 		{
 			FramebufferSpecification extCompFramebufferSpec;
 			extCompFramebufferSpec.DebugName = "External-Composite";
-			extCompFramebufferSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32FSTENCIL8UINT };
+			extCompFramebufferSpec.attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32FSTENCIL8UINT };
 			extCompFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
 			extCompFramebufferSpec.ClearColorOnLoad = false;
 			extCompFramebufferSpec.ClearDepthOnLoad = false;

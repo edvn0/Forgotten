@@ -28,11 +28,11 @@ namespace ForgottenEngine {
 	struct FramebufferAttachmentSpecification {
 		FramebufferAttachmentSpecification() = default;
 		FramebufferAttachmentSpecification(const std::initializer_list<FramebufferTextureSpecification>& attachments)
-			: Attachments(attachments)
+			: texture_attachments(attachments)
 		{
 		}
 
-		std::vector<FramebufferTextureSpecification> Attachments;
+		std::vector<FramebufferTextureSpecification> texture_attachments;
 	};
 
 	struct FramebufferSpecification {
@@ -44,7 +44,7 @@ namespace ForgottenEngine {
 		bool ClearColorOnLoad = true;
 		bool ClearDepthOnLoad = true;
 
-		FramebufferAttachmentSpecification Attachments;
+		FramebufferAttachmentSpecification attachments;
 		uint32_t Samples = 1; // multisampling
 
 		// TODO: Temp, needs scale

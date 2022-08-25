@@ -164,7 +164,7 @@ namespace ForgottenEngine {
 			};
 			PreprocessorOptions preprocessor_options = { .source = shader_source,
 				.stage = ShaderUtils::ShaderStageToShaderC(stage),
-				.file_path = shader_source_path.string().c_str(),
+				.file_path = shader_source_path.c_str(),
 				.options = options };
 
 			const auto result = compiler.PreprocessGlsl(
