@@ -20,31 +20,31 @@ void ForgottenLayer::on_attach()
 	const auto [width, height] = Application::the().get_window().get_size<float>();
 
 	FramebufferSpecification compFramebufferSpec;
-	compFramebufferSpec.DebugName = "SceneComposite";
-	compFramebufferSpec.ClearColor = { 0.1f, 0.9f, 0.1f, 1.0f };
-	compFramebufferSpec.SwapChainTarget = true;
+	compFramebufferSpec.debug_name = "SceneComposite";
+	compFramebufferSpec.clear_colour = { 0.1f, 0.9f, 0.1f, 1.0f };
+	compFramebufferSpec.swapchain_target = true;
 	compFramebufferSpec.attachments = { ImageFormat::RGBA };
 
 	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
 
 	PipelineSpecification pipeline_spec;
-	pipeline_spec.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
-	pipeline_spec.BackfaceCulling = false;
-	pipeline_spec.Shader = Renderer::get_shader_library()->get("TexturePass");
+	pipeline_spec.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
+	pipeline_spec.backface_culling = false;
+	pipeline_spec.shader = Renderer::get_shader_library()->get("TexturePass");
 
 	RenderPassSpecification renderPassSpec;
-	renderPassSpec.TargetFramebuffer = framebuffer;
-	renderPassSpec.DebugName = "SceneComposite";
-	pipeline_spec.RenderPass = RenderPass::create(renderPassSpec);
-	pipeline_spec.DebugName = "SceneComposite";
-	pipeline_spec.DepthWrite = false;
+	renderPassSpec.target_framebuffer = framebuffer;
+	renderPassSpec.debug_name = "SceneComposite";
+	pipeline_spec.render_pass = RenderPass::create(renderPassSpec);
+	pipeline_spec.debug_name = "SceneComposite";
+	pipeline_spec.depth_write = false;
 	swapchain_pipeline = Pipeline::create(pipeline_spec);
 
-	swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0)->invalidate();
+	swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0)->invalidate();
 
 	Renderer::wait_and_render();
 
-	swapchain_material = Material::create(pipeline_spec.Shader);
+	swapchain_material = Material::create(pipeline_spec.shader);
 	command_buffer = RenderCommandBuffer::create_from_swapchain();
 	projection_matrix = glm::ortho(0.0f, width, 0.0f, height);
 }
@@ -71,9 +71,9 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 	user_camera.set_viewport_size(width, height);
 	projection_matrix = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
 
-	if (m_Width != width || m_Height != height) {
-		m_Width = width;
-		m_Height = height;
+	if (width != width || height != height) {
+		this->width = width;
+		this->height = height;
 		renderer->on_recreate_swapchain();
 
 		// Retrieve new main command buffer
@@ -86,19 +86,19 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 		draw_debug_stats();
 
 	// Render final image to swapchain
-	Reference<Image2D> final_image = swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
+	Reference<Image2D> final_image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
 	if (final_image) {
 		swapchain_material->set("u_Texture", final_image);
 
 		command_buffer->begin();
-		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().RenderPass, false);
+		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().render_pass, false);
 		Renderer::submit_fullscreen_quad(command_buffer, swapchain_pipeline, nullptr, swapchain_material);
 		Renderer::end_render_pass(command_buffer);
 		command_buffer->end();
 	} else {
 		// Clear render pass if no image is present
 		command_buffer->begin();
-		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().RenderPass, false);
+		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().render_pass, false);
 		Renderer::end_render_pass(command_buffer);
 		command_buffer->end();
 	}
@@ -202,18 +202,18 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				viewport_focused = ImGui::IsWindowFocused();
 				viewport_hovered = ImGui::IsWindowHovered();
-				const auto& imgui_layer = dynamic_cast<ImGuiLayer*>(Application::the().get_imgui_layer());
-				imgui_layer->should_block(!viewport_focused && !viewport_hovered);
+
+				const auto& imgui_layer = Application::the().get_imgui_layer();
+				imgui_layer->block(!viewport_focused && !viewport_hovered);
 
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				UI::image(swapchain_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0), vp_size, { 0, 1 },
-					{ 1, 0 });
-				ImTextureID texture_id = 0;
-				ImGui::Image(texture_id, ImVec2 { viewport_size.x, viewport_size.y }, ImVec2 { 0, 1 }, ImVec2 { 1, 0 });
+				const auto& image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
+
+				UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
 				ImGui::End();
 			}
 		}
@@ -300,7 +300,7 @@ void ForgottenLayer::on_event(Event& event)
 
 void ForgottenLayer::draw_debug_stats()
 {
-	renderer->set_target_render_pass(swapchain_pipeline->get_specification().RenderPass);
+	renderer->set_target_render_pass(swapchain_pipeline->get_specification().render_pass);
 	renderer->begin_scene(projection_matrix, glm::mat4(1.0f));
 
 	// Add font size to this after each line

@@ -12,6 +12,7 @@ namespace ForgottenEngine {
 	class Layer {
 	private:
 		std::string name;
+		bool should_block;
 
 	public:
 		explicit Layer(std::string name)
@@ -24,6 +25,8 @@ namespace ForgottenEngine {
 		virtual void on_update(const TimeStep& ts) {};
 		virtual void on_ui_render(const TimeStep& ts) {};
 		virtual void on_detach() {};
+
+		virtual void block(bool should_block) { this->should_block = should_block; };
 
 		virtual std::string_view get_name() { return name; }
 	};

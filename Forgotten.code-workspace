@@ -125,7 +125,17 @@
             "stop_token": "cpp",
             "xmemory": "cpp",
             "*.tcc": "cpp",
-            "*.inc": "cpp"
+            "*.inc": "cpp",
+            "source_location": "cpp",
+            "xfacet": "cpp",
+            "xiosbase": "cpp",
+            "xlocbuf": "cpp",
+            "xlocmes": "cpp",
+            "xlocmon": "cpp",
+            "xlocnum": "cpp",
+            "xloctime": "cpp",
+            "xstddef": "cpp",
+            "xtr1common": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,
@@ -167,6 +177,7 @@
             "FORGOTTEN_WINDOWS"
         ],
         "cSpell.words": [
+            "backface",
             "Carlsson",
             "cbai",
             "cbbi",

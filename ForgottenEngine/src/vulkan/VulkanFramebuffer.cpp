@@ -13,44 +13,44 @@ namespace ForgottenEngine {
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& specification)
 		: spec(specification)
 	{
-		if (specification.Width == 0) {
+		if (specification.width == 0) {
 			width = Application::the().get_window().get_width();
 			height = Application::the().get_window().get_height();
 		} else {
-			width = (uint32_t)(specification.Width * spec.Scale);
-			height = (uint32_t)(specification.Height * spec.Scale);
+			width = (uint32_t)(specification.width * spec.scale);
+			height = (uint32_t)(specification.height * spec.scale);
 		}
 
 		// Create all image objects immediately so we can start referencing them
 		// elsewhere
 		uint32_t attachmentIndex = 0;
-		if (!spec.ExistingFramebuffer) {
+		if (!spec.existing_framebuffer) {
 			for (auto& attachmentSpec : spec.attachments.texture_attachments) {
-				if (spec.ExistingImage && spec.ExistingImage->get_specification().Layers > 1) {
-					if (Utils::IsDepthFormat(attachmentSpec.Format))
-						depth_image = spec.ExistingImage;
+				if (spec.existing_image && spec.existing_image->get_specification().Layers > 1) {
+					if (Utils::IsDepthFormat(attachmentSpec.format))
+						depth_image = spec.existing_image;
 					else
-						attachment_images.emplace_back(spec.ExistingImage);
-				} else if (spec.ExistingImages.find(attachmentIndex) != spec.ExistingImages.end()) {
-					if (!Utils::IsDepthFormat(attachmentSpec.Format))
+						attachment_images.emplace_back(spec.existing_image);
+				} else if (spec.existing_images.find(attachmentIndex) != spec.existing_images.end()) {
+					if (!Utils::IsDepthFormat(attachmentSpec.format))
 						attachment_images.emplace_back(); // This will be set later
-				} else if (Utils::IsDepthFormat(attachmentSpec.Format)) {
+				} else if (Utils::IsDepthFormat(attachmentSpec.format)) {
 					ImageSpecification image_specification;
-					image_specification.Format = attachmentSpec.Format;
+					image_specification.Format = attachmentSpec.format;
 					image_specification.Usage = ImageUsage::Attachment;
 					image_specification.Transfer = image_specification.Transfer;
-					image_specification.Width = (uint32_t)(width * spec.Scale);
-					image_specification.Height = (uint32_t)(height * spec.Scale);
+					image_specification.Width = (uint32_t)(width * spec.scale);
+					image_specification.Height = (uint32_t)(height * spec.scale);
 					image_specification.DebugName = fmt::format("{0}-DepthAttachment{1}",
 						image_specification.DebugName.empty() ? "Unnamed FB" : image_specification.DebugName, attachmentIndex);
 					depth_image = Image2D::create(image_specification);
 				} else {
 					ImageSpecification image_specification;
-					image_specification.Format = attachmentSpec.Format;
+					image_specification.Format = attachmentSpec.format;
 					image_specification.Usage = ImageUsage::Attachment;
 					image_specification.Transfer = image_specification.Transfer;
-					image_specification.Width = (uint32_t)(width * spec.Scale);
-					image_specification.Height = (uint32_t)(height * spec.Scale);
+					image_specification.Width = (uint32_t)(width * spec.scale);
+					image_specification.Height = (uint32_t)(height * spec.scale);
 					image_specification.DebugName = fmt::format("{0}-ColorAttachment{1}",
 						image_specification.DebugName.empty() ? "Unnamed FB" : image_specification.DebugName, attachmentIndex);
 					attachment_images.emplace_back(Image2D::create(image_specification));
@@ -75,10 +75,10 @@ namespace ForgottenEngine {
 			});
 
 			// Don't free the images if we don't own them
-			if (!spec.ExistingFramebuffer) {
+			if (!spec.existing_framebuffer) {
 				uint32_t attachmentIndex = 0;
 				for (Reference<VulkanImage2D> image : attachment_images) {
-					if (spec.ExistingImages.find(attachmentIndex) != spec.ExistingImages.end())
+					if (spec.existing_images.find(attachmentIndex) != spec.existing_images.end())
 						continue;
 
 					// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer
@@ -90,7 +90,7 @@ namespace ForgottenEngine {
 
 				if (depth_image) {
 					// Do we own the depth image?
-					if (spec.ExistingImages.find((uint32_t)spec.attachments.texture_attachments.size() - 1) == spec.ExistingImages.end())
+					if (spec.existing_images.find((uint32_t)spec.attachments.texture_attachments.size() - 1) == spec.existing_images.end())
 						depth_image->release();
 				}
 			}
@@ -102,9 +102,9 @@ namespace ForgottenEngine {
 		if (!force_recreate && (width == in_width && height == in_height))
 			return;
 
-		width = (uint32_t)(in_width * spec.Scale);
-		height = (uint32_t)(in_height * spec.Scale);
-		if (!spec.SwapChainTarget) {
+		width = (uint32_t)(in_width * spec.scale);
+		height = (uint32_t)(in_height * spec.scale);
+		if (!spec.swapchain_target) {
 			invalidate();
 		} else {
 			auto& sc = Application::the().get_window().get_swapchain();
@@ -143,42 +143,42 @@ namespace ForgottenEngine {
 
 		bool createImages = attachment_images.empty();
 
-		if (spec.ExistingFramebuffer)
+		if (spec.existing_framebuffer)
 			attachment_images.clear();
 
 		uint32_t attachmentIndex = 0;
 		for (auto attachmentSpec : spec.attachments.texture_attachments) {
-			if (Utils::IsDepthFormat(attachmentSpec.Format)) {
-				if (spec.ExistingImage) {
-					depth_image = spec.ExistingImage;
-				} else if (spec.ExistingFramebuffer) {
-					Reference<VulkanFramebuffer> existingFramebuffer = spec.ExistingFramebuffer.as<VulkanFramebuffer>();
+			if (Utils::IsDepthFormat(attachmentSpec.format)) {
+				if (spec.existing_image) {
+					depth_image = spec.existing_image;
+				} else if (spec.existing_framebuffer) {
+					Reference<VulkanFramebuffer> existingFramebuffer = spec.existing_framebuffer.as<VulkanFramebuffer>();
 					depth_image = existingFramebuffer->get_depth_image();
-				} else if (spec.ExistingImages.find(attachmentIndex) != spec.ExistingImages.end()) {
-					Reference<Image2D> existingImage = spec.ExistingImages.at(attachmentIndex);
+				} else if (spec.existing_images.find(attachmentIndex) != spec.existing_images.end()) {
+					Reference<Image2D> existingImage = spec.existing_images.at(attachmentIndex);
 					CORE_ASSERT(
 						Utils::IsDepthFormat(existingImage->get_specification().Format), "Trying to attach non-depth image as depth attachment");
 					depth_image = existingImage;
 				} else {
 					Reference<VulkanImage2D> depthAttachmentImage = depth_image.as<VulkanImage2D>();
 					auto& depth_spec = depthAttachmentImage->get_specification();
-					depth_spec.Width = (uint32_t)(width * spec.Scale);
-					depth_spec.Height = (uint32_t)(height * spec.Scale);
+					depth_spec.Width = (uint32_t)(width * spec.scale);
+					depth_spec.Height = (uint32_t)(height * spec.scale);
 					depthAttachmentImage->rt_invalidate(); // Create immediately
 				}
 
 				VkAttachmentDescription& attachmentDescription = attachmentDescriptions.emplace_back();
 				attachmentDescription.flags = 0;
-				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.Format);
+				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.format);
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp = spec.ClearDepthOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+				attachmentDescription.loadOp = spec.clear_depth_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store
 																			  // (otherwise DONT_CARE is fine)
 				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachmentDescription.initialLayout
-					= spec.ClearDepthOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-				if (attachmentSpec.Format == ImageFormat::DEPTH24STENCIL8
+					= spec.clear_depth_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+				if (attachmentSpec.format == ImageFormat::DEPTH24STENCIL8
 					|| true) // Separate layouts requires a "separate layouts" flag to be enabled
 				{
 					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
@@ -189,61 +189,62 @@ namespace ForgottenEngine {
 					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
 					depthAttachmentReference = { attachmentIndex, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 				}
-				clear_values[attachmentIndex].depthStencil = { spec.DepthClearValue, 0 };
+				clear_values[attachmentIndex].depthStencil = { spec.depth_clear_value, 0 };
 			} else {
 				// CORE_ASSERT(!spec.ExistingImage, "Not supported for color attachments");
 
 				Reference<VulkanImage2D> colorAttachment;
-				if (spec.ExistingFramebuffer) {
-					Reference<VulkanFramebuffer> existingFramebuffer = spec.ExistingFramebuffer.as<VulkanFramebuffer>();
+				if (spec.existing_framebuffer) {
+					Reference<VulkanFramebuffer> existingFramebuffer = spec.existing_framebuffer.as<VulkanFramebuffer>();
 					Reference<Image2D> existingImage = existingFramebuffer->get_image(attachmentIndex);
 					colorAttachment = attachment_images.emplace_back(existingImage).as<VulkanImage2D>();
-				} else if (spec.ExistingImages.find(attachmentIndex) != spec.ExistingImages.end()) {
-					Reference<Image2D> existingImage = spec.ExistingImages[attachmentIndex];
+				} else if (spec.existing_images.find(attachmentIndex) != spec.existing_images.end()) {
+					Reference<Image2D> existingImage = spec.existing_images[attachmentIndex];
 					CORE_ASSERT(!Utils::IsDepthFormat(existingImage->get_specification().Format), "Trying to attach depth image as color attachment");
 					colorAttachment = existingImage.as<VulkanImage2D>();
 					attachment_images[attachmentIndex] = existingImage;
 				} else {
 					if (createImages) {
 						ImageSpecification image_specification;
-						image_specification.Format = attachmentSpec.Format;
+						image_specification.Format = attachmentSpec.format;
 						image_specification.Usage = ImageUsage::Attachment;
 						image_specification.Transfer = image_specification.Transfer;
-						image_specification.Width = (uint32_t)(width * spec.Scale);
-						image_specification.Height = (uint32_t)(height * spec.Scale);
+						image_specification.Width = (uint32_t)(width * spec.scale);
+						image_specification.Height = (uint32_t)(height * spec.scale);
 						colorAttachment = attachment_images.emplace_back(Image2D::create(image_specification)).as<VulkanImage2D>();
 					} else {
 						Reference<Image2D> image = attachment_images[attachmentIndex];
 						ImageSpecification& image_spec = image->get_specification();
-						image_spec.Width = (uint32_t)(width * spec.Scale);
-						image_spec.Height = (uint32_t)(height * spec.Scale);
+						image_spec.Width = (uint32_t)(width * spec.scale);
+						image_spec.Height = (uint32_t)(height * spec.scale);
 						colorAttachment = image.as<VulkanImage2D>();
 						if (colorAttachment->get_specification().Layers == 1)
 							colorAttachment->rt_invalidate(); // Create immediately
 						else if (attachmentIndex == 0
-							&& spec.ExistingImageLayers[0] == 0) // Only invalidate the first layer from only the first framebuffer
+							&& spec.existing_image_layers[0] == 0) // Only invalidate the first layer from only the first framebuffer
 						{
 							colorAttachment->rt_invalidate(); // Create immediately
-							colorAttachment->rt_create_per_specific_layer_image_views(spec.ExistingImageLayers);
+							colorAttachment->rt_create_per_specific_layer_image_views(spec.existing_image_layers);
 						} else if (attachmentIndex == 0) {
-							colorAttachment->rt_create_per_specific_layer_image_views(spec.ExistingImageLayers);
+							colorAttachment->rt_create_per_specific_layer_image_views(spec.existing_image_layers);
 						}
 					}
 				}
 
 				VkAttachmentDescription& attachmentDescription = attachmentDescriptions.emplace_back();
 				attachmentDescription.flags = 0;
-				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.Format);
+				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.format);
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp = spec.ClearColorOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+				attachmentDescription.loadOp = spec.clear_colour_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store
 																			  // (otherwise DONT_CARE is fine)
 				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				attachmentDescription.initialLayout = spec.ClearColorOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				attachmentDescription.initialLayout
+					= spec.clear_colour_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-				const auto& clearColor = spec.ClearColor;
+				const auto& clearColor = spec.clear_colour;
 				clear_values[attachmentIndex].color = { { clearColor.r, clearColor.g, clearColor.b, clearColor.a } };
 				colorAttachmentReferences.emplace_back(VkAttachmentReference { attachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 			}
@@ -325,7 +326,7 @@ namespace ForgottenEngine {
 		for (uint32_t i = 0; i < attachment_images.size(); i++) {
 			Reference<VulkanImage2D> image = attachment_images[i].as<VulkanImage2D>();
 			if (image->get_specification().Layers > 1)
-				attachments[i] = image->get_layer_image_view(spec.ExistingImageLayers[i]);
+				attachments[i] = image->get_layer_image_view(spec.existing_image_layers[i]);
 			else
 				attachments[i] = image->get_image_info().image_view;
 			CORE_ASSERT_BOOL(attachments[i]);
@@ -333,9 +334,9 @@ namespace ForgottenEngine {
 
 		if (depth_image) {
 			Reference<VulkanImage2D> image = depth_image.as<VulkanImage2D>();
-			if (spec.ExistingImage) {
-				CORE_ASSERT(spec.ExistingImageLayers.size() == 1, "Depth attachments do not support deinterleaving");
-				attachments.emplace_back(image->get_layer_image_view(spec.ExistingImageLayers[0]));
+			if (spec.existing_image) {
+				CORE_ASSERT(spec.existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
+				attachments.emplace_back(image->get_layer_image_view(spec.existing_image_layers[0]));
 			} else
 				attachments.emplace_back(image->get_image_info().image_view);
 

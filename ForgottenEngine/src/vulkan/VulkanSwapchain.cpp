@@ -18,24 +18,24 @@ namespace ForgottenEngine {
 
 	void VulkanSwapchain::init_surface(GLFWwindow* handle)
 	{
-		VkPhysicalDevice physicalDevice = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
+		VkPhysicalDevice physical_device = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
 		glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
 		// Get available queue family properties
 		uint32_t queue_count;
-		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_count, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_count, nullptr);
 		CORE_ASSERT(queue_count >= 1, "Could not create families");
 
 		std::vector<VkQueueFamilyProperties> queue_props(queue_count);
-		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_count, queue_props.data());
+		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_count, queue_props.data());
 
 		// Iterate over each queue to learn whether it supports presenting:
 		// Find a queue with present support
 		// Will be used to present the swap chain images to the windowing system
-		std::vector<VkBool32> supportsPresent(queue_count);
+		std::vector<VkBool32> supports_presentation(queue_count);
 		for (uint32_t i = 0; i < queue_count; i++) {
-			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent[i]);
+			vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, surface, &supports_presentation[i]);
 		}
 
 		// Search for a graphics and a present queue in the array of queue
@@ -51,7 +51,7 @@ namespace ForgottenEngine {
 			// If there's no queue that supports both present and graphics
 			// try to find a separate present queue
 			for (uint32_t i = 0; i < queue_count; ++i) {
-				if (supportsPresent[i] == VK_TRUE) {
+				if (supports_presentation[i] == VK_TRUE) {
 					present_queue_index = i;
 					break;
 				}
@@ -71,34 +71,34 @@ namespace ForgottenEngine {
 		is_vsync = vsync;
 
 		// VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-		VkPhysicalDevice physicalDevice = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
+		VkPhysicalDevice physical_device = VulkanContext::get_current_device()->get_physical_device()->get_vulkan_physical_device();
 
 		VkSwapchainKHR old_sc = swapchain;
 
 		// Get physical device surface properties and formats
-		VkSurfaceCapabilitiesKHR surfCaps;
-		VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfCaps));
+		VkSurfaceCapabilitiesKHR surf_caps;
+		VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surf_caps));
 
 		// Get available present modes
-		uint32_t presentModeCount;
-		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr));
-		CORE_ASSERT_BOOL(presentModeCount > 0);
-		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data()));
+		uint32_t present_mode_count;
+		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, nullptr));
+		CORE_ASSERT_BOOL(present_mode_count > 0);
+		std::vector<VkPresentModeKHR> present_modes(present_mode_count);
+		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, present_modes.data()));
 
 		VkExtent2D sc_extent = {};
 		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the
 		// swapchain
-		if (surfCaps.currentExtent.width == (uint32_t)-1) {
+		if (surf_caps.currentExtent.width == (uint32_t)-1) {
 			// If the surface size is undefined, the size is set to
 			// the size of the images requested.
 			sc_extent.width = *w;
 			sc_extent.height = *h;
 		} else {
 			// If the surface size is defined, the swap chain size must match
-			sc_extent = surfCaps.currentExtent;
-			*w = surfCaps.currentExtent.width;
-			*h = surfCaps.currentExtent.height;
+			sc_extent = surf_caps.currentExtent;
+			*w = surf_caps.currentExtent.width;
+			*h = surf_caps.currentExtent.height;
 		}
 
 		width = *w;
@@ -113,12 +113,12 @@ namespace ForgottenEngine {
 		// If v-sync is not requested, try to find a mailbox mode
 		// It's the lowest latency non-tearing present mode available
 		if (!vsync) {
-			for (size_t i = 0; i < presentModeCount; i++) {
-				if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+			for (size_t i = 0; i < present_mode_count; i++) {
+				if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 					sc_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 					break;
 				}
-				if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+				if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
 					sc_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 				}
 			}
@@ -140,25 +140,27 @@ namespace ForgottenEngine {
 				return "Shared Continuous Refresh";
 			case VK_PRESENT_MODE_MAX_ENUM_KHR:
 				return "Max enum";
+			default:
+				CORE_ASSERT(false, "Could not find chosen present mode.");
 			}
 		};
 		CORE_DEBUG("Chose [{}] as present mode.", present_mode_to_string(sc_present_mode));
 
 		// Determine the number of images
-		uint32_t asked_sc_images = surfCaps.minImageCount + 1;
-		if ((surfCaps.maxImageCount > 0) && (asked_sc_images > surfCaps.maxImageCount)) {
-			asked_sc_images = surfCaps.maxImageCount;
+		uint32_t asked_sc_images = surf_caps.minImageCount + 1;
+		if ((surf_caps.maxImageCount > 0) && (asked_sc_images > surf_caps.maxImageCount)) {
+			asked_sc_images = surf_caps.maxImageCount;
 		}
 
 		CORE_DEBUG("Asked Swapchain for [{}] images.", asked_sc_images);
 
 		// Find the transformation of the surface
 		VkSurfaceTransformFlagsKHR pre_transform;
-		if (surfCaps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+		if (surf_caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
 			// We prefer a non-rotated transform
 			pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 		} else {
-			pre_transform = surfCaps.currentTransform;
+			pre_transform = surf_caps.currentTransform;
 		}
 
 		// Find a supported composite alpha format (not all devices support alpha opaque)
@@ -171,7 +173,7 @@ namespace ForgottenEngine {
 			VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
 		};
 		for (auto& compositeAlphaFlag : compositeAlphaFlags) {
-			if (surfCaps.supportedCompositeAlpha & compositeAlphaFlag) {
+			if (surf_caps.supportedCompositeAlpha & compositeAlphaFlag) {
 				composite_alpha = compositeAlphaFlag;
 				break;
 			};
@@ -198,12 +200,12 @@ namespace ForgottenEngine {
 		swapchain_ci.compositeAlpha = composite_alpha;
 
 		// Enable transfer source on swap chain images if supported
-		if (surfCaps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+		if (surf_caps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
 			swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
 
 		// Enable transfer destination on swap chain images if supported
-		if (surfCaps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
+		if (surf_caps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
 			swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
 
@@ -217,6 +219,7 @@ namespace ForgottenEngine {
 		images.clear();
 
 		VK_CHECK(vkGetSwapchainImagesKHR(device->get_vulkan_device(), swapchain, &image_count, nullptr));
+
 		// Get the swap chain images
 		images.resize(image_count);
 		vulkan_images.resize(image_count);
@@ -339,35 +342,35 @@ namespace ForgottenEngine {
 		dependency.srcAccessMask = 0;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		VkRenderPassCreateInfo renderPassInfo = {};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colorAttachmentDesc;
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subpassDescription;
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
+		VkRenderPassCreateInfo render_pass_info = {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		render_pass_info.attachmentCount = 1;
+		render_pass_info.pAttachments = &colorAttachmentDesc;
+		render_pass_info.subpassCount = 1;
+		render_pass_info.pSubpasses = &subpassDescription;
+		render_pass_info.dependencyCount = 1;
+		render_pass_info.pDependencies = &dependency;
 
-		VK_CHECK(vkCreateRenderPass(VulkanContext::get_current_device()->get_vulkan_device(), &renderPassInfo, nullptr, &render_pass));
+		VK_CHECK(vkCreateRenderPass(VulkanContext::get_current_device()->get_vulkan_device(), &render_pass_info, nullptr, &render_pass));
 
 		// Create framebuffers for every swapchain image
 		{
 			for (auto& framebuffer : framebuffers)
 				vkDestroyFramebuffer(device->get_vulkan_device(), framebuffer, nullptr);
 
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.renderPass = render_pass;
-			frameBufferCreateInfo.attachmentCount = 1;
-			frameBufferCreateInfo.width = width;
-			frameBufferCreateInfo.height = height;
-			frameBufferCreateInfo.layers = 1;
+			VkFramebufferCreateInfo framebuffer_create_info = {};
+			framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebuffer_create_info.renderPass = render_pass;
+			framebuffer_create_info.attachmentCount = 1;
+			framebuffer_create_info.width = width;
+			framebuffer_create_info.height = height;
+			framebuffer_create_info.layers = 1;
 
 			framebuffers.resize(image_count);
 			for (uint32_t i = 0; i < framebuffers.size(); i++) {
-				frameBufferCreateInfo.pAttachments = &images[i].view;
-				VK_CHECK(
-					vkCreateFramebuffer(VulkanContext::get_current_device()->get_vulkan_device(), &frameBufferCreateInfo, nullptr, &framebuffers[i]));
+				framebuffer_create_info.pAttachments = &images[i].view;
+				VK_CHECK(vkCreateFramebuffer(
+					VulkanContext::get_current_device()->get_vulkan_device(), &framebuffer_create_info, nullptr, &framebuffers[i]));
 			}
 		}
 	}
@@ -413,7 +416,6 @@ namespace ForgottenEngine {
 
 	void VulkanSwapchain::begin_frame()
 	{
-
 		// Resource release queue
 		auto& queue = Renderer::get_render_resource_free_queue(current_buffer_index);
 		queue.execute();
@@ -427,11 +429,11 @@ namespace ForgottenEngine {
 	{
 		static constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 
-		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.pWaitDstStageMask = &waitStageMask;
+		submit_info.pWaitDstStageMask = &wait_stage_mask;
 		submit_info.pWaitSemaphores = &semaphores.present_complete_semaphore;
 		submit_info.waitSemaphoreCount = 1;
 		submit_info.pSignalSemaphores = &semaphores.render_complete_semaphore;

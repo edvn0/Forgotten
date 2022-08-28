@@ -18,7 +18,7 @@ namespace ForgottenEngine {
 		uint32_t gpuCount = 0;
 		// Get number of available physical devices
 		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
-		CORE_ASSERT(gpuCount > 0, "", "");
+		CORE_ASSERT_BOOL(gpuCount > 0);
 		// Enumerate devices
 		std::vector<VkPhysicalDevice> devices_to_select_from(gpuCount);
 		VK_CHECK(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, devices_to_select_from.data()));

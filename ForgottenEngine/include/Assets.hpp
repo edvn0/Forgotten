@@ -50,6 +50,8 @@ namespace ForgottenEngine {
 
 		static std::string path_without_extensions(const std::string& input, const std::vector<std::string>& exceptions = {});
 
+		static const char* c_str(const Path& path);
+
 		static std::string extract_extension(const std::string& input);
 	};
 

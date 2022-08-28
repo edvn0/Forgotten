@@ -29,7 +29,7 @@ namespace ForgottenEngine {
 		VkRenderPass get_render_pass() const { return render_pass; }
 		VkFramebuffer get_vulkan_framebuffer() const { return framebuffer; }
 		const std::vector<VkClearValue>& get_vulkan_clear_values() const { return clear_values; }
-		size_t get_color_attachment_count() const { return spec.SwapChainTarget ? 1 : attachment_images.size(); }
+		size_t get_color_attachment_count() const { return spec.swapchain_target ? 1 : attachment_images.size(); }
 		bool has_depth_attachment() const { return (bool)depth_image; }
 
 		const FramebufferSpecification& get_specification() const override { return spec; }

@@ -1,10 +1,8 @@
 #pragma once
 
 #include "Reference.hpp"
-#include "render/Renderer.hpp"
 #include "render/RendererContext.hpp"
 #include "vulkan/VulkanDevice.hpp"
-#include "vulkan/VulkanSwapchain.hpp"
 
 #include <functional>
 #include <vulkan/vulkan.h>
@@ -12,6 +10,9 @@
 struct GLFWwindow;
 
 namespace ForgottenEngine {
+
+	class VulkanPhysicalDevice;
+	class VulkanDevice;
 
 	class VulkanContext : public RendererContext {
 	public:
@@ -36,7 +37,6 @@ namespace ForgottenEngine {
 		inline static VkInstance vulkan_instance;
 
 		VkPipelineCache pipeline_cache = nullptr;
-		VulkanSwapchain swapchain;
 		VkDebugUtilsMessengerEXT debug_messenger;
 	};
 

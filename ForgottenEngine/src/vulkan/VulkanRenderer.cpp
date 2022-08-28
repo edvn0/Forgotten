@@ -400,7 +400,7 @@ namespace ForgottenEngine {
 			uint32_t frameIndex = Renderer::get_current_frame_index();
 			VkCommandBuffer commandBuffer = command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
-			auto fb = render_pass->get_specification().TargetFramebuffer;
+			auto& fb = render_pass->get_specification().target_framebuffer;
 			Reference<VulkanFramebuffer> framebuffer = fb.as<VulkanFramebuffer>();
 			const auto& fbSpec = framebuffer->get_specification();
 
@@ -419,7 +419,7 @@ namespace ForgottenEngine {
 			renderPassBeginInfo.renderArea.offset.y = 0;
 			renderPassBeginInfo.renderArea.extent.width = width;
 			renderPassBeginInfo.renderArea.extent.height = height;
-			if (framebuffer->get_specification().SwapChainTarget) {
+			if (framebuffer->get_specification().swapchain_target) {
 				VulkanSwapchain& swapChain = Application::the().get_window().get_swapchain();
 				width = swapChain.get_width();
 				height = swapChain.get_height();

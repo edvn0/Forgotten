@@ -8,6 +8,7 @@
 
 #include "Logger.hpp"
 #include "vulkan/VulkanContext.hpp"
+#include "vulkan/VulkanDevice.hpp"
 
 namespace ForgottenEngine {
 

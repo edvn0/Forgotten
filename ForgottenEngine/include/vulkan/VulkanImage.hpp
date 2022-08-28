@@ -3,6 +3,7 @@
 #include "render/Image.hpp"
 #include "vk_mem_alloc.h"
 #include "vulkan/VulkanContext.hpp"
+#include "vulkan/VulkanDevice.hpp"
 #include "vulkan/vulkan.h"
 
 #include <map>

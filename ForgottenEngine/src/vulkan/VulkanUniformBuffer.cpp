@@ -6,6 +6,7 @@
 
 #include "vulkan/VulkanUniformBuffer.hpp"
 
+#include "render/Renderer.hpp"
 #include "vulkan/VulkanAllocator.hpp"
 #include "vulkan/VulkanContext.hpp"
 

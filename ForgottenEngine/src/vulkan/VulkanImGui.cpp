@@ -46,7 +46,7 @@ namespace ForgottenEngine::UI {
 	{
 		if (RendererAPI::current() == RendererAPIType::Vulkan) {
 			Reference<VulkanImage2D> vulkanImage = image.as<VulkanImage2D>();
-			auto imageInfo = vulkanImage->get_image_info();
+			auto& imageInfo = vulkanImage->get_image_info();
 			imageInfo.image_view = vulkanImage->get_layer_image_view(imageLayer);
 			if (!imageInfo.image_view)
 				return;
@@ -60,7 +60,7 @@ namespace ForgottenEngine::UI {
 		const ImVec4& border_col)
 	{
 		Reference<VulkanImage2D> vulkanImage = image.as<VulkanImage2D>();
-		auto imageInfo = vulkanImage->get_image_info();
+		auto& imageInfo = vulkanImage->get_image_info();
 		imageInfo.image_view = vulkanImage->get_mip_image_view(mip);
 		if (!imageInfo.image_view)
 			return;

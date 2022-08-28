@@ -2,6 +2,7 @@
 
 #include "vulkan/VulkanImage.hpp"
 
+#include "render/Renderer.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanRenderer.hpp"
 
@@ -10,7 +11,7 @@ namespace ForgottenEngine {
 	VulkanImage2D::VulkanImage2D(const ImageSpecification& specification)
 		: specification(specification)
 	{
-		CORE_TRACE("{},{}", specification.Width, specification.Height);
+		CORE_TRACE("{} by {}", specification.Width, specification.Height);
 
 		CORE_VERIFY_BOOL(specification.Width > 0 && specification.Height > 0);
 	}

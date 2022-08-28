@@ -2,6 +2,7 @@
 
 #include "vulkan/compiler/VulkanShaderCompiler.hpp"
 
+#include "render/Renderer.hpp"
 #include "serialize/FileStream.hpp"
 #include "utilities/StringUtils.hpp"
 #include "vulkan/VulkanContext.hpp"
@@ -162,10 +163,11 @@ namespace ForgottenEngine {
 				const char* file_path;
 				shaderc::CompileOptions options;
 			};
-			PreprocessorOptions preprocessor_options = { .source = shader_source,
-				.stage = ShaderUtils::ShaderStageToShaderC(stage),
-				.file_path = shader_source_path.c_str(),
-				.options = options };
+
+			const auto fp = Assets::c_str(shader_source_path);
+
+			PreprocessorOptions preprocessor_options
+				= { .source = shader_source, .stage = ShaderUtils::ShaderStageToShaderC(stage), .file_path = fp, .options = options };
 
 			const auto result = compiler.PreprocessGlsl(
 				preprocessor_options.source, preprocessor_options.stage, preprocessor_options.file_path, preprocessor_options.options);

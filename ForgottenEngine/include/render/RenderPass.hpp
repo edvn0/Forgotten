@@ -6,9 +6,9 @@
 namespace ForgottenEngine {
 
 	struct RenderPassSpecification {
-		Reference<Framebuffer> TargetFramebuffer;
-		std::string DebugName;
-		glm::vec4 MarkerColor;
+		Reference<Framebuffer> target_framebuffer;
+		std::string debug_name;
+		glm::vec4 marker_colour;
 	};
 
 	class RenderPass : public ReferenceCounted {

@@ -23,19 +23,19 @@ namespace ForgottenEngine {
 	};
 
 	struct PipelineSpecification {
-		Reference<Shader> Shader;
-		VertexBufferLayout Layout;
-		VertexBufferLayout InstanceLayout;
-		Reference<RenderPass> RenderPass;
-		PrimitiveTopology Topology = PrimitiveTopology::Triangles;
-		DepthCompareOperator DepthOperator = DepthCompareOperator::GreaterOrEqual;
-		bool BackfaceCulling = true;
-		bool DepthTest = true;
-		bool DepthWrite = true;
-		bool Wireframe = false;
-		float LineWidth = 1.0f;
+		Reference<Shader> shader;
+		VertexBufferLayout layout;
+		VertexBufferLayout instance_layout;
+		Reference<RenderPass> render_pass;
+		PrimitiveTopology topology = PrimitiveTopology::Triangles;
+		DepthCompareOperator depth_operator = DepthCompareOperator::GreaterOrEqual;
+		bool backface_culling = true;
+		bool depth_test = true;
+		bool depth_write = true;
+		bool wireframe = false;
+		float line_width = 1.0f;
 
-		std::string DebugName;
+		std::string debug_name;
 	};
 
 	struct PipelineStatistics {

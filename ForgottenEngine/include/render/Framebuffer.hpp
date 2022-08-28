@@ -15,19 +15,21 @@ namespace ForgottenEngine {
 	struct FramebufferTextureSpecification {
 		FramebufferTextureSpecification() = default;
 		FramebufferTextureSpecification(ImageFormat format)
-			: Format(format)
+			: format(format)
 		{
 		}
 
-		ImageFormat Format { ImageFormat::None };
-		bool Blend = true;
-		FramebufferBlendMode BlendMode = FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha;
+		ImageFormat format { ImageFormat::None };
+		bool blend = true;
+		FramebufferBlendMode blend_mode = FramebufferBlendMode::SrcAlphaOneMinusSrcAlpha;
 		// TODO: filtering/wrap
 	};
 
 	struct FramebufferAttachmentSpecification {
+		using FBASpec = std::initializer_list<FramebufferTextureSpecification>;
+
 		FramebufferAttachmentSpecification() = default;
-		FramebufferAttachmentSpecification(const std::initializer_list<FramebufferTextureSpecification>& attachments)
+		FramebufferAttachmentSpecification(const FBASpec& attachments)
 			: texture_attachments(attachments)
 		{
 		}
@@ -36,42 +38,42 @@ namespace ForgottenEngine {
 	};
 
 	struct FramebufferSpecification {
-		float Scale = 1.0f;
-		uint32_t Width = 0;
-		uint32_t Height = 0;
-		glm::vec4 ClearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-		float DepthClearValue = 0.0f;
-		bool ClearColorOnLoad = true;
-		bool ClearDepthOnLoad = true;
+		float scale = 1.0f;
+		uint32_t width = 0;
+		uint32_t height = 0;
+		glm::vec4 clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+		float depth_clear_value = 0.0f;
+		bool clear_colour_on_load = true;
+		bool clear_depth_on_load = true;
 
 		FramebufferAttachmentSpecification attachments;
-		uint32_t Samples = 1; // multisampling
+		uint32_t samples = 1; // multisampling
 
 		// TODO: Temp, needs scale
-		bool NoResize = false;
+		bool no_resize = false;
 
 		// Master switch (individual attachments can be disabled in FramebufferTextureSpecification)
-		bool Blend = true;
+		bool blend = true;
 		// None means use BlendMode in FramebufferTextureSpecification
-		FramebufferBlendMode BlendMode = FramebufferBlendMode::None;
+		FramebufferBlendMode blend_mode = FramebufferBlendMode::None;
 
 		// SwapChainTarget = screen buffer (i.e. no framebuffer)
-		bool SwapChainTarget = false;
+		bool swapchain_target = false;
 
 		// Note: these are used to attach multi-layered color/depth images
-		Reference<Image2D> ExistingImage;
-		std::vector<uint32_t> ExistingImageLayers;
+		Reference<Image2D> existing_image;
+		std::vector<uint32_t> existing_image_layers;
 
 		// Specify existing images to attach instead of creating
 		// new images. attachment index -> image
-		std::map<uint32_t, Reference<Image2D>> ExistingImages;
+		std::map<uint32_t, Reference<Image2D>> existing_images;
 
 		// At the moment this will just create a new render pass
 		// with an existing framebuffer
-		Reference<Framebuffer> ExistingFramebuffer;
+		Reference<Framebuffer> existing_framebuffer;
 
-		std::string DebugName;
-		bool Transfer;
+		std::string debug_name;
+		bool transfer;
 	};
 
 	class Framebuffer : public ReferenceCounted {

@@ -85,10 +85,10 @@ namespace ForgottenEngine {
 	VulkanPipeline::VulkanPipeline(const PipelineSpecification& in_spec)
 		: spec(in_spec)
 	{
-		CORE_ASSERT(in_spec.Shader, "");
-		CORE_ASSERT(in_spec.RenderPass, "");
+		CORE_ASSERT(in_spec.shader, "");
+		CORE_ASSERT(in_spec.render_pass, "");
 		invalidate();
-		Renderer::register_shader_dependency(in_spec.Shader, this);
+		Renderer::register_shader_dependency(in_spec.shader, this);
 	}
 
 	VulkanPipeline::~VulkanPipeline()
@@ -108,9 +108,9 @@ namespace ForgottenEngine {
 			// HZ_CORE_WARN("[VulkanPipeline] Creating pipeline {0}", instance->spec.DebugName);
 
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-			CORE_ASSERT(instance->spec.Shader, "");
-			Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(instance->spec.Shader);
-			Reference<VulkanFramebuffer> framebuffer = instance->spec.RenderPass->get_specification().TargetFramebuffer.as<VulkanFramebuffer>();
+			CORE_ASSERT(instance->spec.shader, "");
+			Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(instance->spec.shader);
+			Reference<VulkanFramebuffer> framebuffer = instance->spec.render_pass->get_specification().target_framebuffer.as<VulkanFramebuffer>();
 
 			auto descriptorSetLayouts = vulkanShader->get_all_descriptor_set_layouts();
 			const auto& pushConstantRanges = vulkanShader->get_push_constant_ranges();
@@ -157,24 +157,24 @@ namespace ForgottenEngine {
 			// This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)
 			VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {};
 			inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-			inputAssemblyState.topology = Utils::GetVulkanTopology(instance->spec.Topology);
+			inputAssemblyState.topology = Utils::GetVulkanTopology(instance->spec.topology);
 
 			// Rasterization state
 			VkPipelineRasterizationStateCreateInfo rasterizationState = {};
 			rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-			rasterizationState.polygonMode = instance->spec.Wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
-			rasterizationState.cullMode = instance->spec.BackfaceCulling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
+			rasterizationState.polygonMode = instance->spec.wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
+			rasterizationState.cullMode = instance->spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
 			rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE;
 			rasterizationState.depthClampEnable = VK_FALSE;
 			rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 			rasterizationState.depthBiasEnable = VK_FALSE;
-			rasterizationState.lineWidth = instance->spec.LineWidth; // this is dynamic
+			rasterizationState.lineWidth = instance->spec.line_width; // this is dynamic
 
 			// Color blend state describes how blend factors are calculated (if used)
 			// We need one blend attachment state per color attachment (even if blending is not used)
-			size_t colorAttachmentCount = framebuffer->get_specification().SwapChainTarget ? 1 : framebuffer->get_color_attachment_count();
+			size_t colorAttachmentCount = framebuffer->get_specification().swapchain_target ? 1 : framebuffer->get_color_attachment_count();
 			std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates(colorAttachmentCount);
-			if (framebuffer->get_specification().SwapChainTarget) {
+			if (framebuffer->get_specification().swapchain_target) {
 				blendAttachmentStates[0].colorWriteMask = 0xf;
 				blendAttachmentStates[0].blendEnable = VK_TRUE;
 				blendAttachmentStates[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
@@ -185,19 +185,19 @@ namespace ForgottenEngine {
 				blendAttachmentStates[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 			} else {
 				for (size_t i = 0; i < colorAttachmentCount; i++) {
-					if (!framebuffer->get_specification().Blend)
+					if (!framebuffer->get_specification().blend)
 						break;
 
 					blendAttachmentStates[i].colorWriteMask = 0xf;
-					if (!framebuffer->get_specification().Blend)
+					if (!framebuffer->get_specification().blend)
 						break;
 
 					const auto& attachmentSpec = framebuffer->get_specification().attachments.texture_attachments[i];
-					FramebufferBlendMode blendMode = framebuffer->get_specification().BlendMode == FramebufferBlendMode::None
-						? attachmentSpec.BlendMode
-						: framebuffer->get_specification().BlendMode;
+					FramebufferBlendMode blendMode = framebuffer->get_specification().blend_mode == FramebufferBlendMode::None
+						? attachmentSpec.blend_mode
+						: framebuffer->get_specification().blend_mode;
 
-					blendAttachmentStates[i].blendEnable = attachmentSpec.Blend ? VK_TRUE : VK_FALSE;
+					blendAttachmentStates[i].blendEnable = attachmentSpec.blend ? VK_TRUE : VK_FALSE;
 
 					blendAttachmentStates[i].colorBlendOp = VK_BLEND_OP_ADD;
 					blendAttachmentStates[i].alphaBlendOp = VK_BLEND_OP_ADD;
@@ -239,8 +239,8 @@ namespace ForgottenEngine {
 			std::vector<VkDynamicState> dynamicStateEnables;
 			dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 			dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
-			if (instance->spec.Topology == PrimitiveTopology::Lines || instance->spec.Topology == PrimitiveTopology::LineStrip
-				|| instance->spec.Wireframe)
+			if (instance->spec.topology == PrimitiveTopology::Lines || instance->spec.topology == PrimitiveTopology::LineStrip
+				|| instance->spec.wireframe)
 				dynamicStateEnables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 
 			VkPipelineDynamicStateCreateInfo dynamicState = {};
@@ -250,9 +250,9 @@ namespace ForgottenEngine {
 
 			VkPipelineDepthStencilStateCreateInfo depthStencilState = {};
 			depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-			depthStencilState.depthTestEnable = instance->spec.DepthTest ? VK_TRUE : VK_FALSE;
-			depthStencilState.depthWriteEnable = instance->spec.DepthWrite ? VK_TRUE : VK_FALSE;
-			depthStencilState.depthCompareOp = Utils::GetVulkanCompareOperator(instance->spec.DepthOperator);
+			depthStencilState.depthTestEnable = instance->spec.depth_test ? VK_TRUE : VK_FALSE;
+			depthStencilState.depthWriteEnable = instance->spec.depth_write ? VK_TRUE : VK_FALSE;
+			depthStencilState.depthCompareOp = Utils::GetVulkanCompareOperator(instance->spec.depth_operator);
 			depthStencilState.depthBoundsTestEnable = VK_FALSE;
 			depthStencilState.back.failOp = VK_STENCIL_OP_KEEP;
 			depthStencilState.back.passOp = VK_STENCIL_OP_KEEP;
@@ -267,8 +267,8 @@ namespace ForgottenEngine {
 			multisampleState.pSampleMask = nullptr;
 
 			// Vertex input descriptor
-			VertexBufferLayout& vertexLayout = instance->spec.Layout;
-			VertexBufferLayout& instanceLayout = instance->spec.InstanceLayout;
+			VertexBufferLayout& vertexLayout = instance->spec.layout;
+			VertexBufferLayout& instanceLayout = instance->spec.instance_layout;
 
 			std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
 
@@ -352,7 +352,7 @@ namespace ForgottenEngine {
 
 	void VulkanPipeline::rt_set_uniform_buffer(Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
 	{
-		Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(spec.Shader);
+		Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(spec.shader);
 		Reference<VulkanUniformBuffer> vulkanUniformBuffer = ub.as<VulkanUniformBuffer>();
 
 		CORE_ASSERT(descriptor_sets.descriptor_sets.size() > set, "");
@@ -369,7 +369,7 @@ namespace ForgottenEngine {
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 		vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 
-		vulkanShader = Reference<VulkanShader>(spec.Shader);
+		vulkanShader = Reference<VulkanShader>(spec.shader);
 		CORE_ASSERT(descriptor_sets.descriptor_sets.size() > set, "");
 
 		writeDescriptorSet = {};

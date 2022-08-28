@@ -29,8 +29,6 @@ namespace ForgottenEngine {
 		void on_update(const TimeStep& step) override;
 		void on_event(Event& e) override;
 		void on_detach() override;
-
-		void should_block(bool should_block) { block = should_block; }
 	};
 
 } // namespace ForgottenEngine

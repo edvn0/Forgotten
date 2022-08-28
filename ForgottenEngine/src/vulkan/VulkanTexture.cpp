@@ -2,8 +2,10 @@
 
 #include "vulkan/VulkanTexture.hpp"
 
+#include "render/Renderer.hpp"
 #include "stb_image.h"
 #include "vulkan/VulkanContext.hpp"
+#include "vulkan/VulkanDevice.hpp"
 #include "vulkan/VulkanImage.hpp"
 #include "vulkan/VulkanRenderer.hpp"
 
@@ -194,21 +196,21 @@ namespace ForgottenEngine {
 			VulkanAllocator allocator("Texture2D");
 
 			// Create staging buffer
-			VkBufferCreateInfo bufferCreateInfo {};
-			bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			bufferCreateInfo.size = size;
-			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			VkBufferCreateInfo buffer_create_info {};
+			buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			buffer_create_info.size = size;
+			buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
-			CORE_ASSERT(image_data.data, "");
+			CORE_ASSERT_BOOL(image_data.data);
 			memcpy(destData, image_data.data, size);
 			allocator.unmap_memory(stagingBufferAllocation);
 
-			VkCommandBuffer copyCmd = device->get_command_buffer(true);
+			VkCommandBuffer copy_cmd = device->get_command_buffer(true);
 
 			// Image memory barriers for the texture reference
 
@@ -238,7 +240,7 @@ namespace ForgottenEngine {
 			// transition Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT) Destination
 			// pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 			vkCmdPipelineBarrier(
-				copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+				copy_cmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 			VkBufferImageCopy bufferCopyRegion = {};
 			bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -251,20 +253,20 @@ namespace ForgottenEngine {
 			bufferCopyRegion.bufferOffset = 0;
 
 			// Copy mip levels from staging buffer
-			vkCmdCopyBufferToImage(copyCmd, stagingBuffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
+			vkCmdCopyBufferToImage(copy_cmd, stagingBuffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
 
 			if (mipCount > 1) // Mips to generate
 			{
-				Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+				Utils::insert_image_memory_barrier(copy_cmd, info.image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
 					VK_PIPELINE_STAGE_TRANSFER_BIT, subresourceRange);
 			} else {
-				Utils::insert_image_memory_barrier(copyCmd, info.image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
+				Utils::insert_image_memory_barrier(copy_cmd, info.image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, reference->get_descriptor_info().imageLayout, VK_PIPELINE_STAGE_TRANSFER_BIT,
 					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
 			}
 
-			device->flush_command_buffer(copyCmd);
+			device->flush_command_buffer(copy_cmd);
 
 			// Clean up staging resources
 			allocator.destroy_buffer(stagingBuffer, stagingBufferAllocation);
@@ -517,20 +519,20 @@ namespace ForgottenEngine {
 		// Copy data if present
 		if (local_storage) {
 			// Create staging buffer
-			VkBufferCreateInfo bufferCreateInfo {};
-			bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			bufferCreateInfo.size = local_storage.size;
-			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			VkBufferCreateInfo buffer_create_info {};
+			buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			buffer_create_info.size = local_storage.size;
+			buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+			VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
 			memcpy(destData, local_storage.data, local_storage.size);
 			allocator.unmap_memory(stagingBufferAllocation);
 
-			VkCommandBuffer copyCmd = device->get_command_buffer(true);
+			VkCommandBuffer copy_cmd = device->get_command_buffer(true);
 
 			// Image memory barriers for the texture image
 
@@ -560,7 +562,7 @@ namespace ForgottenEngine {
 			// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
 			// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 			vkCmdPipelineBarrier(
-				copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+				copy_cmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 			VkBufferImageCopy bufferCopyRegion = {};
 			bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -573,13 +575,13 @@ namespace ForgottenEngine {
 			bufferCopyRegion.bufferOffset = 0;
 
 			// Copy mip levels from staging buffer
-			vkCmdCopyBufferToImage(copyCmd, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
+			vkCmdCopyBufferToImage(copy_cmd, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferCopyRegion);
 
-			Utils::insert_image_memory_barrier(copyCmd, image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+			Utils::insert_image_memory_barrier(copy_cmd, image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
 				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, subresourceRange);
 
-			device->flush_command_buffer(copyCmd);
+			device->flush_command_buffer(copy_cmd);
 
 			allocator.destroy_buffer(stagingBuffer, stagingBufferAllocation);
 		}

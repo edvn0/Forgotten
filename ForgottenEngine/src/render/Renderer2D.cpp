@@ -46,25 +46,25 @@ namespace ForgottenEngine {
 			ImageFormat::RGBA32F,
 			ImageFormat::Depth,
 		};
-		framebufferSpec.Samples = 1;
-		framebufferSpec.ClearColorOnLoad = true;
-		framebufferSpec.ClearColor = { 0.1f, 0.9f, 0.5f, 1.0f };
-		framebufferSpec.DebugName = "Renderer2D Framebuffer";
+		framebufferSpec.samples = 1;
+		framebufferSpec.clear_colour_on_load = true;
+		framebufferSpec.clear_colour = { 0.1f, 0.9f, 0.5f, 1.0f };
+		framebufferSpec.debug_name = "Renderer2D Framebuffer";
 
 		Reference<Framebuffer> framebuffer = Framebuffer::create(framebufferSpec);
 
 		RenderPassSpecification renderPassSpec;
-		renderPassSpec.TargetFramebuffer = framebuffer;
-		renderPassSpec.DebugName = "Renderer2D";
+		renderPassSpec.target_framebuffer = framebuffer;
+		renderPassSpec.debug_name = "Renderer2D";
 		Reference<RenderPass> renderPass = RenderPass::create(renderPassSpec);
 
 		{
 			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.DebugName = "Renderer2D-Quad";
-			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D");
-			pipelineSpecification.RenderPass = renderPass;
-			pipelineSpecification.BackfaceCulling = false;
-			pipelineSpecification.Layout
+			pipelineSpecification.debug_name = "Renderer2D-Quad";
+			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D");
+			pipelineSpecification.render_pass = renderPass;
+			pipelineSpecification.backface_culling = false;
+			pipelineSpecification.layout
 				= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" }, { ShaderDataType::Float2, "a_TextureCoords" },
 					  { ShaderDataType::Float, "a_TextureIndex" }, { ShaderDataType::Float, "a_TilingFactor" } };
 			quad_pipeline = Pipeline::create(pipelineSpecification);
@@ -108,14 +108,14 @@ namespace ForgottenEngine {
 		// Lines
 		{
 			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.DebugName = "Renderer2D-Line";
-			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Line");
-			pipelineSpecification.RenderPass = renderPass;
-			pipelineSpecification.Topology = PrimitiveTopology::Lines;
-			pipelineSpecification.LineWidth = 2.0f;
-			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" } };
+			pipelineSpecification.debug_name = "Renderer2D-Line";
+			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D_Line");
+			pipelineSpecification.render_pass = renderPass;
+			pipelineSpecification.topology = PrimitiveTopology::Lines;
+			pipelineSpecification.line_width = 2.0f;
+			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" } };
 			line_pipeline = Pipeline::create(pipelineSpecification);
-			pipelineSpecification.DepthTest = false;
+			pipelineSpecification.depth_test = false;
 			line_on_top_pipeline = Pipeline::create(pipelineSpecification);
 
 			line_vertex_buffer.resize(frames_in_flight);
@@ -136,15 +136,15 @@ namespace ForgottenEngine {
 		// Text
 		{
 			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.DebugName = "Renderer2D-Text";
-			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Text");
-			pipelineSpecification.RenderPass = renderPass;
-			pipelineSpecification.BackfaceCulling = false;
-			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" },
+			pipelineSpecification.debug_name = "Renderer2D-Text";
+			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D_Text");
+			pipelineSpecification.render_pass = renderPass;
+			pipelineSpecification.backface_culling = false;
+			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" },
 				{ ShaderDataType::Float2, "a_TextureCoords" }, { ShaderDataType::Float, "a_TextureIndex" } };
 
 			text_pipeline = Pipeline::create(pipelineSpecification);
-			text_material = Material::create(pipelineSpecification.Shader);
+			text_material = Material::create(pipelineSpecification.shader);
 
 			text_vertex_buffer.resize(frames_in_flight);
 			text_vertex_buffer_base.resize(frames_in_flight);
@@ -175,14 +175,14 @@ namespace ForgottenEngine {
 		// Circles
 		{
 			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.DebugName = "Renderer2D-Circle";
-			pipelineSpecification.Shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
-			pipelineSpecification.BackfaceCulling = false;
-			pipelineSpecification.RenderPass = renderPass;
-			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_WorldPosition" }, { ShaderDataType::Float, "a_Thickness" },
+			pipelineSpecification.debug_name = "Renderer2D-Circle";
+			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
+			pipelineSpecification.backface_culling = false;
+			pipelineSpecification.render_pass = renderPass;
+			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_WorldPosition" }, { ShaderDataType::Float, "a_Thickness" },
 				{ ShaderDataType::Float2, "a_LocalPosition" }, { ShaderDataType::Float4, "a_Color" } };
 			circle_pipeline = Pipeline::create(pipelineSpecification);
-			circle_material = Material::create(pipelineSpecification.Shader);
+			circle_material = Material::create(pipelineSpecification.shader);
 
 			circle_vertex_buffer.resize(frames_in_flight);
 			circle_vertex_buffer_base.resize(frames_in_flight);
@@ -208,70 +208,70 @@ namespace ForgottenEngine {
 
 		{
 			FramebufferSpecification preDepthFramebufferSpec;
-			preDepthFramebufferSpec.DebugName = "PreDepth-Opaque";
+			preDepthFramebufferSpec.debug_name = "PreDepth-Opaque";
 			// Linear depth, reversed device depth
 			preDepthFramebufferSpec.attachments = { /*ImageFormat::RED32F, */ ImageFormat::DEPTH32FSTENCIL8UINT };
-			preDepthFramebufferSpec.ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
-			preDepthFramebufferSpec.DepthClearValue = 0.0f;
+			preDepthFramebufferSpec.clear_colour = { 0.0f, 0.0f, 0.0f, 0.0f };
+			preDepthFramebufferSpec.depth_clear_value = 0.0f;
 
 			RenderPassSpecification preDepthRenderPassSpec;
-			preDepthRenderPassSpec.DebugName = preDepthFramebufferSpec.DebugName;
-			preDepthRenderPassSpec.TargetFramebuffer = Framebuffer::create(preDepthFramebufferSpec);
+			preDepthRenderPassSpec.debug_name = preDepthFramebufferSpec.debug_name;
+			preDepthRenderPassSpec.target_framebuffer = Framebuffer::create(preDepthFramebufferSpec);
 
 			PipelineSpecification pipelineSpec;
-			pipelineSpec.DebugName = preDepthFramebufferSpec.DebugName;
+			pipelineSpec.debug_name = preDepthFramebufferSpec.debug_name;
 
-			pipelineSpec.Shader = Renderer::get_shader_library()->get("PreDepth");
-			pipelineSpec.Layout = vertexLayout;
-			pipelineSpec.InstanceLayout = instanceLayout;
-			pipelineSpec.RenderPass = RenderPass::create(preDepthRenderPassSpec);
+			pipelineSpec.shader = Renderer::get_shader_library()->get("PreDepth");
+			pipelineSpec.layout = vertexLayout;
+			pipelineSpec.instance_layout = instanceLayout;
+			pipelineSpec.render_pass = RenderPass::create(preDepthRenderPassSpec);
 			pre_depth_pipeline = Pipeline::create(pipelineSpec);
 		}
 
 		// Composite
 		{
 			FramebufferSpecification compFramebufferSpec;
-			compFramebufferSpec.DebugName = "SceneComposite";
-			compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
+			compFramebufferSpec.debug_name = "SceneComposite";
+			compFramebufferSpec.clear_colour = { 0.5f, 0.1f, 0.1f, 1.0f };
 			compFramebufferSpec.attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
-			compFramebufferSpec.Transfer = true;
+			compFramebufferSpec.transfer = true;
 
 			Reference<Framebuffer> fb = Framebuffer::create(compFramebufferSpec);
 
 			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.Layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
-			pipelineSpecification.BackfaceCulling = false;
-			pipelineSpecification.Shader = Renderer::get_shader_library()->get("SceneComposite");
+			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
+			pipelineSpecification.backface_culling = false;
+			pipelineSpecification.shader = Renderer::get_shader_library()->get("SceneComposite");
 
 			RenderPassSpecification rps;
-			rps.TargetFramebuffer = framebuffer;
-			rps.DebugName = "SceneComposite";
-			pipelineSpecification.RenderPass = RenderPass::create(rps);
-			pipelineSpecification.DebugName = "SceneComposite";
-			pipelineSpecification.DepthWrite = false;
-			pipelineSpecification.DepthTest = false;
+			rps.target_framebuffer = framebuffer;
+			rps.debug_name = "SceneComposite";
+			pipelineSpecification.render_pass = RenderPass::create(rps);
+			pipelineSpecification.debug_name = "SceneComposite";
+			pipelineSpecification.depth_write = false;
+			pipelineSpecification.depth_test = false;
 			composite_pipeline = Pipeline::create(pipelineSpecification);
 		}
 
 		{
 			FramebufferSpecification extCompFramebufferSpec;
-			extCompFramebufferSpec.DebugName = "External-Composite";
+			extCompFramebufferSpec.debug_name = "External-Composite";
 			extCompFramebufferSpec.attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32FSTENCIL8UINT };
-			extCompFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
-			extCompFramebufferSpec.ClearColorOnLoad = false;
-			extCompFramebufferSpec.ClearDepthOnLoad = false;
+			extCompFramebufferSpec.clear_colour = { 0.5f, 0.1f, 0.1f, 1.0f };
+			extCompFramebufferSpec.clear_colour_on_load = false;
+			extCompFramebufferSpec.clear_depth_on_load = false;
 			// Use the color buffer from the final compositing pass, but the depth buffer from
 			// the actual 3D geometry pass, in case we want to composite elements behind meshes
 			// in the scene
-			extCompFramebufferSpec.ExistingImages[0]
-				= composite_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_image(0);
-			extCompFramebufferSpec.ExistingImages[1]
-				= pre_depth_pipeline->get_specification().RenderPass->get_specification().TargetFramebuffer->get_depth_image();
+			extCompFramebufferSpec.existing_images[0]
+				= composite_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
+			extCompFramebufferSpec.existing_images[1]
+				= pre_depth_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_depth_image();
 			Reference<Framebuffer> fb = Framebuffer::create(extCompFramebufferSpec);
 
 			RenderPassSpecification rps;
-			rps.DebugName = extCompFramebufferSpec.DebugName;
-			rps.TargetFramebuffer = framebuffer;
+			rps.debug_name = extCompFramebufferSpec.debug_name;
+			rps.target_framebuffer = framebuffer;
 			external_composite_render_pass = RenderPass::create(rps);
 		}
 
@@ -280,8 +280,8 @@ namespace ForgottenEngine {
 		uniform_buffer_set = UniformBufferSet::create(frames_in_flight);
 		uniform_buffer_set->create(sizeof(UBCamera), 0);
 
-		quad_material = Material::create(quad_pipeline->get_specification().Shader, "QuadMaterial");
-		line_material = Material::create(line_pipeline->get_specification().Shader, "LineMaterial");
+		quad_material = Material::create(quad_pipeline->get_specification().shader, "QuadMaterial");
+		line_material = Material::create(line_pipeline->get_specification().shader, "LineMaterial");
 	}
 
 	void Renderer2D::shut_down()
@@ -343,7 +343,7 @@ namespace ForgottenEngine {
 		uint32_t frame_index = Renderer::get_current_frame_index();
 
 		render_command_buffer->begin();
-		Renderer::begin_render_pass(render_command_buffer, quad_pipeline->get_specification().RenderPass, false);
+		Renderer::begin_render_pass(render_command_buffer, quad_pipeline->get_specification().render_pass, false);
 
 		auto data_size = (uint32_t)((uint8_t*)quad_vertex_buffer_ptr - (uint8_t*)quad_vertex_buffer_base[frame_index]);
 		if (data_size) {
@@ -413,26 +413,26 @@ namespace ForgottenEngine {
 
 	void Renderer2D::Flush() { }
 
-	Reference<RenderPass> Renderer2D::get_target_render_pass() { return quad_pipeline->get_specification().RenderPass; }
+	Reference<RenderPass> Renderer2D::get_target_render_pass() { return quad_pipeline->get_specification().render_pass; }
 
 	void Renderer2D::set_target_render_pass(const Reference<RenderPass>& renderPass)
 	{
-		if (renderPass != quad_pipeline->get_specification().RenderPass) {
+		if (renderPass != quad_pipeline->get_specification().render_pass) {
 			{
 				PipelineSpecification pipelineSpecification = quad_pipeline->get_specification();
-				pipelineSpecification.RenderPass = renderPass;
+				pipelineSpecification.render_pass = renderPass;
 				quad_pipeline = Pipeline::create(pipelineSpecification);
 			}
 
 			{
 				PipelineSpecification pipelineSpecification = line_pipeline->get_specification();
-				pipelineSpecification.RenderPass = renderPass;
+				pipelineSpecification.render_pass = renderPass;
 				line_pipeline = Pipeline::create(pipelineSpecification);
 			}
 
 			{
 				PipelineSpecification pipelineSpecification = text_pipeline->get_specification();
-				pipelineSpecification.RenderPass = renderPass;
+				pipelineSpecification.render_pass = renderPass;
 				text_pipeline = Pipeline::create(pipelineSpecification);
 			}
 		}

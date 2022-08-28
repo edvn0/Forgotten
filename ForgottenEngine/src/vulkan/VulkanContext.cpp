@@ -8,9 +8,9 @@
 
 #include "Common.hpp"
 #include "GLFW/glfw3.h"
+#include "render/Renderer.hpp"
 #include "vulkan/VulkanAllocator.hpp"
 #include "vulkan/VulkanDevice.hpp"
-#include "vulkan/VulkanSwapchain.hpp"
 
 #include <unordered_set>
 #include <vector>
@@ -270,11 +270,11 @@ namespace ForgottenEngine {
 
 	void VulkanContext::init()
 	{
-		VkApplicationInfo appInfo = {};
-		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Forgotten";
-		appInfo.pEngineName = "ForgottenEngine";
-		appInfo.apiVersion = VK_API_VERSION_1_2;
+		VkApplicationInfo app_info = {};
+		app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		app_info.pApplicationName = "Forgotten";
+		app_info.pEngineName = "ForgottenEngine";
+		app_info.apiVersion = VK_API_VERSION_1_2;
 
 		VkValidationFeatureEnableEXT enables[] = { VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
 		VkValidationFeaturesEXT features = {};
@@ -285,11 +285,14 @@ namespace ForgottenEngine {
 		uint32_t extensions_count = 0;
 		auto extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
 		auto exts = std::unordered_set<const char*>(extensions, extensions + extensions_count);
+
+#ifdef FORGOTTEN_WINDOWS
+		exts.insert(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		exts.insert(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#elif defined(FORGOTTEN_MACOS)
 		exts.insert("VK_EXT_debug_report");
 		exts.insert("VK_KHR_portability_enumeration");
 		exts.insert("VK_KHR_get_physical_device_properties2");
-#ifdef FORGOTTEN_WINDOWS
-		exts.insert(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
 		std::vector<const char*> out(exts.begin(), exts.end());
 
@@ -297,13 +300,13 @@ namespace ForgottenEngine {
 			CORE_INFO("{}", inst);
 		}
 
-		VkInstanceCreateInfo instanceCreateInfo = {};
-		instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		instanceCreateInfo.pNext = nullptr; //;&features;
-		instanceCreateInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-		instanceCreateInfo.pApplicationInfo = &appInfo;
-		instanceCreateInfo.enabledExtensionCount = (uint32_t)out.size();
-		instanceCreateInfo.ppEnabledExtensionNames = out.data();
+		VkInstanceCreateInfo create_fino = {};
+		create_fino.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		create_fino.pNext = nullptr; //;&features;
+		create_fino.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+		create_fino.pApplicationInfo = &app_info;
+		create_fino.enabledExtensionCount = (uint32_t)out.size();
+		create_fino.ppEnabledExtensionNames = out.data();
 
 		const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
 		// Check if this layer is available at instance level
@@ -321,13 +324,13 @@ namespace ForgottenEngine {
 			}
 		}
 		if (validationLayerPresent) {
-			instanceCreateInfo.ppEnabledLayerNames = &validationLayerName;
-			instanceCreateInfo.enabledLayerCount = 1;
+			create_fino.ppEnabledLayerNames = &validationLayerName;
+			create_fino.enabledLayerCount = 1;
 		} else {
 			CORE_ERROR("Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled");
 		}
 
-		VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &vulkan_instance));
+		VK_CHECK(vkCreateInstance(&create_fino, nullptr, &vulkan_instance));
 
 		physical_device = VulkanPhysicalDevice::select();
 

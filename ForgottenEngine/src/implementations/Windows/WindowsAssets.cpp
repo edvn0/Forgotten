@@ -67,4 +67,6 @@ namespace ForgottenEngine {
 
 	bool Assets::exists(const Path& p) { return std::filesystem::exists(p); }
 
+	const char* Assets::c_str(const Path& path) { return path.string().c_str(); }
+
 } // namespace ForgottenEngine
