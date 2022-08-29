@@ -345,8 +345,11 @@ namespace ForgottenEngine {
 
 	void Font::init()
 	{
-		auto path = Assets::slashed_string_to_filepath("fonts/Olive Days.ttf");
-		default_font = Reference<Font>::create(path);
+		auto path = Assets::find_resources_by_path(Assets::slashed_string_to_filepath("fonts/Olive Days.ttf"));
+
+		CORE_ASSERT(path, "Could not find font file under {}", (*path).string());
+
+		default_font = Reference<Font>::create(*path);
 	}
 
 	void Font::shutdown() { default_font.reset(); }

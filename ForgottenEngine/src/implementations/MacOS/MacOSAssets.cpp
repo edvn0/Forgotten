@@ -26,9 +26,9 @@ namespace ForgottenEngine {
 
 		std::filesystem::path try_path;
 		if (subdirectory.empty())
-			try_path = working_directory / RESOURCES / path.filename();
+			try_path = working_directory / path;
 		else
-			try_path = working_directory / RESOURCES / std::filesystem::path(subdirectory) / path.filename();
+			try_path = working_directory / RESOURCES / std::filesystem::path(subdirectory) / path;
 
 		if (exists(try_path)) {
 			return try_path;
@@ -62,5 +62,7 @@ namespace ForgottenEngine {
 	}
 
 	bool Assets::exists(const Path& p) { return std::filesystem::exists(p); }
+
+	const char* Assets::c_str(const Path& p) { return p.c_str(); }
 
 } // namespace ForgottenEngine

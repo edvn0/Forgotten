@@ -17,7 +17,9 @@ ForgottenLayer::ForgottenLayer()
 void ForgottenLayer::on_attach()
 {
 	renderer = Reference<Renderer2D>::create();
-	const auto [width, height] = Application::the().get_window().get_size<float>();
+	const auto [w, h] = Application::the().get_window().get_size<float>();
+	width = w;
+	height = h;
 
 	FramebufferSpecification compFramebufferSpec;
 	compFramebufferSpec.debug_name = "SceneComposite";
@@ -46,15 +48,15 @@ void ForgottenLayer::on_attach()
 
 	swapchain_material = Material::create(pipeline_spec.shader);
 	command_buffer = RenderCommandBuffer::create_from_swapchain();
-	projection_matrix = glm::ortho(0.0f, width, 0.0f, height);
+	projection_matrix = glm::ortho(0.0f, w, 0.0f, h);
 }
 
 void ForgottenLayer::on_detach() { }
 
 void ForgottenLayer::on_update(const TimeStep& ts)
 {
-	const auto [width, height] = Application::the().get_window().get_size<float>();
-	projection_matrix = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
+	const auto [w, h] = Application::the().get_window().get_size<float>();
+	projection_matrix = glm::ortho(0.0f, (float)w, 0.0f, (float)h);
 
 	update_fps_timer -= ts;
 	if (update_fps_timer <= 0.0f) {
@@ -68,12 +70,12 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 		update_performance_timer = 0.2f;
 	}
 
-	user_camera.set_viewport_size(width, height);
-	projection_matrix = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
+	user_camera.set_viewport_size(w, h);
+	projection_matrix = glm::ortho(0.0f, (float)w, 0.0f, (float)h);
 
-	if (width != width || height != height) {
-		this->width = width;
-		this->height = height;
+	if (this->width != w || this->height != h) {
+		this->width = w;
+		this->height = h;
 		renderer->on_recreate_swapchain();
 
 		// Retrieve new main command buffer
@@ -82,8 +84,7 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 
 	user_camera.on_update(ts);
 
-	if (should_show_debug_stats)
-		draw_debug_stats();
+	draw_debug_stats();
 
 	// Render final image to swapchain
 	Reference<Image2D> final_image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
@@ -212,8 +213,8 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
 				const auto& image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
+				// UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
 
-				UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
 				ImGui::End();
 			}
 		}

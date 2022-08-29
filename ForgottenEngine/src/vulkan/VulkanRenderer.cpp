@@ -354,7 +354,8 @@ namespace ForgottenEngine {
 		data[3].Position = glm::vec3(x, y + height, 0.0f);
 		data[3].TexCoord = glm::vec2(0, 1);
 
-		renderer_data->QuadVertexBuffer = VertexBuffer::create(data, 4 * sizeof(QuadVertex));
+		auto data_vb = VertexBuffer::create(data, 4 * sizeof(QuadVertex));
+		renderer_data->QuadVertexBuffer = data_vb;
 		uint32_t indices[6] = {
 			0,
 			1,
@@ -419,17 +420,11 @@ namespace ForgottenEngine {
 			renderPassBeginInfo.renderArea.offset.y = 0;
 			renderPassBeginInfo.renderArea.extent.width = width;
 			renderPassBeginInfo.renderArea.extent.height = height;
+
 			if (framebuffer->get_specification().swapchain_target) {
 				VulkanSwapchain& swapChain = Application::the().get_window().get_swapchain();
 				width = swapChain.get_width();
 				height = swapChain.get_height();
-				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassBeginInfo.pNext = nullptr;
-				renderPassBeginInfo.renderPass = framebuffer->get_render_pass();
-				renderPassBeginInfo.renderArea.offset.x = 0;
-				renderPassBeginInfo.renderArea.offset.y = 0;
-				renderPassBeginInfo.renderArea.extent.width = width;
-				renderPassBeginInfo.renderArea.extent.height = height;
 				renderPassBeginInfo.framebuffer = swapChain.get_current_framebuffer();
 
 				viewport.x = 0.0f;
@@ -439,13 +434,6 @@ namespace ForgottenEngine {
 			} else {
 				width = framebuffer->get_width();
 				height = framebuffer->get_height();
-				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassBeginInfo.pNext = nullptr;
-				renderPassBeginInfo.renderPass = framebuffer->get_render_pass();
-				renderPassBeginInfo.renderArea.offset.x = 0;
-				renderPassBeginInfo.renderArea.offset.y = 0;
-				renderPassBeginInfo.renderArea.extent.width = width;
-				renderPassBeginInfo.renderArea.extent.height = height;
 				renderPassBeginInfo.framebuffer = framebuffer->get_vulkan_framebuffer();
 
 				viewport.x = 0.0f;
@@ -462,33 +450,33 @@ namespace ForgottenEngine {
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 			if (explicit_clear) {
-				const auto colorAttachmentCount = (uint32_t)framebuffer->get_color_attachment_count();
-				const uint32_t totalAttachmentCount = colorAttachmentCount + (framebuffer->has_depth_attachment() ? 1 : 0);
-				CORE_ASSERT(clearValues.size() == totalAttachmentCount, "");
+				const auto colour_attachment_count = (uint32_t)framebuffer->get_color_attachment_count();
+				const uint32_t total_attachment_count = colour_attachment_count + (framebuffer->has_depth_attachment() ? 1 : 0);
+				CORE_ASSERT_BOOL(clearValues.size() == total_attachment_count);
 
-				std::vector<VkClearAttachment> attachments(totalAttachmentCount);
-				std::vector<VkClearRect> clearRects(totalAttachmentCount);
-				for (uint32_t i = 0; i < colorAttachmentCount; i++) {
+				std::vector<VkClearAttachment> attachments(total_attachment_count);
+				std::vector<VkClearRect> clear_rects(total_attachment_count);
+				for (uint32_t i = 0; i < colour_attachment_count; i++) {
 					attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 					attachments[i].colorAttachment = i;
 					attachments[i].clearValue = clearValues[i];
 
-					clearRects[i].rect.offset = { (int32_t)0, (int32_t)0 };
-					clearRects[i].rect.extent = { width, height };
-					clearRects[i].baseArrayLayer = 0;
-					clearRects[i].layerCount = 1;
+					clear_rects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+					clear_rects[i].rect.extent = { width, height };
+					clear_rects[i].baseArrayLayer = 0;
+					clear_rects[i].layerCount = 1;
 				}
 
 				if (framebuffer->has_depth_attachment()) {
-					attachments[colorAttachmentCount].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-					attachments[colorAttachmentCount].clearValue = clearValues[colorAttachmentCount];
-					clearRects[colorAttachmentCount].rect.offset = { (int32_t)0, (int32_t)0 };
-					clearRects[colorAttachmentCount].rect.extent = { width, height };
-					clearRects[colorAttachmentCount].baseArrayLayer = 0;
-					clearRects[colorAttachmentCount].layerCount = 1;
+					attachments[colour_attachment_count].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+					attachments[colour_attachment_count].clearValue = clearValues[colour_attachment_count];
+					clear_rects[colour_attachment_count].rect.offset = { (int32_t)0, (int32_t)0 };
+					clear_rects[colour_attachment_count].rect.extent = { width, height };
+					clear_rects[colour_attachment_count].baseArrayLayer = 0;
+					clear_rects[colour_attachment_count].layerCount = 1;
 				}
 
-				vkCmdClearAttachments(commandBuffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
+				vkCmdClearAttachments(commandBuffer, total_attachment_count, attachments.data(), total_attachment_count, clear_rects.data());
 			}
 
 			// Update dynamic viewport state
@@ -555,7 +543,6 @@ namespace ForgottenEngine {
 
 		Reference<VulkanMaterial> vulkan_material = material.as<VulkanMaterial>();
 		Renderer::submit([this, command_buffer, pipe = pipeline_in, ubs = ub, sbs = sb, vulkan_material]() mutable {
-			uint32_t frameIndex = Renderer::get_current_frame_index();
 			VkCommandBuffer commandBuffer = command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 			Reference<VulkanPipeline> vulkanPipeline = pipe.as<VulkanPipeline>();

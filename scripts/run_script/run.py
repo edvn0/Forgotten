@@ -222,6 +222,7 @@ def main():
             f"--height={cli_results.height}",
         ]
         run_folder = f"{forgotten_root}/{build_folder}/{cli_results.build_type}/ForgottenApp"
+
         if cli_results.generator != "Ninja":
             run_folder += "/Debug"
 

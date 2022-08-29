@@ -114,7 +114,11 @@ namespace ForgottenEngine {
 		{
 			TextureProperties props;
 			props.SamplerWrap = TextureWrap::Clamp;
-			renderer_data->brdf_lut = Texture2D::create(Assets::slashed_string_to_filepath("renderer/brdf_lut.tga").string(), props);
+			const auto brdf_lut = Assets::find_resources_by_path(Assets::slashed_string_to_filepath("renderer/brdf_lut.tga"));
+
+			CORE_ASSERT(brdf_lut, "Could not find a file under {}", (*brdf_lut).string());
+
+			renderer_data->brdf_lut = Texture2D::create((*brdf_lut).string(), props);
 		}
 		constexpr uint32_t black_cube_data[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
 		renderer_data->black_cube = TextureCube::create(ImageFormat::RGBA, 1, 1, &black_cube_data);
@@ -148,7 +152,6 @@ namespace ForgottenEngine {
 			for (int x = 0; x < 64; x++) {
 				for (int y = 0; y < 64; y++) {
 					const uint16_t r2index = HilbertIndex(x, y);
-					CORE_ASSERT_BOOL(r2index < 65536);
 					data[x + 64 * y] = r2index;
 				}
 			}
