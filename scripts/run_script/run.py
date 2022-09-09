@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import os
+from enum import Enum
 from subprocess import check_call, CalledProcessError
 import sys
 from argparse import ArgumentParser, Namespace
@@ -11,7 +12,7 @@ from typing import Callable, List
 import yaml
 
 
-class Color:
+class Color(Enum):
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -73,7 +74,7 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
 
     for program_option in program_defaults:
         as_argument_type = program_option['name'] if program_option[
-            'type'] == 'Optional' else f"--{program_option['name']}"
+                                                         'type'] == 'Optional' else f"--{program_option['name']}"
 
         if 'default' in program_option:
 
@@ -187,7 +188,19 @@ def main():
 
     if should_clean or not build_dir_exists or cli_results.force_regenerate:
         try:
-            cmake_call = f"cmake -S. -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug -DCMAKE_BUILD_TYPE={cli_results.build_type} -DFORGOTTEN_OS={cli_results.os} -DBUILD_SHARED_LIBS=OFF -DUSE_ALTERNATE_LINKER={cli_results.linker} -DASSIMP_BUILD_ZLIB=TRUE -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=OFF -DSPIRV_CROSS_ENABLE_UTIL=OFF -DSPIRV_CROSS_SKIP_INSTALL=ON -DSHADERC_ENABLE_WGSL_OUTPUT=OFF -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_WERROR_COMPILE=OFF -B{forgotten_root}/{build_folder}/{cli_results.build_type}"
+            cmake_call = \
+                f"cmake -S. -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1 " \
+                f"-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug -DCMAK" \
+                f"E_BUILD_TYPE={cli_results.build_type} -DFORGOTTEN_OS={cli_results.os} " \
+                f"-DBUILD_SHARED_LIBS=OFF -DUSE_ALTERNATE_LINKER={cli_results.linker} " \
+                f"-DASSIMP_BUILD_ZLIB=TRUE -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_CLI=OFF " \
+                f"-DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF " \
+                f"-DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF " \
+                f"-DSPIRV_CROSS_ENABLE_C_API=OFF -DSPIRV_CROSS_ENABLE_UTIL=OFF -DSPIRV_CROSS_SKIP_INSTALL=ON " \
+                f"-DSHADERC_ENABLE_WGSL_OUTPUT=OFF -DSHADERC_SKIP_INSTALL=ON -DSHADERC_SKIP_TESTS=ON " \
+                f"-DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON " \
+                f"-DSHADERC_ENABLE_WERROR_COMPILE=OFF -B{forgotten_root}/{build_folder}/" \
+                f"{cli_results.build_type}"
 
             configure_call = cmake_call.split(" ")
             configure_call.append(f"-G{cli_results.generator}")

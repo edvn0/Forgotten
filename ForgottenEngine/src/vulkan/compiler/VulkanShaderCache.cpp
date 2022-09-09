@@ -9,7 +9,7 @@
 
 namespace ForgottenEngine {
 
-	static std::filesystem::path cache_path = Assets::slashed_string_to_filepath("resources/shaders/cache/shader_registry.cache");
+	static std::filesystem::path cache_path = Assets::slashed_string_to_filepath("shaders/cache/shader_registry.cache");
 
 	VkShaderStageFlagBits VulkanShaderCache::has_changed(Reference<VulkanShaderCompiler> shader)
 	{
@@ -18,12 +18,12 @@ namespace ForgottenEngine {
 		deserialize(shader_cache);
 
 		VkShaderStageFlagBits changed_stages = {};
-		const bool shaderNotCached = shader_cache.find(shader->shader_source_path.string()) == shader_cache.end();
+		const bool shader_not_cached = shader_cache.find(shader->shader_source_path.string()) == shader_cache.end();
 
 		for (const auto& [stage, stage_source] : shader->shader_source) {
 			// Keep in mind that we're using the [] operator.
 			// Which means that we add the stage if it's not already there.
-			if (shaderNotCached || shader->stages_metadata.at(stage) != shader_cache[shader->shader_source_path.string()][stage]) {
+			if (shader_not_cached || shader->stages_metadata.at(stage) != shader_cache[shader->shader_source_path.string()][stage]) {
 				shader_cache[shader->shader_source_path.string()][stage] = shader->stages_metadata.at(stage);
 				*(int*)&changed_stages |= stage;
 			}

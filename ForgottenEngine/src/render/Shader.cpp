@@ -48,6 +48,7 @@ namespace ForgottenEngine {
 		} else {
 			// Try to compile from source
 			// Unavailable at runtime
+
 			shader = VulkanShaderCompiler::compile(*found_path, force_compile, disable_optimizations);
 		}
 

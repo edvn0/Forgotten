@@ -88,19 +88,21 @@ namespace ForgottenEngine {
 
 		renderer_data->shader_library = Reference<ShaderLibrary>::create();
 
+		auto& shader_library = Renderer::get_shader_library();
+
 		if (!config.shader_pack_path.empty())
-			Renderer::get_shader_library()->load_shader_pack(config.shader_pack_path);
+			shader_library->load_shader_pack(config.shader_pack_path);
 
 		// Renderer2D Shaders
-		Renderer::get_shader_library()->load("SceneComposite.glsl");
-		Renderer::get_shader_library()->load("Renderer2D_Circle.glsl");
-		Renderer::get_shader_library()->load("Renderer2D_Line.glsl");
-		Renderer::get_shader_library()->load("Renderer2D.glsl");
-		Renderer::get_shader_library()->load("Renderer2D_Text.glsl");
-		Renderer::get_shader_library()->load("TexturePass.glsl");
-		Renderer::get_shader_library()->load("PreDepth.glsl");
-		Renderer::get_shader_library()->load("LightCulling.glsl");
-		Renderer::get_shader_library()->load("DirShadowMap.glsl");
+		shader_library->load("SceneComposite.glsl");
+		shader_library->load("Renderer2D_Circle.glsl");
+		shader_library->load("Renderer2D_Line.glsl");
+		shader_library->load("Renderer2D.glsl");
+		shader_library->load("Renderer2D_Text.glsl");
+		shader_library->load("TexturePass.glsl");
+		shader_library->load("PreDepth.glsl");
+		shader_library->load("LightCulling.glsl");
+		shader_library->load("DirShadowMap.glsl");
 
 		// Compile shaders
 		Renderer::compile_shaders();
@@ -307,7 +309,7 @@ namespace ForgottenEngine {
 
 	Reference<RendererContext> Renderer::get_context() { return Application::the().get_window().get_context(); }
 
-	Reference<ShaderLibrary> Renderer::get_shader_library() { return renderer_data->shader_library; }
+	Reference<ShaderLibrary>& Renderer::get_shader_library() { return renderer_data->shader_library; }
 
 	uint32_t Renderer::get_current_frame_index() { return Application::the().get_window().get_swapchain().get_current_buffer_index(); }
 

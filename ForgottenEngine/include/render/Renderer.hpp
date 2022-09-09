@@ -74,7 +74,7 @@ namespace ForgottenEngine {
 
 		static RendererConfig& get_config();
 
-		static Reference<ShaderLibrary> get_shader_library();
+		static Reference<ShaderLibrary>& get_shader_library();
 
 		static void RT_BeginGPUPerfMarker(
 			Reference<RenderCommandBuffer> renderCommandBuffer, const std::string& label, const glm::vec4& markerColor = {});
