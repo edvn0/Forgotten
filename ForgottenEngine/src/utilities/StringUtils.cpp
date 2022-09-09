@@ -24,7 +24,7 @@ namespace ForgottenEngine::StringUtils {
 	{
 		std::string result;
 
-		auto path = Assets::load(filepath, "shaders", std::ios::binary | std::ios::ate | std::ios::in);
+		auto path = Assets::in(filepath, "shaders", std::ios::binary | std::ios::ate | std::ios::in);
 		if (!path) {
 			CORE_ERROR("Could not load file at path: {}", filepath.string());
 		}

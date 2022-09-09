@@ -12,8 +12,8 @@ namespace ForgottenEngine {
 		static VkShaderStageFlagBits has_changed(Reference<VulkanShaderCompiler> shader);
 
 	private:
-		static void serialize(const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shaderCache);
-		static void deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shaderCache);
+		static void serialize(const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache);
+		static void deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache);
 	};
 
 } // namespace ForgottenEngine

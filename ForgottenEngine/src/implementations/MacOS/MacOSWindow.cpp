@@ -101,7 +101,7 @@ namespace ForgottenEngine {
 		window_data.width = width;
 		window_data.height = height;
 
-		set_vsync(true);
+		set_vsync(false);
 		setup_events();
 	};
 

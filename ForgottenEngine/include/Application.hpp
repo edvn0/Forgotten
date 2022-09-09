@@ -9,7 +9,9 @@
 #include "events/MouseEvent.hpp"
 #include "imgui/ImGuiLayer.hpp"
 
+#include <concepts>
 #include <queue>
+#include <type_traits>
 
 namespace ForgottenEngine {
 
@@ -29,11 +31,11 @@ namespace ForgottenEngine {
 
 		template <typename Func> inline void queue_event(Func&& f) { event_queue.push(f); }
 
-		template <typename TEvent, bool DispatchImmediately = false, typename... TEventArgs> inline void dispatch_event(TEventArgs&&... args)
+		template <typename TEvent, bool DispatchImmediately = false, typename... TEventArgs>
+		requires std::assignable_from<Event, TEvent>
+		inline void dispatch_event(TEventArgs&&... args)
 		{
-			static_assert(std::is_assignable_v<Event, TEvent>);
-
-			std::shared_ptr<TEvent> event = std::make_shared<TEvent>(std::forward<TEventArgs>(args)...);
+			std::unique_ptr<TEvent> event = std::make_unique<TEvent>(std::forward<TEventArgs>(args)...);
 			if constexpr (DispatchImmediately) {
 				on_event(*event);
 			} else {

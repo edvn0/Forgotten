@@ -8,6 +8,8 @@
 #include "render/Font.hpp"
 #include "render/Renderer.hpp"
 
+#include <vulkan/compiler/VulkanShaderCache.hpp>
+
 namespace ForgottenEngine {
 
 	Application* Application::instance = nullptr;
@@ -64,8 +66,12 @@ namespace ForgottenEngine {
 				// Render ImGui on render thread
 				Application* app = this;
 				{
-					Renderer::submit([app, ts = time_step]() { app->render_imgui(ts); });
-					Renderer::submit([app]() { app->imgui_layer()->end(); });
+					Renderer::submit([app, ts = time_step]() {
+						ImGuiLayer::begin();
+						app->render_imgui(ts);
+					});
+
+					Renderer::submit([]() { ImGuiLayer::end(); });
 				}
 				Renderer::end_frame();
 
@@ -79,7 +85,7 @@ namespace ForgottenEngine {
 			time_step = TimeStep(glm::min<float>(frame_time, 0.0333f));
 			last_frame_time = time;
 
-			CORE_INFO("-- END FRAME {0}", frame_counter);
+			CORE_INFO("-- END FRAME {0}, {1}", frame_counter, frame_time);
 			frame_counter++;
 		}
 	}
@@ -98,7 +104,9 @@ namespace ForgottenEngine {
 				return false;
 			}
 
-			window->get_swapchain().on_resize(static_cast<uint32_t>(e.get_width()), static_cast<uint32_t>(e.get_height()));
+			const auto&& [w, h] = e.get_size();
+
+			window->get_swapchain().on_resize(w, h);
 			return false;
 		});
 
@@ -129,8 +137,6 @@ namespace ForgottenEngine {
 
 	void Application::render_imgui(TimeStep step)
 	{
-		imgui_layer()->begin();
-
 		for (auto& l : stack)
 			l->on_ui_render(step);
 	}

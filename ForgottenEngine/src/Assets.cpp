@@ -14,7 +14,7 @@
 
 namespace ForgottenEngine {
 
-	OptionalIFStream Assets::load(const Path& path, FileModifier modifier)
+	OptionalIFStream Assets::in(const Path& path, FileModifier modifier)
 	{
 		const auto found_path = find_resources_by_path(path);
 
@@ -25,20 +25,50 @@ namespace ForgottenEngine {
 		return {};
 	}
 
-	OptionalIFStream Assets::load(const Path& path, const std::string& resource_subdirectory, FileModifier modifier)
+	OptionalIFStream Assets::in(const Path& path, const std::string& resource_subdirectory, FileModifier modifier)
 	{
 		auto const subdir = std::filesystem::path { resource_subdirectory };
 
 		if (exists(path))
-			return std::ifstream(path, modifier);
+			return IFStream(path, modifier);
 
 		const auto parent_resource_path = path.parent_path() / subdir / path.filename();
 		if (exists(parent_resource_path)) {
-			return std::ifstream(parent_resource_path, modifier);
+			return IFStream(parent_resource_path, modifier);
 		}
 
 		if (exists(subdir / path)) {
-			return std::ifstream(subdir / path, modifier);
+			return IFStream(subdir / path, modifier);
+		}
+
+		return {};
+	}
+
+	OptionalOFStream Assets::out(const Path& path, FileModifier modifier)
+	{
+		const auto found_path = find_resources_by_path(path);
+
+		if (found_path) {
+			return OFStream(*found_path, modifier);
+		}
+
+		return {};
+	}
+
+	OptionalOFStream Assets::out(const Path& path, const std::string& resource_subdirectory, FileModifier modifier)
+	{
+		auto const subdir = std::filesystem::path { resource_subdirectory };
+
+		if (exists(path))
+			return OFStream(path, modifier);
+
+		const auto parent_resource_path = path.parent_path() / subdir / path.filename();
+		if (exists(parent_resource_path)) {
+			return OFStream(parent_resource_path, modifier);
+		}
+
+		if (exists(subdir / path)) {
+			return OFStream(subdir / path, modifier);
 		}
 
 		return {};

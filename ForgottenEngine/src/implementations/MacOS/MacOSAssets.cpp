@@ -48,7 +48,7 @@ namespace ForgottenEngine {
 			std::string item;
 			std::vector<std::string> split_strings;
 			while (std::getline(stream, item, '/')) {
-				split_strings.push_back(item); // if C++11 (based on comment from @mchiasson)
+				split_strings.push_back(item);
 			}
 			return split_strings;
 		}();

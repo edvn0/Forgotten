@@ -43,6 +43,9 @@ namespace ForgottenEngine {
 			return ss.str();
 		}
 
+		[[nodiscard]] inline std::pair<uint32_t, uint32_t> get_size() const { return {
+			static_cast<uint32_t>(width), static_cast<uint32_t>(height) } };
+
 		static EventType get_static_type() { return EventType::WindowResize; };
 		[[nodiscard]] EventType get_event_type() const override { return get_static_type(); };
 		[[nodiscard]] const char* get_name() const override { return "WindowResize"; };

@@ -10,6 +10,7 @@
 #include "Common.hpp"
 
 #include <filesystem>
+#include <fstream>
 #include <optional>
 #include <vector>
 
@@ -18,7 +19,9 @@ namespace ForgottenEngine {
 	using Path = std::filesystem::path;
 	using OptionalPath = std::optional<std::filesystem::path>;
 	using IFStream = std::ifstream;
+	using OFStream = std::ofstream;
 	using OptionalIFStream = std::optional<IFStream>;
+	using OptionalOFStream = std::optional<OFStream>;
 
 	using FileModifier = int;
 
@@ -40,10 +43,42 @@ namespace ForgottenEngine {
 		static Path get_base_directory();
 
 		static Path slashed_string_to_filepath(const std::string& slashed_string);
-		static OptionalIFStream load(
-			const Path&, FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
-		static OptionalIFStream load(const Path&, const std::string& resource_subdirectory,
+
+		/**
+		 * @brief Optional resolution of an input stream based on a path.
+		 *
+		 * @param modifier {@link std::ios @endlink }
+		 * @return OptionalIFStream std::optional<std::ifstream>>
+		 */
+		static OptionalIFStream in(const Path&, FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
+
+		/**
+		 * @brief Optional resolution of an input stream based on a path and an optional directory in which to look for it.
+		 *
+		 * @param modifier {@link std::ios @endlink }
+		 * @return OptionalIFStream std::optional<std::ifstream>>
+		 */
+		static OptionalIFStream in(const Path&, const std::string& resource_subdirectory,
 			FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
+
+		/**
+		 * @brief Optional resolution of an output stream based on a path.
+		 *
+		 * @param modifier {@link std::ios @endlink }
+		 * @return OptionalIFStream std::optional<std::ofstream>>
+		 */
+		static OptionalOFStream out(
+			const Path&, FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
+
+		/**
+		 * @brief Optional resolution of an output stream based on a path and an optional directory in which to look for it.
+		 *
+		 * @param modifier {@link std::ios @endlink }
+		 * @return OptionalIFStream std::optional<std::ofstream>>
+		 */
+		static OptionalOFStream out(const Path&, const std::string& resource_subdirectory,
+			FileModifier modifier = AssetModifiers::INPUT | AssetModifiers::BINARY | AssetModifiers::OPEN_AT_END);
+
 		static bool exists(const Path&);
 		static OptionalPath find_resources_by_path(const Path&, const std::string& resource_subdirectory = "");
 		static std::vector<OptionalPath> load_from_directory(const std::filesystem::path& path, bool recurse = false);

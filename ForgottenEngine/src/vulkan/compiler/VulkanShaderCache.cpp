@@ -9,43 +9,43 @@
 
 namespace ForgottenEngine {
 
-	static const char* s_ShaderRegistryPath = "cache/shaders/shader_registry.cache";
+	static std::filesystem::path cache_path = Assets::slashed_string_to_filepath("resources/shaders/cache/shader_registry.cache");
 
 	VkShaderStageFlagBits VulkanShaderCache::has_changed(Reference<VulkanShaderCompiler> shader)
 	{
-		std::map<std::string, std::map<VkShaderStageFlagBits, StageData>> shaderCache;
+		std::map<std::string, std::map<VkShaderStageFlagBits, StageData>> shader_cache;
 
-		deserialize(shaderCache);
+		deserialize(shader_cache);
 
-		VkShaderStageFlagBits changedStages = {};
-		const bool shaderNotCached = shaderCache.find(shader->shader_source_path.string()) == shaderCache.end();
+		VkShaderStageFlagBits changed_stages = {};
+		const bool shaderNotCached = shader_cache.find(shader->shader_source_path.string()) == shader_cache.end();
 
-		for (const auto& [stage, stageSource] : shader->shader_source) {
+		for (const auto& [stage, stage_source] : shader->shader_source) {
 			// Keep in mind that we're using the [] operator.
 			// Which means that we add the stage if it's not already there.
-			if (shaderNotCached || shader->stages_metadata.at(stage) != shaderCache[shader->shader_source_path.string()][stage]) {
-				shaderCache[shader->shader_source_path.string()][stage] = shader->stages_metadata.at(stage);
-				*(int*)&changedStages |= stage;
+			if (shaderNotCached || shader->stages_metadata.at(stage) != shader_cache[shader->shader_source_path.string()][stage]) {
+				shader_cache[shader->shader_source_path.string()][stage] = shader->stages_metadata.at(stage);
+				*(int*)&changed_stages |= stage;
 			}
 		}
 
 		// Update cache in case we added a stage but didn't remove the deleted(in file) stages
-		shaderCache.at(shader->shader_source_path.string()) = shader->stages_metadata;
+		shader_cache.at(shader->shader_source_path.string()) = shader->stages_metadata;
 
-		if (changedStages) {
-			serialize(shaderCache);
+		if (changed_stages) {
+			serialize(shader_cache);
 		}
 
-		return changedStages;
+		return changed_stages;
 	}
 
-	void VulkanShaderCache::serialize(const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shaderCache)
+	void VulkanShaderCache::serialize(const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache)
 	{
 		YAML::Emitter out;
 
 		out << YAML::BeginMap << YAML::Key << "ShaderRegistry" << YAML::BeginSeq; // ShaderRegistry_
 
-		for (auto& [filepath, shader] : shaderCache) {
+		for (auto& [filepath, shader] : shader_cache) {
 			out << YAML::BeginMap; // Shader_
 
 			out << YAML::Key << "ShaderPath" << YAML::Value << filepath;
@@ -81,16 +81,19 @@ namespace ForgottenEngine {
 		out << YAML::EndSeq; // ShaderRegistry_
 		out << YAML::EndMap; // File_
 
-		std::ofstream fout(s_ShaderRegistryPath);
+		std::ofstream fout(*Assets::out(cache_path));
 		fout << out.c_str();
 	}
 
-	void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shaderCache)
+	void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache)
 	{
 		// Read registry
-		std::ifstream stream(s_ShaderRegistryPath);
-		if (!stream.good())
+		auto asset_path = *Assets::in(cache_path);
+		std::ifstream stream(std::move(asset_path));
+		if (!stream) {
+			CORE_ERROR("Could not load cache directory at {}", cache_path);
 			return;
+		}
 
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
@@ -118,7 +121,7 @@ namespace ForgottenEngine {
 				FG_DESERIALIZE_PROPERTY("Stage", stageType, stage, std::string());
 				FG_DESERIALIZE_PROPERTY("StageHash", stageHash, stage, 0u);
 
-				auto& stageCache = shaderCache[path][ShaderUtils::ShaderTypeFromString(stageType)];
+				auto& stageCache = shader_cache[path][ShaderUtils::ShaderTypeFromString(stageType)];
 				stageCache.HashValue = stageHash;
 
 				for (auto header : stage["Headers"]) {

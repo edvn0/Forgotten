@@ -21,9 +21,9 @@ namespace ForgottenEngine {
 
 		~ImGuiLayer() override = default;
 
-		void begin();
+		static void begin();
 
-		void end();
+		static void end();
 
 		void on_attach() override;
 		void on_update(const TimeStep& step) override;

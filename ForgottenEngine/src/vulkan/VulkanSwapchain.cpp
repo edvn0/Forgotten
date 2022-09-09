@@ -89,7 +89,9 @@ namespace ForgottenEngine {
 		VkExtent2D sc_extent = {};
 		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the
 		// swapchain
-		if (surf_caps.currentExtent.width == (uint32_t)-1) {
+		auto constexpr extent_is_undefined = [](const VkExtent2D& extent2D) -> bool { return extent2D.width == (uint32_t)-1; };
+
+		if (extent_is_undefined(surf_caps.currentExtent)) {
 			// If the surface size is undefined, the size is set to
 			// the size of the images requested.
 			sc_extent.width = *w;
@@ -112,7 +114,7 @@ namespace ForgottenEngine {
 
 		// If v-sync is not requested, try to find a mailbox mode
 		// It's the lowest latency non-tearing present mode available
-		if (!vsync) {
+		if (!is_vsync) {
 			for (size_t i = 0; i < present_mode_count; i++) {
 				if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 					sc_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;

@@ -30,9 +30,9 @@ namespace ForgottenEngine {
 
 		[[nodiscard]] inline void* get_natively() const override { return glfw_window; };
 
-		virtual Reference<RendererContext> get_context() override { return render_context; }
-		virtual VulkanSwapchain& get_swapchain() override { return swapchain; }
-		virtual void swap_buffers() override { swapchain.present(); };
+		Reference<RendererContext> get_context() override { return render_context; }
+		VulkanSwapchain& get_swapchain() override { return swapchain; }
+		void swap_buffers() override { swapchain.present(); };
 
 	private:
 		virtual void shutdown();

@@ -40,7 +40,7 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		static std::filesystem::path get_cache_directory() { return Assets::slashed_string_to_filepath("resources/fonts/cache/font_atlases"); }
+		static std::filesystem::path get_cache_directory() { return Assets::slashed_string_to_filepath("fonts/cache/font_atlases"); }
 
 		static void create_cache_directory_if_needed()
 		{
