@@ -81,15 +81,15 @@ namespace ForgottenEngine {
 		out << YAML::EndSeq; // ShaderRegistry_
 		out << YAML::EndMap; // File_
 
-		std::ofstream fout(*Assets::out(cache_path));
+		std::ofstream fout(cache_path);
 		fout << out.c_str();
 	}
 
 	void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache)
 	{
 		// Read registry
-		auto asset_path = *Assets::in(cache_path);
-		std::ifstream stream(std::move(asset_path));
+		const auto& asset_path = cache_path;
+		std::ifstream stream(asset_path);
 		if (!stream) {
 			CORE_ERROR("Could not load cache directory at {}", cache_path);
 			return;

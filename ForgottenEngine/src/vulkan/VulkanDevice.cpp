@@ -42,7 +42,7 @@ namespace ForgottenEngine {
 			selected_physical_device = &devices_to_select_from.back();
 		}
 
-		CORE_ASSERT(selected_physical_device, "Could not find any physical devices!", "");
+		CORE_ASSERT(selected_physical_device, "Could not find any physical devices!");
 		physical_device = *selected_physical_device;
 
 		vkGetPhysicalDeviceFeatures(physical_device, &features);
@@ -50,7 +50,7 @@ namespace ForgottenEngine {
 
 		uint32_t family_count;
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &family_count, nullptr);
-		CORE_ASSERT(family_count > 0, "", "");
+		CORE_ASSERT_BOOL(family_count > 0);
 		queue_family_properties.resize(family_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &family_count, queue_family_properties.data());
 

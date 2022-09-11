@@ -5,11 +5,7 @@ include(../cmake_utils/common/common.cmake)
 
 find_package(Vulkan REQUIRED)
 
-if(WIN32)
-  set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_MULTITHREADED ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
-endif()
+message(STATUS ${Vulkan_LIBRARY})
 
 find_package(
   Boost 1.79
@@ -112,9 +108,8 @@ target_include_directories(
 
 target_link_libraries(
   ForgottenEngine
-  PUBLIC imgui
-  PRIVATE Vulkan::Vulkan
-          glfw
+  PUBLIC imgui Vulkan::Vulkan
+  PRIVATE glfw
           tinyobjloader
           msdf-atlas-gen
           assimp

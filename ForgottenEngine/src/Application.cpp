@@ -23,15 +23,20 @@ namespace ForgottenEngine {
 
 		window = std::unique_ptr<Window>(Window::create(props));
 		window->init();
+		CORE_INFO("Initialized window.");
 		window->set_event_callback([&](Event& event) { this->on_event(event); });
 
 		Assets::init();
+		CORE_INFO("Initialized assets.");
 
 		Renderer::init();
+		CORE_INFO("Initialized renderer.");
 		Renderer::wait_and_render();
+
 		add_overlay(std::make_unique<ImGuiLayer>());
 
 		Font::init();
+		CORE_INFO("Initialized fonts.");
 	};
 
 	Application::~Application()

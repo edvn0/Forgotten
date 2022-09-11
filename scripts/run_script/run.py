@@ -74,7 +74,7 @@ def initialize_cli(project_root: Path, argv: List[str] = None) -> Namespace:
 
     for program_option in program_defaults:
         as_argument_type = program_option['name'] if program_option[
-                                                         'type'] == 'Optional' else f"--{program_option['name']}"
+            'type'] == 'Optional' else f"--{program_option['name']}"
 
         if 'default' in program_option:
 

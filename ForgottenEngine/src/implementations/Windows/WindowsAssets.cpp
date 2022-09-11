@@ -28,7 +28,6 @@ namespace ForgottenEngine {
 			std::stringstream stream(slashed_string);
 			std::string item;
 			std::vector<std::string> split_strings;
-			split_strings.push_back("resources");
 			while (std::getline(stream, item, '/')) {
 				split_strings.push_back(item);
 			}

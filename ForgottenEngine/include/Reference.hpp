@@ -161,6 +161,8 @@ namespace ForgottenEngine {
 		mutable T* instance;
 	};
 
+	template <typename T, typename... Args> static Reference<T> make(Args&&... args) { return Reference<T>(new T(std::forward<Args>(args)...)); }
+
 	template <typename T> class WeakReference {
 	public:
 		WeakReference() = default;

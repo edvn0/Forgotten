@@ -40,13 +40,12 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		static std::filesystem::path get_cache_directory() { return Assets::slashed_string_to_filepath("fonts/cache/font_atlases"); }
+		static std::filesystem::path cache_dir = Assets::slashed_string_to_filepath("fonts/cache/font_atlases");
 
 		static void create_cache_directory_if_needed()
 		{
-			std::filesystem::path cacheDirectory = get_cache_directory();
-			if (!std::filesystem::exists(cacheDirectory))
-				std::filesystem::create_directories(cacheDirectory);
+			if (!std::filesystem::exists(Utils::cache_dir))
+				std::filesystem::create_directories(Utils::cache_dir);
 		}
 	} // namespace Utils
 
@@ -59,7 +58,7 @@ namespace ForgottenEngine {
 		const std::string& font_name, float font_size, AtlasHeader& header, void*& pixels, Buffer& storage_buffer)
 	{
 		std::string filename = fmt::format("{0}-{1}.hfa", font_name, font_size);
-		std::filesystem::path filepath = Utils::get_cache_directory() / filename;
+		std::filesystem::path filepath = Utils::cache_dir / filename;
 
 		if (std::filesystem::exists(filepath)) {
 			storage_buffer = FileSystem::read_bytes(filepath);
@@ -75,7 +74,7 @@ namespace ForgottenEngine {
 		Utils::create_cache_directory_if_needed();
 
 		std::string filename = fmt::format("{0}-{1}.hfa", font_name, font_size);
-		std::filesystem::path filepath = Utils::get_cache_directory() / filename;
+		std::filesystem::path filepath = Utils::cache_dir / filename;
 
 		std::ofstream stream(filepath, std::ios::binary | std::ios::trunc);
 		if (!stream) {
@@ -349,7 +348,7 @@ namespace ForgottenEngine {
 
 		CORE_ASSERT(path, "Could not find font file under {}", (*path).string());
 
-		default_font = Reference<Font>::create(*path);
+		default_font = make<Font>(*path);
 	}
 
 	void Font::shutdown() { default_font.reset(); }
