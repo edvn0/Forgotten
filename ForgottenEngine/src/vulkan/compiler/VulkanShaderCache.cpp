@@ -81,8 +81,14 @@ namespace ForgottenEngine {
 		out << YAML::EndSeq; // ShaderRegistry_
 		out << YAML::EndMap; // File_
 
-		std::ofstream fout(cache_path);
-		fout << out.c_str();
+		std::ofstream output(cache_path.c_str());
+
+		if (!output) {
+			CORE_ERROR("Could not open {} output path.", cache_path.string());
+			return;
+		}
+
+		output << out.c_str();
 	}
 
 	void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache)

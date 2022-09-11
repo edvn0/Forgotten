@@ -89,7 +89,7 @@ namespace ForgottenEngine {
 		const std::vector<Reference<Texture2D>>& GetTextures() const { return m_Textures; }
 		const std::string& GetFilePath() const { return m_FilePath; }
 
-		const std::vector<Triangle> GetTriangleCache(uint32_t index) const { return m_TriangleCache.at(index); }
+		const std::vector<Triangle> GetTriangleCache(uint32_t index) const { return triangle_cache.at(index); }
 
 		Reference<VertexBuffer> GetVertexBuffer() { return m_VertexBuffer; }
 		Reference<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
@@ -125,7 +125,7 @@ namespace ForgottenEngine {
 		std::vector<Reference<Texture2D>> m_NormalMaps;
 		std::vector<Reference<Material>> m_Materials;
 
-		std::unordered_map<uint32_t, std::vector<Triangle>> m_TriangleCache;
+		std::unordered_map<uint32_t, std::vector<Triangle>> triangle_cache;
 
 		AABB m_BoundingBox;
 

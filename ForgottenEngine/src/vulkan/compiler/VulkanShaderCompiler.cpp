@@ -27,18 +27,15 @@ namespace ForgottenEngine {
 
 		static std::filesystem::path get_cache_directory()
 		{
-			// TODO: make sure the assets directory is valid
-			auto cache_dir_local = std::filesystem::path("resources") / std::filesystem::path("shaders") / std::filesystem::path("cache")
-				/ std::filesystem::path("vulkan");
-
+			auto cache_dir_local = Assets::slashed_string_to_filepath("shaders/cache/vulkan");
 			return Assets::get_base_directory() / cache_dir_local;
 		}
 
 		static void create_cache_directory_if_needed()
 		{
-			std::string cacheDirectory = get_cache_directory().string();
-			if (!std::filesystem::exists(cacheDirectory))
-				std::filesystem::create_directories(cacheDirectory);
+			auto cache_dir = get_cache_directory();
+			if (!std::filesystem::exists(cache_dir))
+				std::filesystem::create_directories(cache_dir);
 		}
 
 		static ShaderUniformType SPIRTypeToShaderUniformType(spirv_cross::SPIRType type)
@@ -103,8 +100,8 @@ namespace ForgottenEngine {
 		shader_source = pre_process(source);
 		const VkShaderStageFlagBits changedStages = VulkanShaderCache::has_changed(this);
 
-		bool compileSucceeded = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, force_compile);
-		if (!compileSucceeded) {
+		bool compile_success = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, force_compile);
+		if (!compile_success) {
 			CORE_ASSERT_BOOL(false);
 			return false;
 		}
@@ -245,8 +242,8 @@ namespace ForgottenEngine {
 	bool VulkanShaderCompiler::try_recompile(Reference<VulkanShader> shader)
 	{
 		Reference<VulkanShaderCompiler> compiler = Reference<VulkanShaderCompiler>::create(shader->asset_path, shader->disable_optimisations);
-		bool compileSucceeded = compiler->reload(true);
-		if (!compileSucceeded)
+		bool compile_success = compiler->reload(true);
+		if (!compile_success)
 			return false;
 
 		shader->release();
@@ -279,13 +276,13 @@ namespace ForgottenEngine {
 	bool VulkanShaderCompiler::compile_or_get_vulkan_binary(
 		VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool force_compile)
 	{
-		const std::filesystem::path cacheDirectory = Utils::get_cache_directory();
+		const std::filesystem::path cache_dir = Utils::get_cache_directory();
 
 		// compile shader with debug info so we can reflect
 		const auto extension = ShaderUtils::ShaderStageCachedFileExtension(stage, debug);
 		if (!force_compile && stage & ~changedStages) // Per-stage cache is found and is unchanged
 		{
-			try_get_vulkan_cached_binary(cacheDirectory, extension, outputBinary);
+			try_get_vulkan_cached_binary(cache_dir, extension, outputBinary);
 		}
 
 		if (outputBinary.empty()) {
@@ -301,7 +298,7 @@ namespace ForgottenEngine {
 
 			if (std::string error = compile(outputBinary, stage, options); error.size()) {
 				CORE_ERROR("Renderer {}", error);
-				try_get_vulkan_cached_binary(cacheDirectory, extension, outputBinary);
+				try_get_vulkan_cached_binary(cache_dir, extension, outputBinary);
 				if (outputBinary.empty()) {
 					CORE_ERROR("Failed to compile shader and couldn't find a cached version.");
 				} else {
@@ -311,7 +308,7 @@ namespace ForgottenEngine {
 				return false;
 			} else // compile success
 			{
-				auto path = cacheDirectory / (shader_source_path.filename().string() + extension);
+				auto path = cache_dir / (shader_source_path.filename().string() + extension);
 				std::string cachedFilePath = path.string();
 
 				FILE* f = fopen(cachedFilePath.c_str(), "wb");
@@ -334,9 +331,9 @@ namespace ForgottenEngine {
 	}
 
 	void VulkanShaderCompiler::try_get_vulkan_cached_binary(
-		const std::filesystem::path& cacheDirectory, const std::string& extension, std::vector<uint32_t>& outputBinary) const
+		const std::filesystem::path& cache_dir, const std::string& extension, std::vector<uint32_t>& outputBinary) const
 	{
-		const auto path = cacheDirectory / (shader_source_path.filename().string() + extension);
+		const auto path = cache_dir / (shader_source_path.filename().string() + extension);
 		const std::string cachedFilePath = path.string();
 
 		FILE* f = fopen(cachedFilePath.data(), "rb");
@@ -357,8 +354,8 @@ namespace ForgottenEngine {
 			char Header[4] = { 'F', 'G', 'S', 'R' };
 		} header;
 
-		std::filesystem::path cacheDirectory = Utils::get_cache_directory();
-		const auto path = cacheDirectory / (shader_source_path.filename().string() + ".cached_vulkan.refl");
+		std::filesystem::path cache_dir = Utils::get_cache_directory();
+		const auto path = cache_dir / (shader_source_path.filename().string() + ".cached_vulkan.refl");
 		FileStreamReader serializer(path);
 		if (!serializer)
 			return false;
@@ -397,8 +394,8 @@ namespace ForgottenEngine {
 			char Header[4] = { 'F', 'G', 'S', 'R' };
 		} header;
 
-		std::filesystem::path cacheDirectory = Utils::get_cache_directory();
-		const auto path = cacheDirectory / (shader_source_path.filename().string() + ".cached_vulkan.refl");
+		std::filesystem::path cache_dir = Utils::get_cache_directory();
+		const auto path = cache_dir / (shader_source_path.filename().string() + ".cached_vulkan.refl");
 		FileStreamWriter serializer(path);
 		serializer.write_raw(header);
 		serialize_reflection_data(&serializer);

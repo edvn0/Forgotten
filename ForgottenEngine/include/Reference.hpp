@@ -41,15 +41,15 @@ namespace ForgottenEngine {
 			inc_ref();
 		}
 
-		template <typename T2> Reference(const Reference<T2>& other)
+		template <typename Other> Reference(const Reference<Other>& other)
 		{
-			instance = (T*)other.instance;
+			instance = reinterpret_cast<T*>(other.instance);
 			inc_ref();
 		}
 
-		template <typename T2> Reference(Reference<T2>&& other)
+		template <typename Other> Reference(Reference<Other>&& other)
 		{
-			instance = (T*)other.instance;
+			instance = reinterpret_cast<T*>(other.instance);
 			other.instance = nullptr;
 		}
 
@@ -62,7 +62,7 @@ namespace ForgottenEngine {
 
 		~Reference() { dec_ref(); }
 
-		Reference(const Reference<T>& other)
+		Reference(const Reference& other)
 			: instance(other.instance)
 		{
 			inc_ref();
@@ -75,7 +75,7 @@ namespace ForgottenEngine {
 			return *this;
 		}
 
-		Reference& operator=(const Reference<T>& other)
+		Reference& operator=(const Reference& other)
 		{
 			other.inc_ref();
 			dec_ref();
