@@ -17,8 +17,12 @@
 - name: vsync
   type: Positional
   default:
-    type: bool
+      type: bool
 - name: clean
+  type: Positional
+  default:
+      type: bool
+- name: hard_clean
   type: Positional
   default:
       type: bool

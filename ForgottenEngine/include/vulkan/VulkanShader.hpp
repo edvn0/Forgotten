@@ -5,7 +5,7 @@
 #include "vk_mem_alloc.h"
 
 #include <filesystem>
-#include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace ForgottenEngine {
@@ -97,7 +97,7 @@ namespace ForgottenEngine {
 		const VkWriteDescriptorSet* get_descriptor_set(const std::string& name, uint32_t set = 0) const;
 
 	private:
-		void load_and_create_shaders(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
+		void load_and_create_shaders(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shader_data);
 
 		void create_descriptors();
 
@@ -108,7 +108,7 @@ namespace ForgottenEngine {
 		std::string name;
 		bool disable_optimisations = false;
 
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_data;
+		std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_data;
 		ReflectionData reflection_data;
 
 		std::vector<VkDescriptorSetLayout> descriptor_set_layouts;

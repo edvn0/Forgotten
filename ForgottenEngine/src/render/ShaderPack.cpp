@@ -101,7 +101,7 @@ namespace ForgottenEngine {
 		vulkanShader->try_read_reflection_data(&serializer);
 		// vulkanShader->m_DisableOptimization =
 
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_modules;
+		std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>> shader_modules;
 		for (uint32_t index : shaderProgramInfo.ModuleIndices) {
 			const auto& info = file.index.shader_modules[index];
 			auto& moduleData = shader_modules[Utils::ShaderStageToVkShaderStage((Utils::ShaderStage)info.Stage)];
@@ -152,7 +152,7 @@ namespace ForgottenEngine {
 		}
 
 		uint32_t shaderProgramIndexSize = shaderPackFile.header.ShaderProgramCount
-				* (sizeof(std::map<uint32_t, ShaderPackFile::ShaderProgramInfo>::key_type)
+				* (sizeof(std::unordered_map<uint32_t, ShaderPackFile::ShaderProgramInfo>::key_type)
 					+ sizeof(ShaderPackFile::ShaderProgramInfo::ReflectionDataOffset))
 			+ shaderModuleIndexArraySize;
 

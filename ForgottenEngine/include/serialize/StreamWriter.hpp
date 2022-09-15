@@ -2,6 +2,9 @@
 
 #include "Buffer.hpp"
 
+#include <map>
+#include <unordered_map>
+
 namespace ForgottenEngine {
 
 	class StreamWriter {
@@ -27,7 +30,7 @@ namespace ForgottenEngine {
 
 		template <typename T> void write_object(const T& obj) { T::serialize(this, obj); }
 
-		template <typename Key, typename Value> void write_map(const std::map<Key, Value>& map, bool writeSize = true)
+		template <typename Key, typename Value> void write_map(const std::unordered_map<Key, Value>& map, bool writeSize = true)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)map.size());
@@ -45,7 +48,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename Key, typename Value> void write_map(const std::unordered_map<Key, Value>& map, bool writeSize = true)
+		template <typename Key, typename Value> void write_map(const std::map<Key, Value>& map, bool writeSize = true)
 		{
 			if (writeSize)
 				write_raw<uint32_t>((uint32_t)map.size());

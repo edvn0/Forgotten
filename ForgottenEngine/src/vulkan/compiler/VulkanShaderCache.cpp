@@ -13,7 +13,7 @@ namespace ForgottenEngine {
 
 	VkShaderStageFlagBits VulkanShaderCache::has_changed(Reference<VulkanShaderCompiler> shader)
 	{
-		std::map<std::string, std::map<VkShaderStageFlagBits, StageData>> shader_cache;
+		std::unordered_map<std::string, std::unordered_map<VkShaderStageFlagBits, StageData>> shader_cache;
 
 		deserialize(shader_cache);
 
@@ -30,7 +30,7 @@ namespace ForgottenEngine {
 		}
 
 		// Update cache in case we added a stage but didn't remove the deleted(in file) stages
-		shader_cache.at(shader->shader_source_path.string()) = shader->stages_metadata;
+		shader_cache[shader->shader_source_path.string()] = shader->stages_metadata;
 
 		if (changed_stages) {
 			serialize(shader_cache);
@@ -39,7 +39,7 @@ namespace ForgottenEngine {
 		return changed_stages;
 	}
 
-	void VulkanShaderCache::serialize(const std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache)
+	void VulkanShaderCache::serialize(const std::unordered_map<std::string, std::unordered_map<VkShaderStageFlagBits, StageData>>& shader_cache)
 	{
 		YAML::Emitter out;
 
@@ -91,7 +91,7 @@ namespace ForgottenEngine {
 		output << out.c_str();
 	}
 
-	void VulkanShaderCache::deserialize(std::map<std::string, std::map<VkShaderStageFlagBits, StageData>>& shader_cache)
+	void VulkanShaderCache::deserialize(std::unordered_map<std::string, std::unordered_map<VkShaderStageFlagBits, StageData>>& shader_cache)
 	{
 		// Read registry
 		const auto& asset_path = cache_path;
@@ -101,10 +101,10 @@ namespace ForgottenEngine {
 			return;
 		}
 
-		std::stringstream strStream;
-		strStream << stream.rdbuf();
+		std::stringstream str_stream;
+		str_stream << stream.rdbuf();
 
-		YAML::Node data = YAML::Load(strStream.str());
+		YAML::Node data = YAML::Load(str_stream.str());
 		auto handles = data["ShaderRegistry"];
 		if (handles.IsNull()) {
 			CORE_ERROR("[ShaderCache] Shader Registry is invalid.");
@@ -122,27 +122,27 @@ namespace ForgottenEngine {
 			FG_DESERIALIZE_PROPERTY("ShaderPath", path, shader, std::string());
 			for (auto stage : shader["Stages"]) // Stages
 			{
-				std::string stageType;
-				uint32_t stageHash;
-				FG_DESERIALIZE_PROPERTY("Stage", stageType, stage, std::string());
-				FG_DESERIALIZE_PROPERTY("StageHash", stageHash, stage, 0u);
+				std::string stage_type;
+				uint32_t stage_hash;
+				FG_DESERIALIZE_PROPERTY("Stage", stage_type, stage, std::string());
+				FG_DESERIALIZE_PROPERTY("StageHash", stage_hash, stage, 0u);
 
-				auto& stageCache = shader_cache[path][ShaderUtils::ShaderTypeFromString(stageType)];
-				stageCache.HashValue = stageHash;
+				auto& stage_cache = shader_cache[path][ShaderUtils::ShaderTypeFromString(stage_type)];
+				stage_cache.HashValue = stage_hash;
 
 				for (auto header : stage["Headers"]) {
-					std::string headerPath;
-					uint32_t includeDepth;
-					bool isRelative;
-					bool isGuarded;
-					uint32_t hashValue;
-					FG_DESERIALIZE_PROPERTY("HeaderPath", headerPath, header, std::string());
-					FG_DESERIALIZE_PROPERTY("IncludeDepth", includeDepth, header, 0u);
-					FG_DESERIALIZE_PROPERTY("IsRelative", isRelative, header, false);
-					FG_DESERIALIZE_PROPERTY("IsGuarded", isGuarded, header, false);
-					FG_DESERIALIZE_PROPERTY("HashValue", hashValue, header, 0u);
+					std::string header_path;
+					uint32_t include_depth;
+					bool is_relative;
+					bool is_guarded;
+					uint32_t hash_value;
+					FG_DESERIALIZE_PROPERTY("HeaderPath", header_path, header, std::string());
+					FG_DESERIALIZE_PROPERTY("IncludeDepth", include_depth, header, 0u);
+					FG_DESERIALIZE_PROPERTY("IsRelative", is_relative, header, false);
+					FG_DESERIALIZE_PROPERTY("IsGuarded", is_guarded, header, false);
+					FG_DESERIALIZE_PROPERTY("HashValue", hash_value, header, 0u);
 
-					stageCache.Headers.emplace(IncludeData { headerPath, includeDepth, isRelative, isGuarded, hashValue });
+					stage_cache.Headers.emplace(IncludeData { header_path, include_depth, is_relative, is_guarded, hash_value });
 				}
 			}
 		}

@@ -5,9 +5,9 @@
 #include "vulkan/VulkanShaderUtils.hpp"
 
 #include <filesystem>
-#include <map>
 #include <regex>
 #include <sstream>
+#include <unordered_map>
 #include <unordered_set>
 
 enum VkShaderStageFlagBits;
@@ -125,7 +125,7 @@ namespace ForgottenEngine {
 			const std::unordered_set<IncludeData>& includeData, const std::filesystem::path& fullPath);
 
 		template <ShaderUtils::SourceLang Lang>
-		static std::map<VkShaderStageFlagBits, std::string> PreprocessShader(
+		static std::unordered_map<VkShaderStageFlagBits, std::string> PreprocessShader(
 			const std::string& source, std::unordered_set<std::string>& specialMacros);
 	};
 
@@ -226,14 +226,14 @@ namespace ForgottenEngine {
 	}
 
 	template <ShaderUtils::SourceLang Lang>
-	std::map<VkShaderStageFlagBits, std::string> ShaderPreprocessor::PreprocessShader(
+	std::unordered_map<VkShaderStageFlagBits, std::string> ShaderPreprocessor::PreprocessShader(
 		const std::string& source, std::unordered_set<std::string>& specialMacros)
 	{
 		std::stringstream sourceStream;
 		PreprocessUtils::CopyWithoutComments(source.begin(), source.end(), std::ostream_iterator<char>(sourceStream));
 		std::string newSource = sourceStream.str();
 
-		std::map<VkShaderStageFlagBits, std::string> shaderSources;
+		std::unordered_map<VkShaderStageFlagBits, std::string> shaderSources;
 		std::vector<std::pair<VkShaderStageFlagBits, size_t>> stagePositions;
 		CORE_ASSERT(newSource.size(), "Shader is empty!");
 

@@ -4,7 +4,7 @@
 #include "Image.hpp"
 
 #include <glm/glm.hpp>
-#include <map>
+#include <unordered_map>
 
 namespace ForgottenEngine {
 
@@ -66,7 +66,7 @@ namespace ForgottenEngine {
 
 		// Specify existing images to attach instead of creating
 		// new images. attachment index -> image
-		std::map<uint32_t, Reference<Image2D>> existing_images;
+		std::unordered_map<uint32_t, Reference<Image2D>> existing_images;
 
 		// At the moment this will just create a new render pass
 		// with an existing framebuffer

@@ -37,7 +37,7 @@ namespace ForgottenEngine {
 		};
 
 		struct ShaderIndex {
-			std::map<uint32_t, ShaderProgramInfo> shader_programs; // Hashed shader name/path
+			std::unordered_map<uint32_t, ShaderProgramInfo> shader_programs; // Hashed shader name/path
 			std::vector<ShaderModuleInfo> shader_modules;
 
 			static uint64_t CalculateSizeRequirements(uint32_t programCount, uint32_t moduleCount)

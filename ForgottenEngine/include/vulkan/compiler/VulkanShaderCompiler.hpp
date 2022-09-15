@@ -7,7 +7,6 @@
 #include "vulkan/vulkan.h"
 
 #include <filesystem>
-#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -26,7 +25,7 @@ namespace ForgottenEngine {
 
 		bool reload(bool forceCompile = false);
 
-		const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& get_spirv_data() const { return spirv_data; }
+		const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& get_spirv_data() const { return spirv_data; }
 		const std::unordered_set<std::string>& get_acknowledged_macros() const { return acknowledged_macros; }
 
 		static void clear_uniform_buffers();
@@ -36,8 +35,8 @@ namespace ForgottenEngine {
 		static bool try_recompile(Reference<VulkanShader> shader);
 
 	private:
-		std::map<VkShaderStageFlagBits, std::string> pre_process(const std::string& source);
-		std::map<VkShaderStageFlagBits, std::string> pre_process_glsl(const std::string& source);
+		std::unordered_map<VkShaderStageFlagBits, std::string> pre_process(const std::string& source);
+		std::unordered_map<VkShaderStageFlagBits, std::string> pre_process_glsl(const std::string& source);
 
 		struct CompilationOptions {
 			bool GenerateDebugInfo = false;
@@ -46,8 +45,9 @@ namespace ForgottenEngine {
 
 		std::string compile(std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
 
-		bool compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
-			std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages, const bool forceCompile);
+		bool compile_or_get_vulkan_binaries(std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
+			std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages,
+			const bool forceCompile);
 
 		bool compile_or_get_vulkan_binary(
 			VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool forceCompile);
@@ -61,7 +61,7 @@ namespace ForgottenEngine {
 
 		bool try_read_cached_reflection_data();
 
-		void reflect_all_shader_stages(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData);
+		void reflect_all_shader_stages(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData);
 
 		void reflect(VkShaderStageFlagBits shaderStage, const std::vector<uint32_t>& shaderData);
 
@@ -69,13 +69,13 @@ namespace ForgottenEngine {
 		std::filesystem::path shader_source_path;
 		bool disable_optimization = false;
 
-		std::map<VkShaderStageFlagBits, std::string> shader_source;
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>> spirv_debug_data, spirv_data;
+		std::unordered_map<VkShaderStageFlagBits, std::string> shader_source;
+		std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>> spirv_debug_data, spirv_data;
 
 		// Reflection info
 		VulkanShader::ReflectionData reflection_data;
 
-		std::map<VkShaderStageFlagBits, StageData> stages_metadata;
+		std::unordered_map<VkShaderStageFlagBits, StageData> stages_metadata;
 
 		std::unordered_set<std::string> acknowledged_macros;
 

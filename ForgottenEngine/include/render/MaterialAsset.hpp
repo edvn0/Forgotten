@@ -3,7 +3,7 @@
 #include "Asset.hpp"
 #include "render/Material.hpp"
 
-#include <map>
+#include <unordered_map>
 
 namespace ForgottenEngine {
 
@@ -81,8 +81,8 @@ namespace ForgottenEngine {
 			CORE_ASSERT(has_material(materialIndex), "");
 			return materials.at(materialIndex);
 		}
-		std::map<uint32_t, Reference<MaterialAsset>>& get_materials() { return materials; }
-		const std::map<uint32_t, Reference<MaterialAsset>>& get_materials() const { return materials; }
+		std::unordered_map<uint32_t, Reference<MaterialAsset>>& get_materials() { return materials; }
+		const std::unordered_map<uint32_t, Reference<MaterialAsset>>& get_materials() const { return materials; }
 
 		uint32_t get_material_count() const { return material_count; }
 		void set_material_count(uint32_t in_material_count) { material_count = in_material_count; }
@@ -90,7 +90,7 @@ namespace ForgottenEngine {
 		void clear();
 
 	private:
-		std::map<uint32_t, Reference<MaterialAsset>> materials;
+		std::unordered_map<uint32_t, Reference<MaterialAsset>> materials;
 		uint32_t material_count;
 	};
 

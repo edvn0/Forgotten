@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace ForgottenEngine {
@@ -20,7 +20,7 @@ namespace ForgottenEngine {
 	template <typename Key, typename Value, bool SerializeSize = true> class SMap {
 	public:
 	private:
-		std::map<Key, Value> map;
+		std::unordered_map<Key, Value> map;
 	};
 
 } // namespace ForgottenEngine

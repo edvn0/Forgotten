@@ -171,11 +171,22 @@ def main():
 
     cli_results = initialize_cli(forgotten_root, args)
 
-    should_clean = bool(cli_results.clean)
+    soft_clean = bool(cli_results.clean)
+    hard_clean = bool(cli_results.hard_clean)
 
     build_folder = f"build-{cli_results.generator}".replace(" ", "")
 
-    if should_clean:
+    if soft_clean:
+        try:
+            cmake_call = f"rm -f {forgotten_root}/{build_folder}/{cli_results.build_type}/ForgottenEngine/libForgottenEngined.a"
+            other_call = f"rm -rf {forgotten_root}/{build_folder}/{cli_results.build_type}/ForgottenApp"
+            check_call(cmake_call.split(" "))
+            check_call(other_call.split(" "))
+        except CalledProcessError as e:
+            log_failure(f"Could not soft clean folder, reason: \n\t\t{str(e)}")
+            exit(e.returncode)
+    
+    if hard_clean:
         try:
             cmake_call = f"rm -rf {forgotten_root}/{build_folder}/{cli_results.build_type}"
             check_call(cmake_call.split(" "))
@@ -186,7 +197,7 @@ def main():
     build_dir_exists = os.path.isdir(
         f"{forgotten_root}/{build_folder}/{cli_results.build_type}")
 
-    if should_clean or not build_dir_exists or cli_results.force_regenerate:
+    if soft_clean or hard_clean or not build_dir_exists or cli_results.force_regenerate:
         try:
             cmake_call = \
                 f"cmake -S. -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1 " \

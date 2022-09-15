@@ -121,7 +121,7 @@ namespace ForgottenEngine {
 		compiler_storage_buffers.clear();
 	}
 
-	std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process(const std::string& source)
+	std::unordered_map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process(const std::string& source)
 	{
 		switch (language) {
 		case ShaderUtils::SourceLang::GLSL:
@@ -132,7 +132,7 @@ namespace ForgottenEngine {
 		return {};
 	}
 
-	std::map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_glsl(const std::string& source)
+	std::unordered_map<VkShaderStageFlagBits, std::string> VulkanShaderCompiler::pre_process_glsl(const std::string& source)
 	{
 		auto shaderSources = ShaderPreprocessor::PreprocessShader<ShaderUtils::SourceLang::GLSL>(source, acknowledged_macros);
 
@@ -258,8 +258,9 @@ namespace ForgottenEngine {
 		return true;
 	}
 
-	bool VulkanShaderCompiler::compile_or_get_vulkan_binaries(std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
-		std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages, const bool force_compile)
+	bool VulkanShaderCompiler::compile_or_get_vulkan_binaries(std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
+		std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages,
+		const bool force_compile)
 	{
 		for (auto&& [stage, source] : shader_source) {
 			auto compiled_debug = compile_or_get_vulkan_binary(stage, outputDebugBinary[stage], true, changedStages, force_compile);
@@ -419,7 +420,7 @@ namespace ForgottenEngine {
 		serializer->write_array(reflection_data.push_constant_ranges);
 	}
 
-	void VulkanShaderCompiler::reflect_all_shader_stages(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
+	void VulkanShaderCompiler::reflect_all_shader_stages(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
 	{
 		clear_reflection_data();
 

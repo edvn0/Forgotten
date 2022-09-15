@@ -2,6 +2,9 @@
 
 #include "Buffer.hpp"
 
+#include <map>
+#include <unordered_map>
+
 namespace ForgottenEngine {
 
 	class StreamReader {
@@ -26,7 +29,7 @@ namespace ForgottenEngine {
 
 		template <typename T> void read_object(T& obj) { T::deserialize(this, obj); }
 
-		template <typename Key, typename Value> void read_map(std::map<Key, Value>& map, uint32_t size = 0)
+		template <typename Key, typename Value> void read_map(std::unordered_map<Key, Value>& map, uint32_t size = 0)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);
@@ -45,7 +48,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		template <typename Key, typename Value> void read_map(std::unordered_map<Key, Value>& map, uint32_t size = 0)
+		template <typename Key, typename Value> void read_map(std::map<Key, Value>& map, uint32_t size = 0)
 		{
 			if (size == 0)
 				read_raw<uint32_t>(size);

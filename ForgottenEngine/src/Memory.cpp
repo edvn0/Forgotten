@@ -6,30 +6,31 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
 namespace ForgottenEngine {
 
 	static ForgottenEngine::AllocationStats global_stats;
 
-	static bool s_InInit = false;
+	static bool global_is_in_init = false;
 
 	void Allocator::init()
 	{
 		if (allocator_data)
 			return;
 
-		s_InInit = true;
+		global_is_in_init = true;
 		AllocatorData* data = (AllocatorData*)Allocator::allocate_raw(sizeof(AllocatorData));
 		new (data) AllocatorData();
 		allocator_data = data;
-		s_InInit = false;
+		global_is_in_init = false;
 	}
 
 	void* Allocator::allocate_raw(size_t size) { return malloc(size); }
 
 	void* Allocator::allocate(size_t size)
 	{
-		if (s_InInit)
+		if (global_is_in_init)
 			return allocate_raw(size);
 
 		if (!allocator_data)

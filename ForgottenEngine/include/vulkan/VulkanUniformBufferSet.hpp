@@ -19,7 +19,8 @@ namespace ForgottenEngine {
 
 	private:
 		uint32_t frames;
-		std::map<uint32_t, std::map<uint32_t, std::map<uint32_t, Reference<UniformBuffer>>>> frame_ubs; // frame->set->binding
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, std::unordered_map<uint32_t, Reference<UniformBuffer>>>>
+			frame_ubs; // frame->set->binding
 	};
 
 } // namespace ForgottenEngine

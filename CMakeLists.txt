@@ -4,6 +4,10 @@ project(Forgotten CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(${USE_ALTERNATE_LINKER} STREQUAL "")
+  add_link_options("-fuse-ld=${USE_ALTERNATE_LINKER}")
+endif()
+
 add_subdirectory(ForgottenEngine)
 add_subdirectory(ForgottenApp)
 

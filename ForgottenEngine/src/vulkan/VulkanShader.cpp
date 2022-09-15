@@ -125,7 +125,7 @@ namespace ForgottenEngine {
 
 	size_t VulkanShader::get_hash() const { return 1; }
 
-	void VulkanShader::load_and_create_shaders(const std::map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
+	void VulkanShader::load_and_create_shaders(const std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& shaderData)
 	{
 		shader_data = shaderData;
 

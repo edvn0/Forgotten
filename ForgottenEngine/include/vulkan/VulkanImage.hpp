@@ -6,7 +6,7 @@
 #include "vulkan/VulkanDevice.hpp"
 #include "vulkan/vulkan.h"
 
-#include <map>
+#include <unordered_map>
 
 namespace ForgottenEngine {
 
@@ -75,7 +75,7 @@ namespace ForgottenEngine {
 		VulkanImageInfo info;
 
 		std::vector<VkImageView> per_layer_image_views;
-		std::map<uint32_t, VkImageView> per_mip_image_views;
+		std::unordered_map<uint32_t, VkImageView> per_mip_image_views;
 		VkDescriptorImageInfo descriptor_image_info = {};
 	};
 
