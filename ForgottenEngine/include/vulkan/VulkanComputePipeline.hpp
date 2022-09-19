@@ -16,7 +16,7 @@ namespace ForgottenEngine {
 
 	class VulkanComputePipeline : public ComputePipeline {
 	public:
-		explicit VulkanComputePipeline(Reference<Shader> computeShader);
+		explicit VulkanComputePipeline(const Reference<Shader>& computeShader);
 		~VulkanComputePipeline() = default;
 
 		void execute(VkDescriptorSet* descriptorSets, uint32_t descriptorSetCount, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);

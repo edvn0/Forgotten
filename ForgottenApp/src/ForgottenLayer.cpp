@@ -89,7 +89,7 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 	// Render final image to swapchain
 	Reference<Image2D> final_image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
 	if (final_image) {
-		swapchain_material->set("u_Texture", final_image);
+		// swapchain_material->set("u_Texture", final_image);
 
 		command_buffer->begin();
 		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().render_pass, false);
@@ -157,14 +157,14 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
-		float minWinSizeX = style.WindowMinSize.x;
+		float min_window_size_x = style.WindowMinSize.x;
 		style.WindowMinSize.x = 370.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
-		style.WindowMinSize.x = minWinSizeX;
+		style.WindowMinSize.x = min_window_size_x;
 
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
@@ -213,7 +213,7 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
 				const auto& image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
-				// UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
+				UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
 
 				ImGui::End();
 			}
@@ -312,7 +312,6 @@ void ForgottenLayer::draw_debug_stats()
 	draw_string(fmt::format("{:.2f} ms ({}ms FPS)", frame_time, frames_per_second), { 30.0f, y });
 	y += 50.0f;
 	draw_string(fmt::format("{} fps", (uint32_t)fps), { 30.0f, y });
-	y += 50.0f;
 
 	renderer->end_scene();
 }

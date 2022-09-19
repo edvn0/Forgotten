@@ -53,9 +53,12 @@ namespace ForgottenEngine {
 			out << YAML::Key << "Stages" << YAML::BeginSeq; // Stages_
 
 			for (auto& [stage, stageData] : shader) {
+				if (stage == VK_SHADER_STAGE_ALL)
+					continue;
+
 				out << YAML::BeginMap; // Stage_
 
-				out << YAML::Key << "Stage" << YAML::Value << ShaderUtils::ShaderStageToString(stage);
+				out << YAML::Key << "Stage" << YAML::Value << ShaderUtils::shader_stage_to_string(stage);
 				out << YAML::Key << "StageHash" << YAML::Value << stageData.HashValue;
 
 				out << YAML::Key << "Headers" << YAML::BeginSeq; // Headers_
@@ -81,10 +84,10 @@ namespace ForgottenEngine {
 		out << YAML::EndSeq; // ShaderRegistry_
 		out << YAML::EndMap; // File_
 
-		std::ofstream output(cache_path.c_str());
+		std::ofstream output(Assets::get_base_directory() / cache_path);
 
 		if (!output) {
-			CORE_ERROR("Could not open {} output path.", cache_path.string());
+			CORE_ERROR("Could not open {} output path.", Assets::get_base_directory() / cache_path);
 			return;
 		}
 
@@ -94,8 +97,7 @@ namespace ForgottenEngine {
 	void VulkanShaderCache::deserialize(std::unordered_map<std::string, std::unordered_map<VkShaderStageFlagBits, StageData>>& shader_cache)
 	{
 		// Read registry
-		const auto& asset_path = cache_path;
-		std::ifstream stream(asset_path);
+		std::ifstream stream(Assets::get_base_directory() / cache_path);
 		if (!stream) {
 			CORE_ERROR("Could not load cache directory at {}", cache_path);
 			return;

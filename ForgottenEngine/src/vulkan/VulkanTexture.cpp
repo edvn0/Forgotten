@@ -41,7 +41,7 @@ namespace ForgottenEngine {
 			return (VkFilter)0;
 		}
 
-		static size_t GetMemorySize(ImageFormat format, uint32_t width, uint32_t height)
+		static size_t get_memory_size(ImageFormat format, uint32_t width, uint32_t height)
 		{
 			switch (format) {
 			case ImageFormat::RED16UI:
@@ -75,7 +75,7 @@ namespace ForgottenEngine {
 	// Texture2D
 	//////////////////////////////////////////////////////////////////////////////////
 
-	VulkanTexture2D::VulkanTexture2D(const std::string& path, const TextureProperties properties)
+	VulkanTexture2D::VulkanTexture2D(const std::string& path, const TextureProperties& properties)
 		: path(path)
 		, properties(properties)
 	{
@@ -99,13 +99,13 @@ namespace ForgottenEngine {
 		Renderer::submit([instance]() mutable { instance->invalidate(); });
 	}
 
-	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties properties)
+	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties& properties)
 		: width(width)
 		, height(height)
 		, properties(properties)
 		, format(format)
 	{
-		auto size = (uint32_t)Utils::GetMemorySize(format, width, height);
+		auto size = (uint32_t)Utils::get_memory_size(format, width, height);
 
 		if (data)
 			image_data = Buffer::copy(data, size);

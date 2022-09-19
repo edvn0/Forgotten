@@ -13,12 +13,23 @@ namespace ForgottenEngine {
 
 	static VkFence compute_fence = nullptr;
 
-	VulkanComputePipeline::VulkanComputePipeline(Reference<Shader> computeShader)
-		: shader(computeShader.as<VulkanShader>())
+	static Reference<VulkanDevice> get_device()
+	{
+		static Reference<VulkanDevice> device;
+
+		if (!device) {
+			device = VulkanContext::get_current_device();
+		}
+
+		return device;
+	}
+
+	VulkanComputePipeline::VulkanComputePipeline(const Reference<Shader>& compute_shader)
+		: shader(compute_shader.as<VulkanShader>())
 	{
 		Reference<VulkanComputePipeline> instance = this;
 		Renderer::submit([instance]() mutable { instance->rt_create_pipeline(); });
-		Renderer::register_shader_dependency(computeShader, this);
+		Renderer::register_shader_dependency(compute_shader, this);
 	}
 
 	void VulkanComputePipeline::create_pipeline()
@@ -28,7 +39,7 @@ namespace ForgottenEngine {
 
 	void VulkanComputePipeline::rt_create_pipeline()
 	{
-		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
+		VkDevice device = get_device()->get_vulkan_device();
 
 		// TODO: Abstract into some sort of compute pipeline
 
@@ -75,12 +86,12 @@ namespace ForgottenEngine {
 	void VulkanComputePipeline::execute(
 		VkDescriptorSet* descriptorSets, uint32_t descriptorSetCount, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 	{
-		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
+		VkDevice device = get_device()->get_vulkan_device();
 
-		VkQueue computeQueue = VulkanContext::get_current_device()->get_compute_queue();
+		VkQueue computeQueue = get_device()->get_compute_queue();
 		// vkQueueWaitIdle(computeQueue); // TODO: don't
 
-		VkCommandBuffer computeCommandBuffer = VulkanContext::get_current_device()->get_command_buffer(true, true);
+		VkCommandBuffer computeCommandBuffer = get_device()->get_command_buffer(true, true);
 
 		vkCmdBindPipeline(computeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline);
 		for (uint32_t i = 0; i < descriptorSetCount; i++) {
@@ -123,7 +134,7 @@ namespace ForgottenEngine {
 			active_command_buffer = renderCommandBuffer.as<VulkanRenderCommandBuffer>()->get_command_buffer(frameIndex);
 			using_graphics_queue = true;
 		} else {
-			active_command_buffer = VulkanContext::get_current_device()->get_command_buffer(true, true);
+			active_command_buffer = get_device()->get_command_buffer(true, true);
 			using_graphics_queue = false;
 		}
 		vkCmdBindPipeline(active_command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline);
@@ -141,9 +152,9 @@ namespace ForgottenEngine {
 	{
 		CORE_ASSERT(active_command_buffer, "");
 
-		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
+		VkDevice device = get_device()->get_vulkan_device();
 		if (!using_graphics_queue) {
-			VkQueue computeQueue = VulkanContext::get_current_device()->get_compute_queue();
+			VkQueue computeQueue = get_device()->get_compute_queue();
 
 			vkEndCommandBuffer(active_command_buffer);
 

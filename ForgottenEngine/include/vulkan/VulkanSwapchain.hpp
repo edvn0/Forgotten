@@ -23,7 +23,6 @@ namespace ForgottenEngine {
 	public:
 		VulkanSwapchain() = default;
 
-		void init(VkInstance instance);
 		void init_surface(GLFWwindow*);
 		void create(uint32_t* width, uint32_t* height, bool vsync);
 		void destroy();
@@ -33,10 +32,10 @@ namespace ForgottenEngine {
 		void begin_frame();
 		void present();
 
-		uint32_t get_image_count() const { return image_count; }
+		[[nodiscard]] uint32_t get_image_count() const { return image_count; }
 
-		uint32_t get_width() const { return width; }
-		uint32_t get_height() const { return height; }
+		[[nodiscard]] uint32_t get_width() const { return width; }
+		[[nodiscard]] uint32_t get_height() const { return height; }
 
 		VkRenderPass get_render_pass() { return render_pass; }
 
@@ -45,7 +44,7 @@ namespace ForgottenEngine {
 
 		VkFormat get_color_format() { return color_format; }
 
-		uint32_t get_current_buffer_index() const { return current_buffer_index; }
+		[[nodiscard]] uint32_t get_current_buffer_index() const { return current_buffer_index; }
 
 		VkFramebuffer get_framebuffer(uint32_t index)
 		{
@@ -59,7 +58,7 @@ namespace ForgottenEngine {
 			return command_buffers[index].buffer;
 		}
 
-		VkSemaphore get_render_complete_semaphore() const { return semaphores.render_complete_semaphore; }
+		[[nodiscard]] VkSemaphore get_render_complete_semaphore() const { return semaphores.render_complete_semaphore; }
 
 		void set_vsync(const bool enabled) { is_vsync = enabled; }
 
@@ -69,8 +68,6 @@ namespace ForgottenEngine {
 		void find_image_format_and_color_space();
 
 	private:
-		VkInstance instance = nullptr;
-		Reference<VulkanDevice> device;
 		bool is_vsync = false;
 
 		VkFormat color_format = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;

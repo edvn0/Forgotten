@@ -9,8 +9,8 @@ namespace ForgottenEngine {
 
 	class VulkanTexture2D : public Texture2D {
 	public:
-		VulkanTexture2D(const std::string& path, TextureProperties properties);
-		VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties);
+		VulkanTexture2D(const std::string& path, const TextureProperties& properties);
+		VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties& properties);
 		~VulkanTexture2D() override;
 		void resize(const glm::uvec2& size) override;
 		void resize(uint32_t width, uint32_t height) override;
@@ -45,9 +45,9 @@ namespace ForgottenEngine {
 
 	private:
 		std::string path;
-		uint32_t width;
-		uint32_t height;
-		uint32_t channels;
+		uint32_t width {};
+		uint32_t height {};
+		uint32_t channels {};
 		TextureProperties properties;
 
 		Buffer image_data;

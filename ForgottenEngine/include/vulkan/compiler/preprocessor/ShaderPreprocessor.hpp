@@ -164,7 +164,7 @@ namespace ForgottenEngine {
 						// Skipped ':'
 						const std::string_view stage(tokens[++index]);
 						CORE_VERIFY(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
-						VkShaderStageFlagBits foundStage = ShaderUtils::StageToVKShaderStage(stage);
+						VkShaderStageFlagBits foundStage = ShaderUtils::stage_to_vk_shader_stage(stage);
 
 						const bool alreadyIncluded
 							= std::find_if(includeData.begin(), includeData.end(),
@@ -181,11 +181,11 @@ namespace ForgottenEngine {
 						// Add #endif
 						if (stageCount == 0)
 							contents.replace(startOfShaderStage, endOfLine - startOfShaderStage,
-								fmt::format("#ifdef {}\r\n", ShaderUtils::StageToShaderMacro(stage)));
+								fmt::format("#ifdef {}\r\n", ShaderUtils::stage_to_shader_macro(stage)));
 						else // Add stage macro instead of stage pragma, both #endif and #ifdef must be in the same
 							 // line, hence no '\n'
 							contents.replace(startOfShaderStage, endOfLine - startOfShaderStage,
-								fmt::format("#endif\r\n#ifdef {}", ShaderUtils::StageToShaderMacro(stage)));
+								fmt::format("#endif\r\n#ifdef {}", ShaderUtils::stage_to_shader_macro(stage)));
 
 						*(int*)&stagesInHeader |= (int)foundStage;
 						stageCount++;

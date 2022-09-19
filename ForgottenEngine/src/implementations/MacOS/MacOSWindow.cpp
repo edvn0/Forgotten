@@ -91,9 +91,7 @@ namespace ForgottenEngine {
 
 		Reference<VulkanContext> ctxt = render_context.as<VulkanContext>();
 
-		swapchain.init(VulkanContext::get_instance());
 		swapchain.init_surface(glfw_window);
-
 		swapchain.create(&window_data.width, &window_data.height, props.v_sync);
 
 		int width, height;

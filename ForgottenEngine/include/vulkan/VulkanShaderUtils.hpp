@@ -6,19 +6,21 @@
 
 namespace ForgottenEngine::ShaderUtils {
 
-	inline static std::string_view VKStageToShaderMacro(const VkShaderStageFlagBits stage)
+	inline static std::string_view vk_stage_to_shader_macro(const VkShaderStageFlagBits stage)
 	{
-		if (stage == VK_SHADER_STAGE_VERTEX_BIT)
+		switch (stage) {
+		case VK_SHADER_STAGE_VERTEX_BIT:
 			return "__VERTEX_STAGE__";
-		if (stage == VK_SHADER_STAGE_FRAGMENT_BIT)
+		case VK_SHADER_STAGE_FRAGMENT_BIT:
 			return "__FRAGMENT_STAGE__";
-		if (stage == VK_SHADER_STAGE_COMPUTE_BIT)
+		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return "__COMPUTE_STAGE__";
-		CORE_VERIFY(false, "Unknown shader stage.");
-		return "";
+		default:
+			CORE_VERIFY(false, "Unknown shader stage.");
+		}
 	}
 
-	inline static std::string_view StageToShaderMacro(const std::string_view stage)
+	inline static std::string_view stage_to_shader_macro(const std::string_view stage)
 	{
 		if (stage == "vert")
 			return "__VERTEX_STAGE__";
@@ -30,7 +32,7 @@ namespace ForgottenEngine::ShaderUtils {
 		return "";
 	}
 
-	inline static VkShaderStageFlagBits StageToVKShaderStage(const std::string_view stage)
+	inline static VkShaderStageFlagBits stage_to_vk_shader_stage(const std::string_view stage)
 	{
 		if (stage == "vert")
 			return VK_SHADER_STAGE_VERTEX_BIT;
@@ -42,7 +44,7 @@ namespace ForgottenEngine::ShaderUtils {
 		return VK_SHADER_STAGE_ALL;
 	}
 
-	inline static const char* ShaderStageToString(const VkShaderStageFlagBits stage)
+	inline static const char* shader_stage_to_string(const VkShaderStageFlagBits stage)
 	{
 		switch (stage) {
 		case VK_SHADER_STAGE_VERTEX_BIT:

@@ -11,6 +11,15 @@
 
 namespace ForgottenEngine {
 
+	template <typename OnTrue, typename OnFalse> static constexpr auto do_if(bool expr, OnTrue&& on_true, OnFalse&& on_false)
+	{
+		if (expr) {
+			on_true();
+		} else {
+			on_false();
+		}
+	}
+
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count)
 	{
 		auto device = VulkanContext::get_current_device();
@@ -105,13 +114,11 @@ namespace ForgottenEngine {
 			cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 			cbi.pNext = nullptr;
 
-			VkCommandBuffer cmd_buffer = nullptr;
-			if (instance->owned_by_swapchain) {
-				auto& swapchain = Application::the().get_window().get_swapchain();
-				cmd_buffer = swapchain.get_drawbuffer(frame_index);
-			} else {
-				cmd_buffer = instance->command_buffers[frame_index];
-			}
+			VkCommandBuffer cmd_buffer;
+			do_if(
+				instance->owned_by_swapchain,
+				[&cmd_buffer, frame_index] { cmd_buffer = Application::the().get_window().get_swapchain().get_drawbuffer(frame_index); },
+				[&cmd_buffer, frame_index, &instance] { cmd_buffer = instance->command_buffers[frame_index]; });
 			instance->active_command_buffer = cmd_buffer;
 			VK_CHECK(vkBeginCommandBuffer(cmd_buffer, &cbi));
 		});

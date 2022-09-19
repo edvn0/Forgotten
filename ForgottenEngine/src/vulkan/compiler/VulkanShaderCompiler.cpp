@@ -144,7 +144,7 @@ namespace ForgottenEngine {
 		for (auto& [stage, shader_source] : shaderSources) {
 			shaderc::CompileOptions options;
 			options.AddMacroDefinition("__GLSL__");
-			options.AddMacroDefinition(std::string(ShaderUtils::VKStageToShaderMacro(stage)));
+			options.AddMacroDefinition(std::string(ShaderUtils::vk_stage_to_shader_macro(stage)));
 
 			const auto& globalMacros = Renderer::get_global_shader_macros();
 			for (const auto& [name, value] : globalMacros)
@@ -172,7 +172,7 @@ namespace ForgottenEngine {
 			if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 				CORE_ERROR("Renderer",
 					fmt::format("Failed to pre-process \"{}\"'s {} shader.\nError: {}", shader_source_path.string(),
-						ShaderUtils::ShaderStageToString(stage), result.GetErrorMessage()));
+						ShaderUtils::shader_stage_to_string(stage), result.GetErrorMessage()));
 
 			stages_metadata[stage].HashValue = Hash::generate_fnv_hash(shader_source);
 			stages_metadata[stage].Headers = std::move(includer->get_include_data());
@@ -210,7 +210,7 @@ namespace ForgottenEngine {
 
 			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				return fmt::format("\n{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(), shader_source_path.string(),
-					ShaderUtils::ShaderStageToString(stage));
+					ShaderUtils::shader_stage_to_string(stage));
 
 			outputBinary = std::vector<uint32_t>(module.begin(), module.end());
 			return {}; // Success
@@ -304,7 +304,7 @@ namespace ForgottenEngine {
 					CORE_ERROR("Failed to compile shader and couldn't find a cached version.");
 				} else {
 					CORE_ERROR("Failed to compile {}:{} so a cached version was loaded instead.", shader_source_path.string(),
-						ShaderUtils::ShaderStageToString(stage));
+						ShaderUtils::shader_stage_to_string(stage));
 				}
 				return false;
 			} else // compile success

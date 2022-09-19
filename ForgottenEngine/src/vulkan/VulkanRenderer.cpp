@@ -213,16 +213,34 @@ namespace ForgottenEngine {
 		int32_t draw_call_count = 0;
 	};
 
-	static VulkanRendererData* renderer_data = nullptr;
+	static VulkanRendererData& renderer_data()
+	{
+		static VulkanRendererData* renderer_data_impl = nullptr;
 
-	static RenderCommandQueue* command_queue = nullptr;
+		if (!renderer_data_impl) {
+			renderer_data_impl = new VulkanRendererData;
+		}
+
+		return *renderer_data_impl;
+	};
+
+	static RenderCommandQueue& render_command_queue()
+	{
+		static RenderCommandQueue* render_command_queue_impl = nullptr;
+
+		if (!render_command_queue_impl) {
+			render_command_queue_impl = new RenderCommandQueue;
+		}
+
+		return *render_command_queue_impl;
+	};
 
 	static const std::vector<std::vector<VkWriteDescriptorSet>>& rt_retrieve_or_create_uniform_buffer_write_descriptors(
 		Reference<UniformBufferSet> ubs, Reference<VulkanMaterial> vulkan_material)
 	{
 		size_t shader_hash = vulkan_material->get_shader()->get_hash();
-		if (renderer_data->uniform_buffer_write_descriptor_cache.find(ubs.raw()) != renderer_data->uniform_buffer_write_descriptor_cache.end()) {
-			const auto& shader_map = renderer_data->uniform_buffer_write_descriptor_cache.at(ubs.raw());
+		if (renderer_data().uniform_buffer_write_descriptor_cache.find(ubs.raw()) != renderer_data().uniform_buffer_write_descriptor_cache.end()) {
+			const auto& shader_map = renderer_data().uniform_buffer_write_descriptor_cache.at(ubs.raw());
 			if (shader_map.find(shader_hash) != shader_map.end()) {
 				const auto& write_descriptors = shader_map.at(shader_hash);
 				return write_descriptors;
@@ -235,7 +253,7 @@ namespace ForgottenEngine {
 			const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
 			if (!shaderDescriptorSets.empty()) {
 				for (auto&& [binding, shaderUB] : shaderDescriptorSets[0].uniform_buffers) {
-					auto& write_descriptors = renderer_data->uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
+					auto& write_descriptors = renderer_data().uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
 					write_descriptors.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
 						Reference<VulkanUniformBuffer> uniformBuffer = ubs->get(binding, 0, frame); // set = 0 for now
@@ -252,7 +270,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		return renderer_data->uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
+		return renderer_data().uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
 	}
 
 	static const std::vector<std::vector<VkWriteDescriptorSet>>& rt_retrieve_or_create_storage_buffer_write_descriptors(
@@ -260,9 +278,9 @@ namespace ForgottenEngine {
 	{
 		size_t shader_hash = vulkan_material->get_shader()->get_hash();
 
-		auto& map = renderer_data->storage_buffer_write_descriptor_cache;
+		auto& map = renderer_data().storage_buffer_write_descriptor_cache;
 		if (map.find(sbs.raw()) != map.end()) {
-			const auto& shader_map = renderer_data->storage_buffer_write_descriptor_cache.at(sbs.raw());
+			const auto& shader_map = renderer_data().storage_buffer_write_descriptor_cache.at(sbs.raw());
 			if (shader_map.find(shader_hash) != shader_map.end()) {
 				const auto& write_descriptors = shader_map.at(shader_hash);
 				return write_descriptors;
@@ -275,7 +293,7 @@ namespace ForgottenEngine {
 			const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
 			if (!shaderDescriptorSets.empty()) {
 				for (auto&& [binding, shaderSB] : shaderDescriptorSets[0].storage_buffers) {
-					auto& write_descriptors = renderer_data->storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
+					auto& write_descriptors = renderer_data().storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
 					write_descriptors.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
 						Reference<VulkanStorageBuffer> storageBuffer = sbs->get(binding, 0, frame); // set = 0 for now
@@ -292,18 +310,16 @@ namespace ForgottenEngine {
 			}
 		}
 
-		return renderer_data->storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
+		return renderer_data().storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
 	}
 
 	void VulkanRenderer::init()
 	{
-		renderer_data = new VulkanRendererData();
-
 		const auto& config = Renderer::get_config();
-		renderer_data->descriptor_pools.resize(config.frames_in_flight);
-		renderer_data->descriptor_pool_allocation_count.resize(config.frames_in_flight);
+		renderer_data().descriptor_pools.resize(config.frames_in_flight);
+		renderer_data().descriptor_pool_allocation_count.resize(config.frames_in_flight);
 
-		auto& caps = renderer_data->render_caps;
+		auto& caps = renderer_data().render_caps;
 		auto& properties = VulkanContext::get_current_device()->get_physical_device()->get_properties();
 		caps.vendor = vulkan_vendor_to_identifier_string(properties.vendorID);
 		caps.device = properties.deviceName;
@@ -311,12 +327,12 @@ namespace ForgottenEngine {
 
 		Renderer::submit([]() mutable {
 			// Create Descriptor Pool
-			VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 } };
+			VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 100 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100 },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 } };
 			VkDescriptorPoolCreateInfo pool_info = {};
 			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
@@ -326,8 +342,8 @@ namespace ForgottenEngine {
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 			uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 			for (uint32_t i = 0; i < frames_in_flight; i++) {
-				VK_CHECK(vkCreateDescriptorPool(device, &pool_info, nullptr, &renderer_data->descriptor_pools[i]));
-				renderer_data->descriptor_pool_allocation_count[i] = 0;
+				VK_CHECK(vkCreateDescriptorPool(device, &pool_info, nullptr, &renderer_data().descriptor_pools[i]));
+				renderer_data().descriptor_pool_allocation_count[i] = 0;
 			}
 		});
 
@@ -355,7 +371,7 @@ namespace ForgottenEngine {
 		data[3].TexCoord = glm::vec2(0, 1);
 
 		auto data_vb = VertexBuffer::create(data, 4 * sizeof(QuadVertex));
-		renderer_data->QuadVertexBuffer = data_vb;
+		renderer_data().QuadVertexBuffer = data_vb;
 		uint32_t indices[6] = {
 			0,
 			1,
@@ -364,7 +380,7 @@ namespace ForgottenEngine {
 			3,
 			0,
 		};
-		renderer_data->QuadIndexBuffer = IndexBuffer::create(indices, 6 * sizeof(uint32_t));
+		renderer_data().QuadIndexBuffer = IndexBuffer::create(indices, 6 * sizeof(uint32_t));
 	};
 
 	void VulkanRenderer::shut_down()
@@ -373,23 +389,21 @@ namespace ForgottenEngine {
 		vkDeviceWaitIdle(device);
 
 		VulkanShaderCompiler::clear_uniform_buffers();
-
-		delete renderer_data;
 	};
 
 	void VulkanRenderer::begin_frame()
 	{
 		Renderer::submit([]() {
-			auto& swapChain = Application::the().get_window().get_swapchain();
+			auto& swap_chain = Application::the().get_window().get_swapchain();
 
 			// Reset descriptor pools here
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-			uint32_t bufferIndex = swapChain.get_current_buffer_index();
-			vkResetDescriptorPool(device, renderer_data->descriptor_pools[bufferIndex], 0);
-			memset(
-				renderer_data->descriptor_pool_allocation_count.data(), 0, renderer_data->descriptor_pool_allocation_count.size() * sizeof(uint32_t));
+			uint32_t bufferIndex = swap_chain.get_current_buffer_index();
+			vkResetDescriptorPool(device, renderer_data().descriptor_pools[bufferIndex], 0);
+			memset(renderer_data().descriptor_pool_allocation_count.data(), 0,
+				renderer_data().descriptor_pool_allocation_count.size() * sizeof(uint32_t));
 
-			renderer_data->draw_call_count = 0;
+			renderer_data().draw_call_count = 0;
 		});
 	};
 
@@ -398,7 +412,6 @@ namespace ForgottenEngine {
 	void VulkanRenderer::begin_render_pass(Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
 	{
 		Renderer::submit([command_buffer, render_pass, explicit_clear]() {
-			uint32_t frameIndex = Renderer::get_current_frame_index();
 			VkCommandBuffer commandBuffer = command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 			auto& fb = render_pass->get_specification().target_framebuffer;
@@ -422,10 +435,10 @@ namespace ForgottenEngine {
 			renderPassBeginInfo.renderArea.extent.height = height;
 
 			if (framebuffer->get_specification().swapchain_target) {
-				VulkanSwapchain& swapChain = Application::the().get_window().get_swapchain();
-				width = swapChain.get_width();
-				height = swapChain.get_height();
-				renderPassBeginInfo.framebuffer = swapChain.get_current_framebuffer();
+				VulkanSwapchain& swap_chain = Application::the().get_window().get_swapchain();
+				width = swap_chain.get_width();
+				height = swap_chain.get_height();
+				renderPassBeginInfo.framebuffer = swap_chain.get_current_framebuffer();
 
 				viewport.x = 0.0f;
 				viewport.y = (float)height;
@@ -549,12 +562,12 @@ namespace ForgottenEngine {
 
 			VkPipelineLayout layout = vulkanPipeline->get_vulkan_pipeline_layout();
 
-			auto vulkanMeshVB = renderer_data->QuadVertexBuffer.as<VulkanVertexBuffer>();
+			auto vulkanMeshVB = renderer_data().QuadVertexBuffer.as<VulkanVertexBuffer>();
 			VkBuffer vbMeshBuffer = vulkanMeshVB->get_vulkan_buffer();
 			VkDeviceSize offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
 
-			auto vulkanMeshIB = renderer_data->QuadIndexBuffer.as<VulkanIndexBuffer>();
+			auto vulkanMeshIB = renderer_data().QuadIndexBuffer.as<VulkanIndexBuffer>();
 			VkBuffer ibBuffer = vulkanMeshIB->get_vulkan_buffer();
 			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
 
@@ -572,7 +585,7 @@ namespace ForgottenEngine {
 			if (uniformStorageBuffer.size)
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.size, uniformStorageBuffer.data);
 
-			vkCmdDrawIndexed(commandBuffer, renderer_data->QuadIndexBuffer->get_count(), 1, 0, 0, 0);
+			vkCmdDrawIndexed(commandBuffer, renderer_data().QuadIndexBuffer->get_count(), 1, 0, 0, 0);
 		});
 	}
 
@@ -610,11 +623,11 @@ namespace ForgottenEngine {
 	VkDescriptorSet VulkanRenderer::rt_allocate_descriptor_set(VkDescriptorSetAllocateInfo alloc_info)
 	{
 		uint32_t buffer_index = Renderer::get_current_frame_index();
-		alloc_info.descriptorPool = renderer_data->descriptor_pools[buffer_index];
+		alloc_info.descriptorPool = renderer_data().descriptor_pools[buffer_index];
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 		VkDescriptorSet result;
 		VK_CHECK(vkAllocateDescriptorSets(device, &alloc_info, &result));
-		renderer_data->descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
+		renderer_data().descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
 		return result;
 	}
 	void VulkanRenderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,

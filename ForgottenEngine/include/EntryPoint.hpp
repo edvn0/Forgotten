@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
 	ForgottenEngine::CLIOptions desc("Allowed options");
 	desc.add_options()("help", "Show help message")("width", boost::program_options::value<uint32_t>()->default_value(1280), "Width of window")(
-		"height", boost::program_options::value<uint32_t>()->default_value(1080), "Height of window")("name",
+		"height", boost::program_options::value<uint32_t>()->default_value(720), "Height of window")("name",
 		boost::program_options::value<std::string>()->default_value(std::string { "ForgottenEngine" }),
 		"Title of window")("vsync", boost::program_options::value<bool>()->default_value(true), "Window vsync");
 
