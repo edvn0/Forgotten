@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "Carlsson",
     "drawbuffer",
     "Framebuffer",
     "fullscreen",
@@ -8,7 +9,8 @@
     "Serialiser",
     "Serialisers",
     "Swapchain",
-    "Wwindow"
+    "Wwindow",
+    "YCBCR"
   ],
   "files.associations": {
     "*.module": "php",

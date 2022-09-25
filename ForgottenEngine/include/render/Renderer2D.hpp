@@ -101,10 +101,10 @@ namespace ForgottenEngine {
 		Reference<RenderPass> external_composite_render_pass;
 
 	private:
-		void Flush();
+		void flush();
 
-		void FlushAndReset();
-		void FlushAndResetLines();
+		void flush_and_reset();
+		void flush_and_reset_lines();
 
 	private:
 		struct QuadVertex {
@@ -134,14 +134,14 @@ namespace ForgottenEngine {
 			glm::vec4 Color;
 		};
 
-		static constexpr uint32_t MaxQuads = 10000;
-		static constexpr uint32_t MaxVertices = MaxQuads * 4;
-		static constexpr uint32_t MaxIndices = MaxQuads * 6;
-		static constexpr uint32_t MaxTextureSlots = 16; // TODO: RenderCaps
+		static constexpr uint32_t max_quads = 10000;
+		static constexpr uint32_t max_vertices = max_quads * 4;
+		static constexpr uint32_t max_indices = max_quads * 6;
+		static constexpr uint32_t max_texture_slots = 16; // TODO: RenderCaps
 
-		static constexpr uint32_t MaxLines = 2000;
-		static constexpr uint32_t MaxLineVertices = MaxLines * 2;
-		static constexpr uint32_t MaxLineIndices = MaxLines * 6;
+		static constexpr uint32_t max_lines = 2000;
+		static constexpr uint32_t max_line_vertices = max_lines * 2;
+		static constexpr uint32_t max_line_indices = max_lines * 6;
 
 		Renderer2DSpecification specification;
 		Reference<RenderCommandBuffer> render_command_buffer;
@@ -164,7 +164,7 @@ namespace ForgottenEngine {
 		std::vector<CircleVertex*> circle_vertex_buffer_base;
 		CircleVertex* circle_vertex_buffer_ptr;
 
-		std::array<Reference<Texture2D>, MaxTextureSlots> texture_slots;
+		std::array<Reference<Texture2D>, max_texture_slots> texture_slots;
 		uint32_t texture_slot_index = 1; // 0 = white texture
 
 		glm::vec4 quad_vertex_positions[4];
@@ -185,7 +185,7 @@ namespace ForgottenEngine {
 		std::vector<Reference<VertexBuffer>> text_vertex_buffer;
 		Reference<IndexBuffer> text_index_buffer;
 		Reference<Material> text_material;
-		std::array<Reference<Texture2D>, MaxTextureSlots> font_texture_slots;
+		std::array<Reference<Texture2D>, max_texture_slots> font_texture_slots;
 		uint32_t font_texture_slot_index = 0;
 
 		uint32_t text_index_count = 0;

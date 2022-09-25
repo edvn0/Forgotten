@@ -20,7 +20,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanTexture2D>::create(format, width, height, data, properties);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 	Reference<Texture2D> Texture2D::create(const std::string& path, TextureProperties properties)
@@ -31,7 +31,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanTexture2D>::create(path, properties);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 	Reference<TextureCube> TextureCube::create(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
@@ -42,7 +42,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanTextureCube>::create(format, width, height, data, properties);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 	Reference<TextureCube> TextureCube::create(const std::string& path, TextureProperties properties)
@@ -53,7 +53,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanTextureCube>::create(path, properties);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

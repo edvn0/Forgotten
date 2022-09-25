@@ -20,33 +20,55 @@ void ForgottenLayer::on_attach()
 	const auto [w, h] = Application::the().get_window().get_size<float>();
 	width = w;
 	height = h;
+	VertexBufferLayout vertex_layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float3, "a_Normal" },
+		{ ShaderDataType::Float3, "a_Tangent" }, { ShaderDataType::Float3, "a_Binormal" }, { ShaderDataType::Float2, "a_TexCoord" } };
 
-	FramebufferSpecification compFramebufferSpec;
-	compFramebufferSpec.debug_name = "SceneComposite";
-	compFramebufferSpec.clear_colour = { 0.1f, 0.9f, 0.1f, 1.0f };
-	compFramebufferSpec.swapchain_target = true;
-	compFramebufferSpec.attachments = { ImageFormat::RGBA };
+	VertexBufferLayout instance_layout = {
+		{ ShaderDataType::Float4, "a_MRow0" },
+		{ ShaderDataType::Float4, "a_MRow1" },
+		{ ShaderDataType::Float4, "a_MRow2" },
+	};
+	{
+		FramebufferSpecification geo_framebuffer_spec;
+		geo_framebuffer_spec.attachments = { ImageFormat::RGBA32F, ImageFormat::RGBA16F, ImageFormat::RGBA, ImageFormat::DEPTH32FSTENCIL8UINT };
 
-	Reference<Framebuffer> framebuffer = Framebuffer::create(compFramebufferSpec);
+		// Don't blend with luminance in the alpha channel.
+		geo_framebuffer_spec.attachments.texture_attachments[1].blend = false;
+		geo_framebuffer_spec.samples = 1;
+		geo_framebuffer_spec.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+		geo_framebuffer_spec.debug_name = "Geometry";
+		geo_framebuffer_spec.clear_depth_on_load = false;
+		auto framebuffer = Framebuffer::create(geo_framebuffer_spec);
 
-	PipelineSpecification pipeline_spec;
-	pipeline_spec.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
-	pipeline_spec.backface_culling = false;
-	pipeline_spec.shader = Renderer::get_shader_library()->get("TexturePass");
+		RenderPassSpecification render_pass_spec;
+		render_pass_spec.debug_name = geo_framebuffer_spec.debug_name;
+		render_pass_spec.target_framebuffer = framebuffer;
+		auto render_pass = RenderPass::create(render_pass_spec);
 
-	RenderPassSpecification renderPassSpec;
-	renderPassSpec.target_framebuffer = framebuffer;
-	renderPassSpec.debug_name = "SceneComposite";
-	pipeline_spec.render_pass = RenderPass::create(renderPassSpec);
-	pipeline_spec.debug_name = "SceneComposite";
-	pipeline_spec.depth_write = false;
-	swapchain_pipeline = Pipeline::create(pipeline_spec);
+		PipelineSpecification pipeline_specification;
+		pipeline_specification.debug_name = "PBR-Static";
+		pipeline_specification.shader = Renderer::get_shader_library()->get("HazelPBR_Static");
+		pipeline_specification.depth_operator = DepthCompareOperator::Equal;
+		pipeline_specification.depth_write = false;
+		pipeline_specification.layout = vertex_layout;
+		pipeline_specification.instance_layout = instance_layout;
+		pipeline_specification.line_width = 2.0f;
+		pipeline_specification.render_pass = render_pass;
+		geometry_pipeline = Pipeline::create(pipeline_specification);
 
-	swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0)->invalidate();
+		//
+		// Transparent Geometry
+		//
+		pipeline_specification.debug_name = "PBR-Transparent";
+		pipeline_specification.shader = Renderer::get_shader_library()->get("HazelPBR_Transparent");
+		pipeline_specification.depth_operator = DepthCompareOperator::GreaterOrEqual;
+		transparent_geometry_pipeline = Pipeline::create(pipeline_specification);
+
+		swapchain_material = Material::create(pipeline_specification.shader);
+	}
 
 	Renderer::wait_and_render();
 
-	swapchain_material = Material::create(pipeline_spec.shader);
 	command_buffer = RenderCommandBuffer::create_from_swapchain();
 	projection_matrix = glm::ortho(0.0f, w, 0.0f, h);
 }
@@ -84,22 +106,22 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 
 	user_camera.on_update(ts);
 
-	draw_debug_stats();
-
 	// Render final image to swapchain
-	Reference<Image2D> final_image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
+	Reference<Image2D> final_image = geometry_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
 	if (final_image) {
-		// swapchain_material->set("u_Texture", final_image);
+		swapchain_material->set("u_Texture", final_image);
 
 		command_buffer->begin();
-		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().render_pass, false);
-		Renderer::submit_fullscreen_quad(command_buffer, swapchain_pipeline, nullptr, swapchain_material);
+		Renderer::begin_render_pass(command_buffer, geometry_pipeline->get_specification().render_pass, false);
+		draw_debug_stats();
+		Renderer::submit_fullscreen_quad(command_buffer, geometry_pipeline, nullptr, swapchain_material);
 		Renderer::end_render_pass(command_buffer);
 		command_buffer->end();
 	} else {
 		// Clear render pass if no image is present
 		command_buffer->begin();
-		Renderer::begin_render_pass(command_buffer, swapchain_pipeline->get_specification().render_pass, false);
+		Renderer::begin_render_pass(command_buffer, geometry_pipeline->get_specification().render_pass, false);
+		draw_debug_stats();
 		Renderer::end_render_pass(command_buffer);
 		command_buffer->end();
 	}
@@ -195,11 +217,11 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 		{
 			ImGui::Begin("Viewport");
 			{
-				auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-				auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-				auto viewportOffset = ImGui::GetWindowPos();
-				viewport_bounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-				viewport_bounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+				auto viewport_min_region = ImGui::GetWindowContentRegionMin();
+				auto viewport_max_region = ImGui::GetWindowContentRegionMax();
+				auto viewport_offset = ImGui::GetWindowPos();
+				viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
+				viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
 
 				viewport_focused = ImGui::IsWindowFocused();
 				viewport_hovered = ImGui::IsWindowHovered();
@@ -212,7 +234,7 @@ void ForgottenLayer::on_ui_render(const TimeStep& ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				const auto& image = swapchain_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
+				const auto& image = geometry_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
 				UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
 
 				ImGui::End();
@@ -231,10 +253,10 @@ void ForgottenLayer::ui_toolbar()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 	auto& colors = ImGui::GetStyle().Colors;
-	const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
-	const auto& buttonActive = colors[ImGuiCol_ButtonActive];
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
+	const auto& button_hovered = colors[ImGuiCol_ButtonHovered];
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(button_hovered.x, button_hovered.y, button_hovered.z, 0.5f));
+	const auto& button_active = colors[ImGuiCol_ButtonActive];
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(button_active.x, button_active.y, button_active.z, 0.5f));
 
 	ImGui::Begin("##toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
@@ -301,7 +323,7 @@ void ForgottenLayer::on_event(Event& event)
 
 void ForgottenLayer::draw_debug_stats()
 {
-	renderer->set_target_render_pass(swapchain_pipeline->get_specification().render_pass);
+	renderer->set_target_render_pass(geometry_pipeline->get_specification().render_pass);
 	renderer->begin_scene(projection_matrix, glm::mat4(1.0f));
 
 	// Add font size to this after each line

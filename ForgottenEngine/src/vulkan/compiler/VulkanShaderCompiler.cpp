@@ -5,10 +5,10 @@
 #include "render/Renderer.hpp"
 #include "serialize/FileStream.hpp"
 #include "utilities/StringUtils.hpp"
+#include "vulkan/compiler/preprocessor/GlslIncluder.hpp"
+#include "vulkan/compiler/VulkanShaderCache.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanShader.hpp"
-#include "vulkan/compiler/VulkanShaderCache.hpp"
-#include "vulkan/compiler/preprocessor/GlslIncluder.hpp"
 
 #include <filesystem>
 #include <libshaderc_util/file_finder.h>
@@ -72,7 +72,7 @@ namespace ForgottenEngine {
 				break;
 
 			default:
-				CORE_ASSERT(false, "Unknown type!");
+				core_assert(false, "Unknown type!");
 			}
 
 			return ShaderUniformType::None;
@@ -95,14 +95,14 @@ namespace ForgottenEngine {
 
 		Utils::create_cache_directory_if_needed();
 		const std::string source = StringUtils::read_file_and_skip_bom(shader_source_path);
-		CORE_VERIFY(source.size(), "Failed to load shader!");
+		core_verify(source.size(), "Failed to load shader!");
 
 		shader_source = pre_process(source);
 		const VkShaderStageFlagBits changedStages = VulkanShaderCache::has_changed(this);
 
 		bool compile_success = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, force_compile);
 		if (!compile_success) {
-			CORE_ASSERT_BOOL(false);
+			core_assert_bool(false);
 			return false;
 		}
 
@@ -127,7 +127,7 @@ namespace ForgottenEngine {
 		case ShaderUtils::SourceLang::GLSL:
 			return pre_process_glsl(source);
 		default:
-			CORE_ASSERT(false, "Only GLSL supported.");
+			core_assert(false, "Only GLSL supported.");
 		}
 		return {};
 	}
@@ -314,7 +314,7 @@ namespace ForgottenEngine {
 
 				FILE* f = fopen(cachedFilePath.c_str(), "wb");
 				if (!f)
-					CORE_ASSERT(false, "Failed to cache shader binary!");
+					core_assert(false, "Failed to cache shader binary!");
 				fwrite(outputBinary.data(), sizeof(uint32_t), outputBinary.size(), f);
 				fclose(f);
 			}
@@ -364,7 +364,7 @@ namespace ForgottenEngine {
 		serializer.read_raw(header);
 
 		bool validHeader = memcmp(&header, "FGSR", 4) == 0;
-		CORE_ASSERT_BOOL(validHeader);
+		core_assert_bool(validHeader);
 
 		clear_reflection_data();
 

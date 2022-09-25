@@ -19,7 +19,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanImage2D>::create(specification);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 	Reference<Image2D> Image2D::create(ImageSpecification specification, const void* data)
@@ -30,7 +30,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanImage2D>::create(specification);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

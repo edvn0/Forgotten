@@ -8,8 +8,8 @@
 #include "render/Material.hpp"
 #include "render/Pipeline.hpp"
 #include "render/RenderCommandQueue.hpp"
-#include "render/RenderPass.hpp"
 #include "render/RendererAPI.hpp"
+#include "render/RenderPass.hpp"
 #include "render/SceneEnvironment.hpp"
 #include "render/Shader.hpp"
 #include "render/StorageBufferSet.hpp"
@@ -46,20 +46,20 @@ namespace ForgottenEngine {
 		std::unordered_map<std::string, std::string> global_shader_macros;
 	};
 
-	static RendererData* renderer_data;
+	RendererData renderer_data;
+	std::unique_ptr<RendererAPI> renderer_api;
 
-	static RendererAPI* renderer_api = nullptr;
 	static RenderCommandQueue resource_free_queue[3];
 	static RenderCommandQueue* command_queue = nullptr;
 	static RendererConfig config;
 
-	static RendererAPI* init_renderer_api()
+	static std::unique_ptr<RendererAPI> init_renderer_api()
 	{
 		switch (RendererAPI::current()) {
 		case RendererAPIType::Vulkan:
-			return new VulkanRenderer();
+			return std::make_unique<VulkanRenderer>();
 		default:
-			CORE_ASSERT(false, "Unknown RendererAPI");
+			core_assert(false, "Unknown RendererAPI");
 		}
 	}
 
@@ -70,13 +70,9 @@ namespace ForgottenEngine {
 	};
 	static std::unordered_map<size_t, ShaderDependencies> shader_dependencies;
 
-	static inline auto& get() { return *renderer_data; }
-
 	void Renderer::init()
 	{
 		CORE_DEBUG("Initializing renderer.");
-		renderer_data = new RendererData();
-
 		command_queue = new RenderCommandQueue();
 
 		CORE_DEBUG("Initializing renderer API.");
@@ -86,7 +82,7 @@ namespace ForgottenEngine {
 		config.frames_in_flight = glm::min<uint32_t>(config.frames_in_flight, fif);
 		// Much stuff
 
-		renderer_data->shader_library = Reference<ShaderLibrary>::create();
+		renderer_data.shader_library = Reference<ShaderLibrary>::create();
 
 		auto& shader_library = Renderer::get_shader_library();
 
@@ -108,23 +104,23 @@ namespace ForgottenEngine {
 		Renderer::compile_shaders();
 
 		uint32_t white_data = 0xffffffff;
-		renderer_data->white_texture = Texture2D::create(ImageFormat::RGBA, 1, 1, &white_data);
+		renderer_data.white_texture = Texture2D::create(ImageFormat::RGBA, 1, 1, &white_data);
 
 		constexpr uint32_t black_data = 0xff000000;
-		renderer_data->black_texture = Texture2D::create(ImageFormat::RGBA, 1, 1, &black_data);
+		renderer_data.black_texture = Texture2D::create(ImageFormat::RGBA, 1, 1, &black_data);
 
 		{
 			TextureProperties props;
 			props.SamplerWrap = TextureWrap::Clamp;
 			const auto brdf_lut = Assets::find_resources_by_path(Assets::slashed_string_to_filepath("renderer/brdf_lut.tga"));
 
-			CORE_ASSERT(brdf_lut, "Could not find a file under {}", (*brdf_lut).string());
+			core_assert(brdf_lut, "Could not find a file under {}", (*brdf_lut).string());
 
-			renderer_data->brdf_lut = Texture2D::create((*brdf_lut).string(), props);
+			renderer_data.brdf_lut = Texture2D::create((*brdf_lut).string(), props);
 		}
 		constexpr uint32_t black_cube_data[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
-		renderer_data->black_cube = TextureCube::create(ImageFormat::RGBA, 1, 1, &black_cube_data);
-		renderer_data->empty_env = Reference<SceneEnvironment>::create(renderer_data->black_cube, renderer_data->black_texture);
+		renderer_data.black_cube = TextureCube::create(ImageFormat::RGBA, 1, 1, &black_cube_data);
+		renderer_data.empty_env = Reference<SceneEnvironment>::create(renderer_data.black_cube, renderer_data.black_texture);
 
 		// Hilbert look-up texture! It's a 64 x 64 uint16 texture
 		{
@@ -132,14 +128,14 @@ namespace ForgottenEngine {
 			props.SamplerWrap = TextureWrap::Clamp;
 			props.SamplerFilter = TextureFilter::Nearest;
 
-			constexpr auto HilbertIndex = [](uint32_t posX, uint32_t posY) {
+			constexpr auto hilbert_index = [](uint32_t posX, uint32_t posY) {
 				uint16_t index = 0u;
-				for (uint16_t curLevel = 64 / 2u; curLevel > 0u; curLevel /= 2u) {
-					const uint16_t regionX = (posX & curLevel) > 0u;
-					const uint16_t regionY = (posY & curLevel) > 0u;
-					index += curLevel * curLevel * ((3u * regionX) ^ regionY);
-					if (regionY == 0u) {
-						if (regionX == 1u) {
+				for (uint16_t cur_level = 64 / 2u; cur_level > 0u; cur_level /= 2u) {
+					const uint16_t region_x = (posX & cur_level) > 0u;
+					const uint16_t region_y = (posY & cur_level) > 0u;
+					index += cur_level * cur_level * ((3u * region_x) ^ region_y);
+					if (region_y == 0u) {
+						if (region_x == 1u) {
 							posX = uint16_t((64 - 1u)) - posX;
 							posY = uint16_t((64 - 1u)) - posY;
 						}
@@ -153,11 +149,11 @@ namespace ForgottenEngine {
 			uint16_t* data = new uint16_t[(size_t)(64 * 64)];
 			for (int x = 0; x < 64; x++) {
 				for (int y = 0; y < 64; y++) {
-					const uint16_t r2index = HilbertIndex(x, y);
+					const uint16_t r2index = hilbert_index(x, y);
 					data[x + 64 * y] = r2index;
 				}
 			}
-			renderer_data->hilbert_lut = Texture2D::create(ImageFormat::RED16UI, 64, 64, data, props);
+			renderer_data.hilbert_lut = Texture2D::create(ImageFormat::RED16UI, 64, 64, data, props);
 			delete[] data;
 		}
 
@@ -172,7 +168,6 @@ namespace ForgottenEngine {
 	void Renderer::shut_down()
 	{
 		renderer_api->shut_down();
-		delete renderer_data;
 
 		shader_dependencies.clear();
 
@@ -191,7 +186,7 @@ namespace ForgottenEngine {
 
 	void Renderer::begin_render_pass(const Reference<RenderCommandBuffer>& command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
 	{
-		CORE_ASSERT(render_pass, "Render pass cannot be null!");
+		core_assert(render_pass, "Render pass cannot be null!");
 
 		renderer_api->begin_render_pass(command_buffer, render_pass, explicit_clear);
 	}
@@ -266,22 +261,22 @@ namespace ForgottenEngine {
 
 	void Renderer::set_global_macro_in_shaders(const std::string& name, const std::string& value)
 	{
-		if (renderer_data->global_shader_macros.find(name) != renderer_data->global_shader_macros.end()) {
-			if (renderer_data->global_shader_macros.at(name) == value)
+		if (renderer_data.global_shader_macros.find(name) != renderer_data.global_shader_macros.end()) {
+			if (renderer_data.global_shader_macros.at(name) == value)
 				return;
 		}
 
-		renderer_data->global_shader_macros[name] = value;
+		renderer_data.global_shader_macros[name] = value;
 
 		if (global_shaders.shader_global_macros_map.find(name) == global_shaders.shader_global_macros_map.end()) {
 			CORE_WARN("No shaders with {} macro found", name);
 			return;
 		}
 
-		CORE_ASSERT(global_shaders.shader_global_macros_map.find(name) != global_shaders.shader_global_macros_map.end(),
+		core_assert(global_shaders.shader_global_macros_map.find(name) != global_shaders.shader_global_macros_map.end(),
 			"Macro has not been passed from any shader!");
 		for (auto& [hash, shader] : global_shaders.shader_global_macros_map.at(name)) {
-			CORE_ASSERT(shader.is_valid(), "Shader is deleted!");
+			core_assert(shader.is_valid(), "Shader is deleted!");
 			global_shaders.dirty_shaders.emplace(shader);
 		}
 	}
@@ -290,7 +285,7 @@ namespace ForgottenEngine {
 	{
 		const bool updated_any_shader = global_shaders.dirty_shaders.size();
 		for (auto shader : global_shaders.dirty_shaders) {
-			CORE_ASSERT(shader.is_valid(), "Shader is deleted!");
+			core_assert(shader.is_valid(), "Shader is deleted!");
 			shader->rt_reload(true);
 		}
 		global_shaders.dirty_shaders.clear();
@@ -298,7 +293,7 @@ namespace ForgottenEngine {
 		return updated_any_shader;
 	}
 
-	const std::unordered_map<std::string, std::string>& Renderer::get_global_shader_macros() { return renderer_data->global_shader_macros; }
+	const std::unordered_map<std::string, std::string>& Renderer::get_global_shader_macros() { return renderer_data.global_shader_macros; }
 	// end Registrations
 
 	RenderCommandQueue& Renderer::get_render_resource_free_queue(uint32_t index) { return resource_free_queue[index]; }
@@ -309,18 +304,18 @@ namespace ForgottenEngine {
 
 	Reference<RendererContext> Renderer::get_context() { return Application::the().get_window().get_context(); }
 
-	Reference<ShaderLibrary>& Renderer::get_shader_library() { return renderer_data->shader_library; }
+	Reference<ShaderLibrary>& Renderer::get_shader_library() { return renderer_data.shader_library; }
 
 	uint32_t Renderer::get_current_frame_index() { return Application::the().get_window().get_swapchain().get_current_buffer_index(); }
 
-	Reference<Texture2D> Renderer::get_white_texture() { return renderer_data->white_texture; }
+	Reference<Texture2D> Renderer::get_white_texture() { return renderer_data.white_texture; }
 
-	Reference<Texture2D> Renderer::get_black_texture() { return renderer_data->black_texture; }
+	Reference<Texture2D> Renderer::get_black_texture() { return renderer_data.black_texture; }
 
-	Reference<Texture2D> Renderer::get_brdf_lut() { return renderer_data->brdf_lut; }
+	Reference<Texture2D> Renderer::get_brdf_lut() { return renderer_data.brdf_lut; }
 
-	Reference<TextureCube> Renderer::get_black_cube() { return renderer_data->black_cube; }
+	Reference<TextureCube> Renderer::get_black_cube() { return renderer_data.black_cube; }
 
-	Reference<Texture2D> Renderer::get_hilbert_lut() { return renderer_data->hilbert_lut; }
+	Reference<Texture2D> Renderer::get_hilbert_lut() { return renderer_data.hilbert_lut; }
 
 } // namespace ForgottenEngine

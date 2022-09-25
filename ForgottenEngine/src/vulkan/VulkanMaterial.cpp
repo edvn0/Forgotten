@@ -107,7 +107,7 @@ namespace ForgottenEngine {
 	{
 		const auto& shaderBuffers = material_shader->get_shader_buffers();
 
-		CORE_ASSERT(shaderBuffers.size() <= 1, "We currently only support ONE material buffer!", "");
+		core_assert(shaderBuffers.size() <= 1, "We currently only support ONE material buffer!", "");
 
 		if (shaderBuffers.size() > 0) {
 			const ShaderBuffer& buffer = (*shaderBuffers.begin()).second;
@@ -131,7 +131,7 @@ namespace ForgottenEngine {
 	void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture)
 	{
 		const ShaderResourceDeclaration* resource = find_resource_declaration(name);
-		CORE_ASSERT_BOOL(resource);
+		core_assert_bool(resource);
 
 		uint32_t binding = resource->get_register();
 
@@ -146,7 +146,7 @@ namespace ForgottenEngine {
 		material_textures[binding] = texture;
 
 		const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
-		CORE_ASSERT_BOOL(wds);
+		core_assert_bool(wds);
 		resident_descriptors[binding]
 			= std::make_shared<PendingDescriptor>(PendingDescriptor { PendingDescriptorType::Texture2D, *wds, {}, texture.as<Texture>(), nullptr });
 		pending_descriptors.push_back(resident_descriptors.at(binding));
@@ -157,7 +157,7 @@ namespace ForgottenEngine {
 	void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex)
 	{
 		const ShaderResourceDeclaration* resource = find_resource_declaration(name);
-		CORE_ASSERT_BOOL(resource);
+		core_assert_bool(resource);
 
 		uint32_t binding = resource->get_register();
 		// Texture is already set
@@ -174,7 +174,7 @@ namespace ForgottenEngine {
 		texture_arrays[binding][arrayIndex] = texture;
 
 		const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
-		CORE_ASSERT_BOOL(wds);
+		core_assert_bool(wds);
 		if (resident_descriptors_array.find(binding) == resident_descriptors_array.end()) {
 			resident_descriptors_array[binding]
 				= std::make_shared<PendingDescriptorArray>(PendingDescriptorArray { PendingDescriptorType::Texture2D, *wds, {}, {}, {} });
@@ -194,7 +194,7 @@ namespace ForgottenEngine {
 	void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<TextureCube>& texture)
 	{
 		const ShaderResourceDeclaration* resource = find_resource_declaration(name);
-		CORE_ASSERT_BOOL(resource);
+		core_assert_bool(resource);
 
 		uint32_t binding = resource->get_register();
 		// Texture is already set
@@ -208,7 +208,7 @@ namespace ForgottenEngine {
 		material_textures[binding] = texture;
 
 		const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
-		CORE_ASSERT_BOOL(wds);
+		core_assert_bool(wds);
 		resident_descriptors[binding]
 			= std::make_shared<PendingDescriptor>(PendingDescriptor { PendingDescriptorType::TextureCube, *wds, {}, texture.as<Texture>(), nullptr });
 		pending_descriptors.push_back(resident_descriptors.at(binding));
@@ -218,11 +218,11 @@ namespace ForgottenEngine {
 
 	void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Image2D>& image)
 	{
-		CORE_VERIFY_BOOL(image);
-		CORE_ASSERT(image.as<VulkanImage2D>()->get_image_info().image_view, "ImageView is null");
+		core_verify_bool(image);
+		core_assert(image.as<VulkanImage2D>()->get_image_info().image_view, "ImageView is null");
 
 		const ShaderResourceDeclaration* resource = find_resource_declaration(name);
-		CORE_VERIFY_BOOL(resource);
+		core_verify_bool(resource);
 
 		uint32_t binding = resource->get_register();
 		// Image is already set
@@ -235,7 +235,7 @@ namespace ForgottenEngine {
 		images[resource->get_register()] = image;
 
 		const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
-		CORE_ASSERT_BOOL(wds);
+		core_assert_bool(wds);
 		resident_descriptors[binding]
 			= std::make_shared<PendingDescriptor>(PendingDescriptor { PendingDescriptorType::Image2D, *wds, {}, nullptr, image.as<Image>() });
 		pending_descriptors.push_back(resident_descriptors.at(binding));
@@ -314,7 +314,7 @@ namespace ForgottenEngine {
 		for (auto&& [binding, descriptor] : resident_descriptors) {
 			if (descriptor->type == PendingDescriptorType::Image2D) {
 				Reference<VulkanImage2D> image = descriptor->image.as<VulkanImage2D>();
-				CORE_ASSERT(image->get_image_info().image_view, "ImageView is null", "");
+				core_assert(image->get_image_info().image_view, "ImageView is null", "");
 				if (descriptor->wds.pImageInfo && image->get_image_info().image_view != descriptor->wds.pImageInfo->imageView) {
 					// HZ_CORE_WARN("Found out of date Image2D descriptor ({0} vs. {1})",
 					// (void*)image->get_image_info().image_view, (void*)descriptor->wds.pImageInfo->imageView);

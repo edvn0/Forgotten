@@ -7,10 +7,10 @@
 #pragma once
 
 #include "render/ComputePipeline.hpp"
+#include "vulkan/vulkan.h"
 #include "vulkan/VulkanRenderCommandBuffer.hpp"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanTexture.hpp"
-#include "vulkan/vulkan.h"
 
 namespace ForgottenEngine {
 

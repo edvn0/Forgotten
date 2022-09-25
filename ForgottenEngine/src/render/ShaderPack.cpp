@@ -77,7 +77,7 @@ namespace ForgottenEngine {
 	Reference<Shader> ShaderPack::load_shader(std::string_view name)
 	{
 		uint32_t nameHash = Hash::generate_fnv_hash(name);
-		CORE_VERIFY(contains(name), "");
+		core_verify(contains(name), "");
 
 		const auto& shaderProgramInfo = file.index.shader_programs.at(nameHash);
 

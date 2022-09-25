@@ -24,7 +24,7 @@ namespace ForgottenEngine {
 		template <typename T> void read_raw(T& type)
 		{
 			bool success = read_data((char*)&type, sizeof(T));
-			CORE_ASSERT(success, "Could not read data into type T.");
+			core_assert(success, "Could not read data into type T.");
 		}
 
 		template <typename T> void read_object(T& obj) { T::deserialize(this, obj); }

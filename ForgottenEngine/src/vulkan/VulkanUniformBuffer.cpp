@@ -71,10 +71,10 @@ namespace ForgottenEngine {
 		// TODO: local storage should be potentially replaced with render thread storage
 		memcpy(local_storage, data, in_size);
 		Reference<VulkanUniformBuffer> instance = this;
-		Renderer::submit([instance, in_size, offset]() mutable { instance->rt_set_data(instance->local_storage, in_size, offset); });
+		Renderer::submit([instance, in_size, offset]() mutable { instance->render_thread_set_data(instance->local_storage, in_size, offset); });
 	}
 
-	void VulkanUniformBuffer::rt_set_data(const void* data, uint32_t in_size, uint32_t offset)
+	void VulkanUniformBuffer::render_thread_set_data(const void* data, uint32_t in_size, uint32_t offset)
 	{
 		VulkanAllocator allocator("VulkanUniformBuffer");
 		uint8_t* pData = allocator.map_memory<uint8_t>(memory_alloc);

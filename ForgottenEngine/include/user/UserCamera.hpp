@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "TimeStep.hpp"
 #include "events/KeyEvent.hpp"
 #include "events/MouseEvent.hpp"
 #include "render/Camera.hpp"
+#include "TimeStep.hpp"
 
 #include <concepts>
 #include <glm/detail/type_quat.hpp>

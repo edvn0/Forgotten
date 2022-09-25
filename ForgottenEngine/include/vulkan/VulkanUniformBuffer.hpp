@@ -15,7 +15,7 @@ namespace ForgottenEngine {
 
 		const VkDescriptorBufferInfo& get_descriptor_buffer_info() const { return descriptor_buffer_info; }
 
-		void rt_set_data(const void* data, uint32_t in_size, uint32_t offset) override;
+		void render_thread_set_data(const void* data, uint32_t in_size, uint32_t offset) override;
 		void set_data(const void* data, uint32_t in_size, uint32_t offset) override;
 
 	private:

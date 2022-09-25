@@ -20,7 +20,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanRenderCommandBuffer>::create(count);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 	Reference<RenderCommandBuffer> RenderCommandBuffer::create_from_swapchain()
@@ -31,7 +31,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanRenderCommandBuffer>::create();
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

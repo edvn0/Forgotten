@@ -77,38 +77,26 @@ namespace ForgottenEngine {
 
 } // namespace ForgottenEngine
 
-#if FORGOTTEN_TRACE_MEMORY
+#if 1
 
-_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size)
-_VCRT_ALLOCATOR
-void* __CRTDECL operator new(size_t size);
+[[nodiscard]] void* operator new(size_t size);
 
-_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size)
-_VCRT_ALLOCATOR
-void* __CRTDECL operator new[](size_t size);
+[[nodiscard]] void* operator new[](size_t size);
 
-_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size)
-_VCRT_ALLOCATOR
-void* __CRTDECL operator new(size_t size, const char* desc);
+[[nodiscard]] void* operator new(size_t size, const char* desc);
 
-_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size)
-_VCRT_ALLOCATOR
-void* __CRTDECL operator new[](size_t size, const char* desc);
+[[nodiscard]] void* operator new[](size_t size, const char* desc);
 
-_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size)
-_VCRT_ALLOCATOR
-void* __CRTDECL operator new(size_t size, const char* file, int line);
+[[nodiscard]] void* operator new(size_t size, const char* file, int line);
 
-_NODISCARD _Ret_notnull_ _Post_writable_byte_size_(size)
-_VCRT_ALLOCATOR
-void* __CRTDECL operator new[](size_t size, const char* file, int line);
+[[nodiscard]] void* operator new[](size_t size, const char* file, int line);
 
-void __CRTDECL operator delete(void* memory);
-void __CRTDECL operator delete(void* memory, const char* desc);
-void __CRTDECL operator delete(void* memory, const char* file, int line);
-void __CRTDECL operator delete[](void* memory);
-void __CRTDECL operator delete[](void* memory, const char* desc);
-void __CRTDECL operator delete[](void* memory, const char* file, int line);
+void operator delete(void* memory);
+void operator delete(void* memory, const char* desc);
+void operator delete(void* memory, const char* file, int line);
+void operator delete[](void* memory);
+void operator delete[](void* memory, const char* desc);
+void operator delete[](void* memory, const char* file, int line);
 
 #define hnew new (__FILE__, __LINE__)
 #define hdelete delete

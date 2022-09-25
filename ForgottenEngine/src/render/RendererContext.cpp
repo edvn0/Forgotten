@@ -14,7 +14,7 @@ namespace ForgottenEngine {
 		if (RendererAPI::current() == RendererAPIType::Vulkan) {
 			return Reference<VulkanContext>::create();
 		}
-		CORE_ASSERT(false, "Incorrect rendering APi chosen.");
+		core_assert(false, "Incorrect rendering APi chosen.");
 	}
 
 } // namespace ForgottenEngine

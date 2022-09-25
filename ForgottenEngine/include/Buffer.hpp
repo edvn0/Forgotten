@@ -54,7 +54,7 @@ namespace ForgottenEngine {
 
 		byte* read_bytes(uint32_t in_size, uint32_t offset) const
 		{
-			CORE_ASSERT_BOOL(offset + in_size <= this->size);
+			core_assert_bool(offset + in_size <= this->size);
 			byte* buffer = new byte[in_size];
 			memcpy(buffer, (byte*)this->data + offset, in_size);
 			return buffer;
@@ -62,7 +62,7 @@ namespace ForgottenEngine {
 
 		void write(const void* in_data, uint32_t in_size, uint32_t offset = 0) const
 		{
-			CORE_ASSERT_BOOL(offset + in_size <= this->size);
+			core_assert_bool(offset + in_size <= this->size);
 			memcpy((byte*)this->data + offset, in_data, in_size);
 		}
 

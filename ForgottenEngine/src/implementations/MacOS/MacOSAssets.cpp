@@ -15,7 +15,7 @@ namespace ForgottenEngine {
 
 	Path Assets::get_base_directory()
 	{
-		CORE_ASSERT_BOOL(initialized);
+		core_assert_bool(initialized);
 		return working_directory;
 	}
 

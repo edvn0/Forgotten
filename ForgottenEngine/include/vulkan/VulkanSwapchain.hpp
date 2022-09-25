@@ -48,13 +48,13 @@ namespace ForgottenEngine {
 
 		VkFramebuffer get_framebuffer(uint32_t index)
 		{
-			CORE_ASSERT_BOOL(index < framebuffers.size());
+			core_assert_bool(index < framebuffers.size());
 			return framebuffers[index];
 		}
 
 		VkCommandBuffer get_drawbuffer(uint32_t index)
 		{
-			CORE_ASSERT_BOOL(index < command_buffers.size());
+			core_assert_bool(index < command_buffers.size());
 			return command_buffers[index].buffer;
 		}
 

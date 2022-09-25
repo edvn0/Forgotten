@@ -6,9 +6,9 @@
 
 #include "user/UserCamera.hpp"
 
-#include "Input.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
+#include "Input.hpp"
 
 namespace ForgottenEngine {
 
@@ -40,9 +40,9 @@ namespace ForgottenEngine {
 		view_matrix = glm::inverse(view_matrix);
 	}
 
-	void UserCamera::focus(const glm::vec3& focusPoint)
+	void UserCamera::focus(const glm::vec3& focus_point)
 	{
-		focal_point = focusPoint;
+		focal_point = focus_point;
 		camera_mode = CameraMode::FLYCAM;
 		if (distance > min_focus_distance) {
 			distance -= distance - min_focus_distance;
@@ -67,14 +67,14 @@ namespace ForgottenEngine {
 		if (Input::mouse(Mouse::Right) && !Input::key(Key::LeftAlt)) {
 			camera_mode = CameraMode::FLYCAM;
 			disable_mouse();
-			const float yawSign = get_up_direction().y < 0 ? -1.0f : 1.0f;
+			const float yaw_sign = get_up_direction().y < 0 ? -1.0f : 1.0f;
 
 			const float speed = get_camera_speed();
 
 			if (Input::key(Key::Q))
-				position_delta -= ts.get_milli_seconds() * speed * glm::vec3 { 0.f, yawSign, 0.f };
+				position_delta -= ts.get_milli_seconds() * speed * glm::vec3 { 0.f, yaw_sign, 0.f };
 			if (Input::key(Key::E))
-				position_delta += ts.get_milli_seconds() * speed * glm::vec3 { 0.f, yawSign, 0.f };
+				position_delta += ts.get_milli_seconds() * speed * glm::vec3 { 0.f, yaw_sign, 0.f };
 			if (Input::key(Key::S))
 				position_delta -= ts.get_milli_seconds() * speed * direction;
 			if (Input::key(Key::W))
@@ -84,14 +84,14 @@ namespace ForgottenEngine {
 			if (Input::key(Key::D))
 				position_delta += ts.get_milli_seconds() * speed * right_direction;
 
-			constexpr float maxRate { 0.12f };
-			yaw_delta += glm::clamp(yawSign * delta.x * rotation_speed(), -maxRate, maxRate);
-			pitch_delta += glm::clamp(delta.y * rotation_speed(), -maxRate, maxRate);
+			static constexpr float max_rate { 0.12f };
+			yaw_delta += glm::clamp(yaw_sign * delta.x * rotation_speed(), -max_rate, max_rate);
+			pitch_delta += glm::clamp(delta.y * rotation_speed(), -max_rate, max_rate);
 
-			right_direction = glm::cross(direction, glm::vec3 { 0.f, yawSign, 0.f });
+			right_direction = glm::cross(direction, glm::vec3 { 0.f, yaw_sign, 0.f });
 
 			direction = glm::rotate(glm::normalize(glm::cross(
-										glm::angleAxis(-pitch_delta, right_direction), glm::angleAxis(-yaw_delta, glm::vec3 { 0.f, yawSign, 0.f }))),
+										glm::angleAxis(-pitch_delta, right_direction), glm::angleAxis(-yaw_delta, glm::vec3 { 0.f, yaw_sign, 0.f }))),
 				direction);
 
 			const float dist = glm::distance(focal_point, position);
@@ -155,17 +155,17 @@ namespace ForgottenEngine {
 
 	void UserCamera::update_camera_view()
 	{
-		const float yawSign = get_up_direction().y < 0 ? -1.0f : 1.0f;
+		const float yaw_sign = get_up_direction().y < 0 ? -1.0f : 1.0f;
 
 		// Extra step to handle the problem when the camera direction is the same as the up vector
-		const float cosAngle = glm::dot(get_forward_direction(), get_up_direction());
-		if (cosAngle * yawSign > 0.99f)
+		const float cos_angle = glm::dot(get_forward_direction(), get_up_direction());
+		if (cos_angle * yaw_sign > 0.99f)
 			pitch_delta = 0.f;
 
-		const glm::vec3 lookAt = position + get_forward_direction();
-		direction = glm::normalize(lookAt - position);
+		const glm::vec3 look_at = position + get_forward_direction();
+		direction = glm::normalize(look_at - position);
 		distance = glm::distance(position, focal_point);
-		view_matrix = glm::lookAt(position, lookAt, glm::vec3 { 0.f, yawSign, 0.f });
+		view_matrix = glm::lookAt(position, look_at, glm::vec3 { 0.f, yaw_sign, 0.f });
 
 		// damping for smooth camera
 		yaw_delta *= 0.6f;
@@ -195,8 +195,8 @@ namespace ForgottenEngine {
 
 	void UserCamera::mouse_rotate(const glm::vec2& delta)
 	{
-		const float yawSign = get_up_direction().y < 0.0f ? -1.0f : 1.0f;
-		yaw_delta += yawSign * delta.x * rotation_speed();
+		const float yaw_sign = get_up_direction().y < 0.0f ? -1.0f : 1.0f;
+		yaw_delta += yaw_sign * delta.x * rotation_speed();
 		pitch_delta += delta.y * rotation_speed();
 	}
 

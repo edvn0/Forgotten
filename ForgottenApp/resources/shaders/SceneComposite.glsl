@@ -240,5 +240,5 @@ void main()
 
 	color *= u_Uniforms.Opacity;
 
-	o_Color = vec4(color, 1.0);
+	o_Color = vec4(1.0, 0.1, 0.1, 1.0);
 }

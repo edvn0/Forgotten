@@ -61,31 +61,26 @@ namespace ForgottenEngine {
 
 			process_events();
 
-			if (!is_minimized) {
-				Renderer::begin_frame();
-				{
-					for (const auto& layer : stack)
-						layer->on_update(time_step);
-				}
-
-				// Render ImGui on render thread
-				Application* app = this;
-				{
-					Renderer::submit([app, ts = time_step]() {
-						ImGuiLayer::begin();
-						app->render_imgui(ts);
-					});
-
-					Renderer::submit([]() { ImGuiLayer::end(); });
-				}
-				Renderer::end_frame();
-
-				window->get_swapchain().begin_frame();
-				Renderer::wait_and_render();
-				window->swap_buffers();
-			}
+			Renderer::begin_frame();
+			{
+				for (const auto& layer : stack)
+					layer->on_update(time_step);
+			} // Render ImGui on render thread
 
 			auto time = Clock::get_time<float>();
+			Application* app = this;
+			{
+				Renderer::submit([app, ts = time_step]() {
+					ImGuiLayer::begin();
+					app->render_imgui(ts);
+				});
+
+				Renderer::submit([] { ImGuiLayer::end(); });
+			}
+			Renderer::end_frame();
+			window->get_swapchain().begin_frame();
+			Renderer::wait_and_render();
+			window->swap_buffers();
 			frame_time = TimeStep(time - last_frame_time);
 			time_step = TimeStep(glm::min<float>(frame_time, 0.0333f));
 			last_frame_time = time;

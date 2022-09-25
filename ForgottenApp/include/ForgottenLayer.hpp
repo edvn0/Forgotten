@@ -35,7 +35,6 @@ private:
 	Reference<Renderer2D> renderer;
 
 	glm::mat4 projection_matrix { 1.0f };
-	Reference<Pipeline> swapchain_pipeline;
 	Reference<Material> swapchain_material;
 	Reference<RenderCommandBuffer> command_buffer;
 	float width { 1280 };
@@ -45,4 +44,6 @@ private:
 	TimeStep update_performance_timer { 0.0f };
 	TimeStep frames_per_second { 0.0f };
 	UserCamera user_camera;
+	Reference<Pipeline> geometry_pipeline;
+	Reference<Pipeline> transparent_geometry_pipeline;
 };

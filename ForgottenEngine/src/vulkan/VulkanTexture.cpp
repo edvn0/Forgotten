@@ -21,7 +21,7 @@ namespace ForgottenEngine {
 			case TextureWrap::Repeat:
 				return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 			return (VkSamplerAddressMode)0;
 		}
@@ -36,7 +36,7 @@ namespace ForgottenEngine {
 			case TextureFilter::Cubic:
 				return VK_FILTER_CUBIC_IMG;
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 			return (VkFilter)0;
 		}
@@ -63,7 +63,7 @@ namespace ForgottenEngine {
 			case ImageFormat::B10R11G11UF:
 				return width * height * sizeof(float);
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 
 			return 0;
@@ -80,7 +80,7 @@ namespace ForgottenEngine {
 		, properties(properties)
 	{
 		bool loaded = load_image(path);
-		CORE_ASSERT_BOOL(loaded);
+		core_assert_bool(loaded);
 		if (!loaded) {
 			CORE_ERROR("Could not load Texture.");
 		}
@@ -93,7 +93,7 @@ namespace ForgottenEngine {
 		imageSpec.DebugName = properties.DebugName;
 		image = Image2D::create(imageSpec);
 
-		CORE_ASSERT(format != ImageFormat::None, "");
+		core_assert_bool(format != ImageFormat::None);
 
 		Reference<VulkanTexture2D> instance = this;
 		Renderer::submit([instance]() mutable { instance->invalidate(); });
@@ -147,7 +147,7 @@ namespace ForgottenEngine {
 			format = ImageFormat::RGBA;
 		}
 
-		CORE_ASSERT(image_data.data, fmt::format("Failed to load image from in_path: {}.", in_path));
+		core_assert(image_data.data, fmt::format("Failed to load image from in_path: {}.", in_path));
 
 		this->width = static_cast<uint32_t>(stbi_w);
 		this->height = static_cast<uint32_t>(stbi_h);
@@ -206,7 +206,7 @@ namespace ForgottenEngine {
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.map_memory<uint8_t>(stagingBufferAllocation);
-			CORE_ASSERT_BOOL(image_data.data);
+			core_assert_bool(image_data.data);
 			memcpy(destData, image_data.data, size);
 			allocator.unmap_memory(stagingBufferAllocation);
 
@@ -315,13 +315,13 @@ namespace ForgottenEngine {
 		sampler.anisotropyEnable = VK_FALSE;
 		sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
-		VK_CHECK(vkCreateSampler(vulkanDevice, &sampler, nullptr, &info.sampler));
+		vk_check(vkCreateSampler(vulkanDevice, &sampler, nullptr, &info.sampler));
 
 		if (!properties.Storage) {
 			VkImageViewCreateInfo view {};
 			view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			view.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			view.format = Utils::VulkanImageFormat(format);
+			view.format = Utils::vulkan_image_format(format);
 			view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 			// The subresource range describes the set of mip levels (and array layers) that can be accessed through
 			// this reference view It's possible to create multiple reference views for a single reference referring to
@@ -332,7 +332,7 @@ namespace ForgottenEngine {
 			view.subresourceRange.layerCount = 1;
 			view.subresourceRange.levelCount = mipCount;
 			view.image = info.image;
-			VK_CHECK(vkCreateImageView(vulkanDevice, &view, nullptr, &info.image_view));
+			vk_check(vkCreateImageView(vulkanDevice, &view, nullptr, &info.image_view));
 
 			reference->update_descriptor();
 		}
@@ -352,7 +352,7 @@ namespace ForgottenEngine {
 
 	const std::string& VulkanTexture2D::get_path() const { return path; }
 
-	uint32_t VulkanTexture2D::get_mip_level_count() const { return Utils::CalculateMipCount(width, height); }
+	uint32_t VulkanTexture2D::get_mip_level_count() const { return Utils::calculate_mip_count(width, height); }
 
 	std::pair<uint32_t, uint32_t> VulkanTexture2D::get_mip_size(uint32_t mip) const
 	{
@@ -458,7 +458,7 @@ namespace ForgottenEngine {
 	VulkanTextureCube::VulkanTextureCube(const std::string& path, TextureProperties properties)
 		: properties(properties)
 	{
-		CORE_ASSERT(false, "Not implemented");
+		core_assert(false, "Not implemented");
 	}
 
 	void VulkanTextureCube::release()
@@ -490,7 +490,7 @@ namespace ForgottenEngine {
 
 		release();
 
-		VkFormat format = Utils::VulkanImageFormat(this->format);
+		VkFormat format = Utils::vulkan_image_format(this->format);
 		uint32_t mipCount = get_mip_level_count();
 
 		VkMemoryAllocateInfo memAllocInfo {};
@@ -622,7 +622,7 @@ namespace ForgottenEngine {
 		sampler.maxAnisotropy = 1.0;
 		sampler.anisotropyEnable = VK_FALSE;
 		sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-		VK_CHECK(vkCreateSampler(vulkanDevice, &sampler, nullptr, &descriptor_image_info.sampler));
+		vk_check(vkCreateSampler(vulkanDevice, &sampler, nullptr, &descriptor_image_info.sampler));
 
 		// Create image view
 		// Textures are not directly accessed by the shaders and
@@ -642,10 +642,10 @@ namespace ForgottenEngine {
 		view.subresourceRange.layerCount = 6;
 		view.subresourceRange.levelCount = mipCount;
 		view.image = image;
-		VK_CHECK(vkCreateImageView(vulkanDevice, &view, nullptr, &descriptor_image_info.imageView));
+		vk_check(vkCreateImageView(vulkanDevice, &view, nullptr, &descriptor_image_info.imageView));
 	}
 
-	uint32_t VulkanTextureCube::get_mip_level_count() const { return Utils::CalculateMipCount(width, height); }
+	uint32_t VulkanTextureCube::get_mip_level_count() const { return Utils::calculate_mip_count(width, height); }
 
 	std::pair<uint32_t, uint32_t> VulkanTextureCube::get_mip_size(uint32_t mip) const
 	{
@@ -666,7 +666,7 @@ namespace ForgottenEngine {
 		auto device = VulkanContext::get_current_device();
 		auto vulkanDevice = device->get_vulkan_device();
 
-		VkFormat format = Utils::VulkanImageFormat(this->format);
+		VkFormat format = Utils::vulkan_image_format(this->format);
 
 		VkImageViewCreateInfo view {};
 		view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -681,7 +681,7 @@ namespace ForgottenEngine {
 		view.image = image;
 
 		VkImageView result;
-		VK_CHECK(vkCreateImageView(vulkanDevice, &view, nullptr, &result));
+		vk_check(vkCreateImageView(vulkanDevice, &view, nullptr, &result));
 
 		return result;
 	}

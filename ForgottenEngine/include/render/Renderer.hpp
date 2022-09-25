@@ -83,7 +83,8 @@ namespace ForgottenEngine {
 		static void RT_EndGPUPerfMarker(Reference<RenderCommandBuffer> renderCommandBuffer);
 
 	public:
-		template <typename SubmittedFunction> static void submit(SubmittedFunction&& func)
+		using SubmittedFunction = std::function<void(void)>;
+		static void submit(SubmittedFunction&& func)
 		{
 			auto render_command = [](void* ptr) {
 				auto function_pointer = (SubmittedFunction*)ptr;

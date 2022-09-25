@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Common.hpp"
-#include "LayerStack.hpp"
-#include "TimeStep.hpp"
-#include "Window.hpp"
 #include "events/ApplicationEvent.hpp"
 #include "events/KeyEvent.hpp"
 #include "events/MouseEvent.hpp"
 #include "imgui/ImGuiLayer.hpp"
+#include "LayerStack.hpp"
+#include "TimeStep.hpp"
+#include "Window.hpp"
 
 #include <concepts>
 #include <queue>

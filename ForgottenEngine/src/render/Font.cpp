@@ -191,7 +191,7 @@ namespace ForgottenEngine {
 		} font;
 
 		if (!font.load(fontInput.font_filename))
-			CORE_ASSERT_BOOL(false);
+			core_assert_bool(false);
 		if (fontInput.font_scale <= 0)
 			fontInput.font_scale = 1;
 
@@ -231,7 +231,7 @@ namespace ForgottenEngine {
 		}
 
 		if (glyphsLoaded < 0)
-			CORE_ASSERT_BOOL(false);
+			core_assert_bool(false);
 		CORE_TRACE("Loaded geometry of {0} out of {1} glyphs", glyphsLoaded, (int)charset.size());
 		// List missing glyphs
 		if (glyphsLoaded < (int)charset.size()) {
@@ -266,14 +266,14 @@ namespace ForgottenEngine {
 		atlasPacker.setMiterLimit(config.miter_limit);
 		if (int remaining = atlasPacker.pack(msdf_data->glyphs.data(), msdf_data->glyphs.size())) {
 			if (remaining < 0) {
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			} else {
 				CORE_ERROR("Error: Could not fit {0} out of {1} glyphs into the atlas.", remaining, (int)msdf_data->glyphs.size());
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 		}
 		atlasPacker.getDimensions(config.width, config.height);
-		CORE_ASSERT(config.width > 0 && config.height > 0, "");
+		core_assert(config.width > 0 && config.height > 0, "");
 		config.em_size = atlasPacker.getScale();
 		config.px_range = atlasPacker.getPixelRange();
 		if (!fixedScale)
@@ -331,7 +331,7 @@ namespace ForgottenEngine {
 						font_name, (float)config.em_size, msdf_data->glyphs, msdf_data->font_geometry, config);
 				break;
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 
 			texture_atlas = texture;
@@ -346,7 +346,7 @@ namespace ForgottenEngine {
 	{
 		auto path = Assets::find_resources_by_path(Assets::slashed_string_to_filepath("fonts/Olive Days.ttf"));
 
-		CORE_ASSERT(path, "Could not find font file under {}", (*path).string());
+		core_assert(path, "Could not find font file under {}", (*path).string());
 
 		default_font = make<Font>(*path);
 	}

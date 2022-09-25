@@ -27,7 +27,7 @@ namespace ForgottenEngine {
 			case PrimitiveTopology::TriangleFan:
 				return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
 			default:
-				CORE_ASSERT(false, "Unknown toplogy");
+				core_assert(false, "Unknown toplogy");
 			}
 
 			return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
@@ -53,7 +53,7 @@ namespace ForgottenEngine {
 			case DepthCompareOperator::Always:
 				return VK_COMPARE_OP_ALWAYS;
 			default:
-				CORE_ASSERT(false, "Unknown operator");
+				core_assert(false, "Unknown operator");
 			}
 		}
 	} // namespace Utils
@@ -78,16 +78,15 @@ namespace ForgottenEngine {
 		case ShaderDataType::Int4:
 			return VK_FORMAT_R32G32B32A32_SINT;
 		default:
-			CORE_ASSERT(false, "Unknown format");
+			core_assert(false, "Unknown format");
 		}
 	}
 
 	VulkanPipeline::VulkanPipeline(const PipelineSpecification& in_spec)
 		: spec(in_spec)
 	{
-		CORE_ASSERT(in_spec.shader, "");
-		CORE_ASSERT(in_spec.render_pass, "");
-		invalidate();
+		core_assert_bool(in_spec.shader);
+		core_assert_bool(in_spec.render_pass);
 		Renderer::register_shader_dependency(in_spec.shader, this);
 	}
 
@@ -105,10 +104,10 @@ namespace ForgottenEngine {
 	{
 		Reference<VulkanPipeline> instance = this;
 		Renderer::submit([instance]() mutable {
-			// HZ_CORE_WARN("[VulkanPipeline] Creating pipeline {0}", instance->spec.DebugName);
+			CORE_INFO("[VulkanPipeline] Creating pipeline {0}", instance->spec.debug_name);
 
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-			CORE_ASSERT(instance->spec.shader, "");
+			core_assert_bool(instance->spec.shader);
 			Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(instance->spec.shader);
 			Reference<VulkanFramebuffer> framebuffer = instance->spec.render_pass->get_specification().target_framebuffer.as<VulkanFramebuffer>();
 
@@ -136,7 +135,7 @@ namespace ForgottenEngine {
 			pPipelineLayoutCreateInfo.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
 			pPipelineLayoutCreateInfo.pPushConstantRanges = vulkanPushConstantRanges.data();
 
-			VK_CHECK(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &instance->pipeline_layout));
+			vk_check(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &instance->pipeline_layout));
 
 			// Create the graphics pipeline used in this example
 			// Vulkan uses the concept of rendering pipelines to encapsulate fixed states, replacing OpenGL's complex
@@ -221,7 +220,7 @@ namespace ForgottenEngine {
 						break;
 
 					default:
-						CORE_VERIFY_BOOL(false);
+						core_verify_bool(false);
 					}
 				}
 			}
@@ -329,10 +328,10 @@ namespace ForgottenEngine {
 			// What is this pipeline cache?
 			VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 			pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-			VK_CHECK(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &instance->pipeline_cache));
+			vk_check(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &instance->pipeline_cache));
 
 			// Create rendering pipeline using the specified states
-			VK_CHECK(vkCreateGraphicsPipelines(device, instance->pipeline_cache, 1, &pipelineCreateInfo, nullptr, &instance->pipeline));
+			vk_check(vkCreateGraphicsPipelines(device, instance->pipeline_cache, 1, &pipelineCreateInfo, nullptr, &instance->pipeline));
 
 			// Shader modules are no longer needed once the graphics pipeline has been created
 			// vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
@@ -355,7 +354,7 @@ namespace ForgottenEngine {
 		Reference<VulkanShader> vulkanShader = Reference<VulkanShader>(spec.shader);
 		Reference<VulkanUniformBuffer> vulkanUniformBuffer = ub.as<VulkanUniformBuffer>();
 
-		CORE_ASSERT(descriptor_sets.descriptor_sets.size() > set, "");
+		core_assert(descriptor_sets.descriptor_sets.size() > set, "");
 
 		VkWriteDescriptorSet writeDescriptorSet = {};
 		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -370,7 +369,7 @@ namespace ForgottenEngine {
 		vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 
 		vulkanShader = Reference<VulkanShader>(spec.shader);
-		CORE_ASSERT(descriptor_sets.descriptor_sets.size() > set, "");
+		core_assert(descriptor_sets.descriptor_sets.size() > set, "");
 
 		writeDescriptorSet = {};
 		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

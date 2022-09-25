@@ -9,15 +9,15 @@
 #include "Logger.hpp"
 #include "vulkan/vulkan.h"
 
-#include <Common.hpp>
-#include <Logger.hpp>
-#include <Memory.hpp>
 #include <algorithm>
 #include <array>
+#include <Common.hpp>
 #include <events/Event.hpp>
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <Logger.hpp>
+#include <Memory.hpp>
 #include <memory>
 #include <random>
 #include <set>

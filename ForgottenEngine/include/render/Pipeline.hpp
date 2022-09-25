@@ -55,7 +55,7 @@ namespace ForgottenEngine {
 		virtual PipelineSpecification& get_specification() = 0;
 		virtual const PipelineSpecification& get_specification() const = 0;
 
-		virtual void invalidate() = 0;
+		virtual void invalidate() {};
 
 		// TEMP: remove this when render command buffers are a thing
 		virtual void bind() = 0;

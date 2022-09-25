@@ -15,6 +15,7 @@
 #include "render/UniformBuffer.hpp"
 #include "render/UniformBufferSet.hpp"
 #include "render/VertexBuffer.hpp"
+#include "vulkan/compiler/VulkanShaderCompiler.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanFramebuffer.hpp"
 #include "vulkan/VulkanIndexBuffer.hpp"
@@ -22,7 +23,6 @@
 #include "vulkan/VulkanRenderCommandBuffer.hpp"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanVertexBuffer.hpp"
-#include "vulkan/compiler/VulkanShaderCompiler.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -34,80 +34,80 @@ namespace ForgottenEngine {
 			VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
 			VkImageSubresourceRange subresourceRange)
 		{
-			VkImageMemoryBarrier imageMemoryBarrier {};
-			imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			VkImageMemoryBarrier image_memory_barrier {};
+			image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
-			imageMemoryBarrier.srcAccessMask = srcAccessMask;
-			imageMemoryBarrier.dstAccessMask = dstAccessMask;
-			imageMemoryBarrier.oldLayout = oldImageLayout;
-			imageMemoryBarrier.newLayout = newImageLayout;
-			imageMemoryBarrier.image = image;
-			imageMemoryBarrier.subresourceRange = subresourceRange;
+			image_memory_barrier.srcAccessMask = srcAccessMask;
+			image_memory_barrier.dstAccessMask = dstAccessMask;
+			image_memory_barrier.oldLayout = oldImageLayout;
+			image_memory_barrier.newLayout = newImageLayout;
+			image_memory_barrier.image = image;
+			image_memory_barrier.subresourceRange = subresourceRange;
 
-			vkCmdPipelineBarrier(cmdbuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+			vkCmdPipelineBarrier(cmdbuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &image_memory_barrier);
 		}
 
-		void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageLayout oldImageLayout, VkImageLayout newImageLayout,
-			VkImageSubresourceRange subresourceRange, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask)
+		void set_image_layout(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_image_layout, VkImageLayout new_image_layout,
+			VkImageSubresourceRange subresource_range, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask)
 		{
 			// Create an image barrier object
-			VkImageMemoryBarrier imageMemoryBarrier = {};
-			imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			imageMemoryBarrier.oldLayout = oldImageLayout;
-			imageMemoryBarrier.newLayout = newImageLayout;
-			imageMemoryBarrier.image = image;
-			imageMemoryBarrier.subresourceRange = subresourceRange;
+			VkImageMemoryBarrier image_memory_barrier = {};
+			image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			image_memory_barrier.oldLayout = old_image_layout;
+			image_memory_barrier.newLayout = new_image_layout;
+			image_memory_barrier.image = image;
+			image_memory_barrier.subresourceRange = subresource_range;
 
 			// Source layouts (old)
 			// Source access mask controls actions that have to be finished on the old layout
 			// before it will be transitioned to the new layout
-			switch (oldImageLayout) {
+			switch (old_image_layout) {
 			case VK_IMAGE_LAYOUT_UNDEFINED:
 				// Image layout is undefined (or does not matter)
 				// Only valid as initial layout
 				// No flags required, listed only for completeness
-				imageMemoryBarrier.srcAccessMask = 0;
+				image_memory_barrier.srcAccessMask = 0;
 				break;
 
 			case VK_IMAGE_LAYOUT_PREINITIALIZED:
 				// Image is preinitialized
 				// Only valid as initial layout for linear images, preserves memory contents
 				// Make sure host writes have been finished
-				imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+				image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 				// Image is a color attachment
 				// Make sure any writes to the color buffer have been finished
-				imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+				image_memory_barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 				// Image is a depth/stencil attachment
 				// Make sure any writes to the depth/stencil buffer have been finished
-				imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				image_memory_barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
 				// Image is a transfer source
 				// Make sure any reads from the image have been finished
-				imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+				image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 				// Image is a transfer destination
 				// Make sure any writes to the image have been finished
-				imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 				// Image is read by a shader
 				// Make sure any shader reads from the image have been finished
-				imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				image_memory_barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				break;
 			default:
 				// Other source layouts aren't handled (yet)
@@ -116,38 +116,38 @@ namespace ForgottenEngine {
 
 			// Target layouts (new)
 			// Destination access mask controls the dependency for the new image layout
-			switch (newImageLayout) {
+			switch (new_image_layout) {
 			case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 				// Image will be used as a transfer destination
 				// Make sure any writes to the image have been finished
-				imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
 				// Image will be used as a transfer source
 				// Make sure any reads from the image have been finished
-				imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+				image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
 				// Image will be used as a color attachment
 				// Make sure any writes to the color buffer have been finished
-				imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+				image_memory_barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 				// Image layout will be used as a depth/stencil attachment
 				// Make sure any writes to depth/stencil buffer have been finished
-				imageMemoryBarrier.dstAccessMask = imageMemoryBarrier.dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				image_memory_barrier.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 				break;
 
 			case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 				// Image will be read in a shader (sampler, input attachment)
 				// Make sure any writes to the image have been finished
-				if (imageMemoryBarrier.srcAccessMask == 0) {
-					imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+				if (image_memory_barrier.srcAccessMask == 0) {
+					image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
 				}
-				imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				image_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 				break;
 			default:
 				// Other source layouts aren't handled (yet)
@@ -155,24 +155,24 @@ namespace ForgottenEngine {
 			}
 
 			// Put barrier inside setup command buffer
-			vkCmdPipelineBarrier(cmdbuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+			vkCmdPipelineBarrier(command_buffer, src_stage_mask, dst_stage_mask, 0, 0, nullptr, 0, nullptr, 1, &image_memory_barrier);
 		}
 
-		void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout,
-			VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask)
+		void set_image_layout(VkCommandBuffer command_buffer, VkImage image, VkImageAspectFlags aspect_mask, VkImageLayout old_image_layout,
+			VkImageLayout new_image_layout, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask)
 		{
-			VkImageSubresourceRange subresourceRange = {};
-			subresourceRange.aspectMask = aspectMask;
-			subresourceRange.baseMipLevel = 0;
-			subresourceRange.levelCount = 1;
-			subresourceRange.layerCount = 1;
-			set_image_layout(cmdbuffer, image, oldImageLayout, newImageLayout, subresourceRange, srcStageMask, dstStageMask);
+			VkImageSubresourceRange subresource_range = {};
+			subresource_range.aspectMask = aspect_mask;
+			subresource_range.baseMipLevel = 0;
+			subresource_range.levelCount = 1;
+			subresource_range.layerCount = 1;
+			set_image_layout(command_buffer, image, old_image_layout, new_image_layout, subresource_range, src_stage_mask, dst_stage_mask);
 		}
 	} // namespace Utils
 
-	static const char* vulkan_vendor_to_identifier_string(uint32_t vendorID)
+	static const char* vulkan_vendor_to_identifier_string(uint32_t vendor_id)
 	{
-		switch (vendorID) {
+		switch (vendor_id) {
 		case 0x10DE:
 			return "NVIDIA";
 		case 0x1002:
@@ -248,23 +248,23 @@ namespace ForgottenEngine {
 		}
 
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
-		Reference<VulkanShader> vulkanShader = vulkan_material->get_shader().as<VulkanShader>();
-		if (vulkanShader->has_descriptor_set(0)) {
-			const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
-			if (!shaderDescriptorSets.empty()) {
-				for (auto&& [binding, shaderUB] : shaderDescriptorSets[0].uniform_buffers) {
+		Reference<VulkanShader> vulkan_shader = vulkan_material->get_shader().as<VulkanShader>();
+		if (vulkan_shader->has_descriptor_set(0)) {
+			const auto& shader_descriptor_sets = vulkan_shader->get_shader_descriptor_sets();
+			if (!shader_descriptor_sets.empty()) {
+				for (auto&& [binding, shaderUB] : shader_descriptor_sets[0].uniform_buffers) {
 					auto& write_descriptors = renderer_data().uniform_buffer_write_descriptor_cache[ubs.raw()][shader_hash];
 					write_descriptors.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
-						Reference<VulkanUniformBuffer> uniformBuffer = ubs->get(binding, 0, frame); // set = 0 for now
+						Reference<VulkanUniformBuffer> uniform_buffer = ubs->get(binding, 0, frame); // set = 0 for now
 
-						VkWriteDescriptorSet writeDescriptorSet = {};
-						writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-						writeDescriptorSet.descriptorCount = 1;
-						writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-						writeDescriptorSet.pBufferInfo = &uniformBuffer->get_descriptor_buffer_info();
-						writeDescriptorSet.dstBinding = uniformBuffer->get_binding();
-						write_descriptors[frame].push_back(writeDescriptorSet);
+						VkWriteDescriptorSet write_descriptor_set = {};
+						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+						write_descriptor_set.descriptorCount = 1;
+						write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+						write_descriptor_set.pBufferInfo = &uniform_buffer->get_descriptor_buffer_info();
+						write_descriptor_set.dstBinding = uniform_buffer->get_binding();
+						write_descriptors[frame].push_back(write_descriptor_set);
 					}
 				}
 			}
@@ -288,23 +288,23 @@ namespace ForgottenEngine {
 		}
 
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
-		Reference<VulkanShader> vulkanShader = vulkan_material->get_shader().as<VulkanShader>();
-		if (vulkanShader->has_descriptor_set(0)) {
-			const auto& shaderDescriptorSets = vulkanShader->get_shader_descriptor_sets();
-			if (!shaderDescriptorSets.empty()) {
-				for (auto&& [binding, shaderSB] : shaderDescriptorSets[0].storage_buffers) {
+		Reference<VulkanShader> vulkan_shader = vulkan_material->get_shader().as<VulkanShader>();
+		if (vulkan_shader->has_descriptor_set(0)) {
+			const auto& shader_descriptor_sets = vulkan_shader->get_shader_descriptor_sets();
+			if (!shader_descriptor_sets.empty()) {
+				for (auto&& [binding, shaderSB] : shader_descriptor_sets[0].storage_buffers) {
 					auto& write_descriptors = renderer_data().storage_buffer_write_descriptor_cache[sbs.raw()][shader_hash];
 					write_descriptors.resize(frames_in_flight);
 					for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
-						Reference<VulkanStorageBuffer> storageBuffer = sbs->get(binding, 0, frame); // set = 0 for now
+						Reference<VulkanStorageBuffer> storage_buffer = sbs->get(binding, 0, frame); // set = 0 for now
 
-						VkWriteDescriptorSet writeDescriptorSet = {};
-						writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-						writeDescriptorSet.descriptorCount = 1;
-						writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-						writeDescriptorSet.pBufferInfo = &storageBuffer->get_descriptor_buffer_info();
-						writeDescriptorSet.dstBinding = storageBuffer->get_binding();
-						write_descriptors[frame].push_back(writeDescriptorSet);
+						VkWriteDescriptorSet write_descriptor_set = {};
+						write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+						write_descriptor_set.descriptorCount = 1;
+						write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+						write_descriptor_set.pBufferInfo = &storage_buffer->get_descriptor_buffer_info();
+						write_descriptor_set.dstBinding = storage_buffer->get_binding();
+						write_descriptors[frame].push_back(write_descriptor_set);
 					}
 				}
 			}
@@ -342,7 +342,7 @@ namespace ForgottenEngine {
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 			uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 			for (uint32_t i = 0; i < frames_in_flight; i++) {
-				VK_CHECK(vkCreateDescriptorPool(device, &pool_info, nullptr, &renderer_data().descriptor_pools[i]));
+				vk_check(vkCreateDescriptorPool(device, &pool_info, nullptr, &renderer_data().descriptor_pools[i]));
 				renderer_data().descriptor_pool_allocation_count[i] = 0;
 			}
 		});
@@ -398,8 +398,8 @@ namespace ForgottenEngine {
 
 			// Reset descriptor pools here
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
-			uint32_t bufferIndex = swap_chain.get_current_buffer_index();
-			vkResetDescriptorPool(device, renderer_data().descriptor_pools[bufferIndex], 0);
+			uint32_t buffer_index = swap_chain.get_current_buffer_index();
+			vkResetDescriptorPool(device, renderer_data().descriptor_pools[buffer_index], 0);
 			memset(renderer_data().descriptor_pool_allocation_count.data(), 0,
 				renderer_data().descriptor_pool_allocation_count.size() * sizeof(uint32_t));
 
@@ -409,14 +409,14 @@ namespace ForgottenEngine {
 
 	void VulkanRenderer::end_frame() { }
 
-	void VulkanRenderer::begin_render_pass(Reference<RenderCommandBuffer> command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
+	void VulkanRenderer::begin_render_pass(Reference<RenderCommandBuffer> in_command_buffer, Reference<RenderPass> render_pass, bool explicit_clear)
 	{
-		Renderer::submit([command_buffer, render_pass, explicit_clear]() {
-			VkCommandBuffer commandBuffer = command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
+		Renderer::submit([in_command_buffer, render_pass, explicit_clear]() {
+			VkCommandBuffer command_buffer = in_command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 			auto& fb = render_pass->get_specification().target_framebuffer;
 			Reference<VulkanFramebuffer> framebuffer = fb.as<VulkanFramebuffer>();
-			const auto& fbSpec = framebuffer->get_specification();
+			const auto& fb_spec = framebuffer->get_specification();
 
 			uint32_t width = framebuffer->get_width();
 			uint32_t height = framebuffer->get_height();
@@ -425,29 +425,29 @@ namespace ForgottenEngine {
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 
-			VkRenderPassBeginInfo renderPassBeginInfo = {};
-			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassBeginInfo.pNext = nullptr;
-			renderPassBeginInfo.renderPass = framebuffer->get_render_pass();
-			renderPassBeginInfo.renderArea.offset.x = 0;
-			renderPassBeginInfo.renderArea.offset.y = 0;
-			renderPassBeginInfo.renderArea.extent.width = width;
-			renderPassBeginInfo.renderArea.extent.height = height;
+			VkRenderPassBeginInfo render_pass_begin_info = {};
+			render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			render_pass_begin_info.pNext = nullptr;
+			render_pass_begin_info.renderPass = framebuffer->get_render_pass();
+			render_pass_begin_info.renderArea.offset.x = 0;
+			render_pass_begin_info.renderArea.offset.y = 0;
+			render_pass_begin_info.renderArea.extent.width = width;
+			render_pass_begin_info.renderArea.extent.height = height;
 
 			if (framebuffer->get_specification().swapchain_target) {
 				VulkanSwapchain& swap_chain = Application::the().get_window().get_swapchain();
 				width = swap_chain.get_width();
 				height = swap_chain.get_height();
-				renderPassBeginInfo.framebuffer = swap_chain.get_current_framebuffer();
+				render_pass_begin_info.framebuffer = swap_chain.get_current_framebuffer();
 
 				viewport.x = 0.0f;
 				viewport.y = (float)height;
 				viewport.width = (float)width;
-				viewport.height = -(float)height;
+				viewport.height = (float)height;
 			} else {
 				width = framebuffer->get_width();
 				height = framebuffer->get_height();
-				renderPassBeginInfo.framebuffer = framebuffer->get_vulkan_framebuffer();
+				render_pass_begin_info.framebuffer = framebuffer->get_vulkan_framebuffer();
 
 				viewport.x = 0.0f;
 				viewport.y = 0.0f;
@@ -456,23 +456,23 @@ namespace ForgottenEngine {
 			}
 
 			// TODO: Does our framebuffer have a depth attachment?
-			const auto& clearValues = framebuffer->get_vulkan_clear_values();
-			renderPassBeginInfo.clearValueCount = (uint32_t)clearValues.size();
-			renderPassBeginInfo.pClearValues = clearValues.data();
+			const auto& clear_values = framebuffer->get_vulkan_clear_values();
+			render_pass_begin_info.clearValueCount = (uint32_t)clear_values.size();
+			render_pass_begin_info.pClearValues = clear_values.data();
 
-			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 			if (explicit_clear) {
 				const auto colour_attachment_count = (uint32_t)framebuffer->get_color_attachment_count();
 				const uint32_t total_attachment_count = colour_attachment_count + (framebuffer->has_depth_attachment() ? 1 : 0);
-				CORE_ASSERT_BOOL(clearValues.size() == total_attachment_count);
+				core_assert_bool(clear_values.size() == total_attachment_count);
 
 				std::vector<VkClearAttachment> attachments(total_attachment_count);
 				std::vector<VkClearRect> clear_rects(total_attachment_count);
 				for (uint32_t i = 0; i < colour_attachment_count; i++) {
 					attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 					attachments[i].colorAttachment = i;
-					attachments[i].clearValue = clearValues[i];
+					attachments[i].clearValue = clear_values[i];
 
 					clear_rects[i].rect.offset = { (int32_t)0, (int32_t)0 };
 					clear_rects[i].rect.extent = { width, height };
@@ -482,18 +482,18 @@ namespace ForgottenEngine {
 
 				if (framebuffer->has_depth_attachment()) {
 					attachments[colour_attachment_count].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-					attachments[colour_attachment_count].clearValue = clearValues[colour_attachment_count];
+					attachments[colour_attachment_count].clearValue = clear_values[colour_attachment_count];
 					clear_rects[colour_attachment_count].rect.offset = { (int32_t)0, (int32_t)0 };
 					clear_rects[colour_attachment_count].rect.extent = { width, height };
 					clear_rects[colour_attachment_count].baseArrayLayer = 0;
 					clear_rects[colour_attachment_count].layerCount = 1;
 				}
 
-				vkCmdClearAttachments(commandBuffer, total_attachment_count, attachments.data(), total_attachment_count, clear_rects.data());
+				vkCmdClearAttachments(command_buffer, total_attachment_count, attachments.data(), total_attachment_count, clear_rects.data());
 			}
 
 			// Update dynamic viewport state
-			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
 			// Update dynamic scissor state
 			VkRect2D scissor = {};
@@ -501,7 +501,7 @@ namespace ForgottenEngine {
 			scissor.extent.height = height;
 			scissor.offset.x = 0;
 			scissor.offset.y = 0;
-			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 		});
 	}
 
@@ -591,11 +591,11 @@ namespace ForgottenEngine {
 
 	void VulkanRenderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer)
 	{
-		Renderer::submit([command_buffer]() {
-			uint32_t frameIndex = Renderer::get_current_frame_index();
-			VkCommandBuffer commandBuffer = command_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
+		Renderer::submit([cmd_buffer = command_buffer]() {
+			Renderer::get_current_frame_index();
+			VkCommandBuffer command_buffer = cmd_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
-			vkCmdEndRenderPass(commandBuffer);
+			vkCmdEndRenderPass(command_buffer);
 		});
 	}
 
@@ -605,13 +605,13 @@ namespace ForgottenEngine {
 		if (ubs) {
 			auto write_descriptors = rt_retrieve_or_create_uniform_buffer_write_descriptors(ubs, material);
 			if (sbs) {
-				const auto& storageBufferWriteDescriptors = rt_retrieve_or_create_storage_buffer_write_descriptors(sbs, material);
+				const auto& storage_buffer_write_descriptors = rt_retrieve_or_create_storage_buffer_write_descriptors(sbs, material);
 
 				const uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 				for (uint32_t frame = 0; frame < frames_in_flight; frame++) {
-					write_descriptors[frame].reserve(write_descriptors[frame].size() + storageBufferWriteDescriptors[frame].size());
-					write_descriptors[frame].insert(
-						write_descriptors[frame].end(), storageBufferWriteDescriptors[frame].begin(), storageBufferWriteDescriptors[frame].end());
+					write_descriptors[frame].reserve(write_descriptors[frame].size() + storage_buffer_write_descriptors[frame].size());
+					write_descriptors[frame].insert(write_descriptors[frame].end(), storage_buffer_write_descriptors[frame].begin(),
+						storage_buffer_write_descriptors[frame].end());
 				}
 			}
 			material->rt_update_for_rendering(write_descriptors);
@@ -626,10 +626,11 @@ namespace ForgottenEngine {
 		alloc_info.descriptorPool = renderer_data().descriptor_pools[buffer_index];
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 		VkDescriptorSet result;
-		VK_CHECK(vkAllocateDescriptorSets(device, &alloc_info, &result));
+		vk_check(vkAllocateDescriptorSets(device, &alloc_info, &result));
 		renderer_data().descriptor_pool_allocation_count[buffer_index] += alloc_info.descriptorSetCount;
 		return result;
 	}
+
 	void VulkanRenderer::submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,
 		const Reference<UniformBufferSet>& ubs, const Reference<Material>& material)
 	{

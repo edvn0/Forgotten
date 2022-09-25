@@ -2,8 +2,8 @@
 
 #include "Assets.hpp"
 
-#include <Windows.h>
 #include <regex>
+#include <Windows.h>
 
 namespace ForgottenEngine {
 
@@ -18,7 +18,7 @@ namespace ForgottenEngine {
 
 	Path Assets::get_base_directory()
 	{
-		CORE_ASSERT_BOOL(initialized);
+		core_assert_bool(initialized);
 		return working_directory;
 	}
 

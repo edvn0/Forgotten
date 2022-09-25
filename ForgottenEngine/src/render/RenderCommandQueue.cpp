@@ -4,13 +4,13 @@
 
 namespace ForgottenEngine {
 
-	static constexpr auto COMMAND_QUEUE_SIZE = 10 * 1024 * 1024;
+	static constexpr auto command_queue_size = 10 * 1024 * 1024;
 
 	RenderCommandQueue::RenderCommandQueue()
 	{
-		command_buffer = hnew uint8_t[COMMAND_QUEUE_SIZE]; // 10mb buffer
+		command_buffer = hnew uint8_t[command_queue_size]; // 10mb buffer
 		command_buffer_ptr = command_buffer;
-		memset(command_buffer, 0, COMMAND_QUEUE_SIZE);
+		memset(command_buffer, 0, command_queue_size);
 	}
 
 	RenderCommandQueue::~RenderCommandQueue() { delete[] command_buffer; }

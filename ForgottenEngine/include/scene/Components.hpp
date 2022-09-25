@@ -1,12 +1,12 @@
 #pragma once
 
-#include "UUID.hpp"
 #include "maths/Mathematics.hpp"
 #include "render/MaterialAsset.hpp"
 #include "render/Mesh.hpp"
 #include "render/SceneEnvironment.hpp"
 #include "render/Texture.hpp"
 #include "scene/SceneCamera.hpp"
+#include "UUID.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "Asset.hpp"

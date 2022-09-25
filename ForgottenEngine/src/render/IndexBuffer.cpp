@@ -16,7 +16,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanIndexBuffer>::create(data, size);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 	Reference<IndexBuffer> IndexBuffer::create(uint32_t size)
@@ -27,7 +27,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanIndexBuffer>::create(size);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

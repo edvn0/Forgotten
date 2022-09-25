@@ -47,7 +47,7 @@ namespace ForgottenEngine {
 			pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
 			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 			pool_info.pPoolSizes = pool_sizes;
-			VK_CHECK(vkCreateDescriptorPool(device->get_vulkan_device(), &pool_info, nullptr, &imgui_descriptor_pool));
+			vk_check(vkCreateDescriptorPool(device->get_vulkan_device(), &pool_info, nullptr, &imgui_descriptor_pool));
 
 			// Setup Platform/Renderer bindings
 			ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -74,11 +74,11 @@ namespace ForgottenEngine {
 
 			// Upload Fonts
 			{
-				VkCommandBuffer commandBuffer = vulkan_context->get_device()->get_command_buffer(true);
-				ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-				vulkan_context->get_device()->flush_command_buffer(commandBuffer);
+				VkCommandBuffer command_buffer = vulkan_context->get_device()->get_command_buffer(true);
+				ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+				vulkan_context->get_device()->flush_command_buffer(command_buffer);
 
-				VK_CHECK(vkDeviceWaitIdle(device->get_vulkan_device()));
+				vk_check(vkDeviceWaitIdle(device->get_vulkan_device()));
 				ImGui_ImplVulkan_DestroyFontUploadObjects();
 			}
 
@@ -94,7 +94,7 @@ namespace ForgottenEngine {
 		Renderer::submit([]() {
 			auto device = VulkanContext::get_current_device();
 
-			VK_CHECK(vkDeviceWaitIdle(device->get_vulkan_device()));
+			vk_check(vkDeviceWaitIdle(device->get_vulkan_device()));
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 			ImGui::DestroyContext();
@@ -110,11 +110,9 @@ namespace ForgottenEngine {
 
 	void ImGuiLayer::on_event(Event& e)
 	{
-		if (block) {
-			auto& io = ImGui::GetIO();
-			e.handled |= e.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
-			e.handled |= e.is_in_category(EventCategoryKeyboard) & io.WantCaptureKeyboard;
-		}
+		auto& io = ImGui::GetIO();
+		e.handled |= e.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
+		e.handled |= e.is_in_category(EventCategoryKeyboard) & io.WantCaptureKeyboard;
 	}
 
 	void ImGuiLayer::begin()
@@ -132,14 +130,14 @@ namespace ForgottenEngine {
 
 		auto& swapchain = Application::the().get_window().get_swapchain();
 
-		VkClearValue clearValues[2];
-		clearValues[0].color = clear_colour;
-		clearValues[1].depthStencil = { 1.0f, 0 };
+		std::array<VkClearValue, 2> clear_values {};
+		clear_values[0].color = clear_colour;
+		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
 
 		uint32_t width = swapchain.get_width();
 		uint32_t height = swapchain.get_height();
 
-		uint32_t commandBufferIndex = swapchain.get_current_buffer_index();
+		uint32_t command_buffer_index = swapchain.get_current_buffer_index();
 
 		VkCommandBufferBeginInfo cmd_bbi = {};
 		cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -147,63 +145,63 @@ namespace ForgottenEngine {
 		cmd_bbi.pNext = nullptr;
 
 		VkCommandBuffer draw_command_buffer = swapchain.get_current_drawbuffer();
-		VK_CHECK(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
+		vk_check(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
 
-		VkRenderPassBeginInfo renderPassBeginInfo = {};
-		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassBeginInfo.pNext = nullptr;
-		renderPassBeginInfo.renderPass = swapchain.get_render_pass();
-		renderPassBeginInfo.renderArea.offset.x = 0;
-		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = width;
-		renderPassBeginInfo.renderArea.extent.height = height;
-		renderPassBeginInfo.clearValueCount = 2; // Color + depth
-		renderPassBeginInfo.pClearValues = clearValues;
-		renderPassBeginInfo.framebuffer = swapchain.get_current_framebuffer();
+		VkRenderPassBeginInfo render_pass_begin_info = {};
+		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		render_pass_begin_info.pNext = nullptr;
+		render_pass_begin_info.renderPass = swapchain.get_render_pass();
+		render_pass_begin_info.renderArea.offset.x = 0;
+		render_pass_begin_info.renderArea.offset.y = 0;
+		render_pass_begin_info.renderArea.extent.width = width;
+		render_pass_begin_info.renderArea.extent.height = height;
+		render_pass_begin_info.clearValueCount = clear_values.size();
+		render_pass_begin_info.pClearValues = clear_values.data();
+		render_pass_begin_info.framebuffer = swapchain.get_current_framebuffer();
 
-		vkCmdBeginRenderPass(draw_command_buffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		VkCommandBufferInheritanceInfo inheritanceInfo = {};
-		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-		inheritanceInfo.renderPass = swapchain.get_render_pass();
-		inheritanceInfo.framebuffer = swapchain.get_current_framebuffer();
+		VkCommandBufferInheritanceInfo inheritance_info = {};
+		inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+		inheritance_info.renderPass = swapchain.get_render_pass();
+		inheritance_info.framebuffer = swapchain.get_current_framebuffer();
 
 		VkCommandBufferBeginInfo cbi = {};
 		cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		cbi.pInheritanceInfo = &inheritanceInfo;
+		cbi.pInheritanceInfo = &inheritance_info;
 
-		VK_CHECK(vkBeginCommandBuffer(imgui_command_buffers[commandBufferIndex], &cbi));
+		vk_check(vkBeginCommandBuffer(imgui_command_buffers[command_buffer_index], &cbi));
 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = (float)height;
-		viewport.height = -(float)height;
+		viewport.height = (float)height;
 		viewport.width = (float)width;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(imgui_command_buffers[commandBufferIndex], 0, 1, &viewport);
+		vkCmdSetViewport(imgui_command_buffers[command_buffer_index], 0, 1, &viewport);
 
 		VkRect2D scissor = {};
 		scissor.extent.width = width;
 		scissor.extent.height = height;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		vkCmdSetScissor(imgui_command_buffers[commandBufferIndex], 0, 1, &scissor);
+		vkCmdSetScissor(imgui_command_buffers[command_buffer_index], 0, 1, &scissor);
 
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_command_buffers[commandBufferIndex]);
+		ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_command_buffers[command_buffer_index]);
 
-		VK_CHECK(vkEndCommandBuffer(imgui_command_buffers[commandBufferIndex]));
+		vk_check(vkEndCommandBuffer(imgui_command_buffers[command_buffer_index]));
 
 		std::vector<VkCommandBuffer> buffers;
-		buffers.push_back(imgui_command_buffers[commandBufferIndex]);
+		buffers.push_back(imgui_command_buffers[command_buffer_index]);
 
 		vkCmdExecuteCommands(draw_command_buffer, uint32_t(buffers.size()), buffers.data());
 
 		vkCmdEndRenderPass(draw_command_buffer);
 
-		VK_CHECK(vkEndCommandBuffer(draw_command_buffer));
+		vk_check(vkEndCommandBuffer(draw_command_buffer));
 
 		ImGuiIO& io = ImGui::GetIO();
 		// Update and Render additional Platform Windows

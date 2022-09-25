@@ -2,8 +2,8 @@
 
 #include "serialize/StreamReader.hpp"
 #include "serialize/StreamWriter.hpp"
-#include "vulkan/VulkanAllocator.hpp"
 #include "vulkan/vulkan.h"
+#include "vulkan/VulkanAllocator.hpp"
 
 #include <string>
 #include <unordered_map>
