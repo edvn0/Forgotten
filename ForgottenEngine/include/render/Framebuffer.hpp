@@ -39,8 +39,8 @@ namespace ForgottenEngine {
 
 	struct FramebufferSpecification {
 		float scale = 1.0f;
-		uint32_t width = 0;
-		uint32_t height = 0;
+		uint32_t width = 1280;
+		uint32_t height = 720;
 		glm::vec4 clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 		float depth_clear_value = 0.0f;
 		bool clear_colour_on_load = true;
@@ -85,14 +85,14 @@ namespace ForgottenEngine {
 		virtual void resize(uint32_t width, uint32_t height, bool forceRecreate) = 0;
 		virtual void add_resize_callback(const std::function<void(Reference<Framebuffer>)>& func) = 0;
 
-		virtual void bind_texture(uint32_t attachmentIndex, uint32_t slot) const = 0;
+		virtual void bind_texture(uint32_t attachment_index, uint32_t slot) const = 0;
 
 		virtual uint32_t get_width() const = 0;
 		virtual uint32_t get_height() const = 0;
 
 		virtual RendererID get_renderer_id() const = 0;
 
-		virtual Reference<Image2D> get_image(uint32_t attachmentIndex) const = 0;
+		virtual Reference<Image2D> get_image(uint32_t attachment_index) const = 0;
 		virtual Reference<Image2D> get_depth_image() const = 0;
 
 		virtual const FramebufferSpecification& get_specification() const = 0;

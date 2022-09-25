@@ -126,7 +126,7 @@ namespace ForgottenEngine {
 
 		bool operator==(const Reference<T>& other) const { return instance == other.instance; }
 
-		bool operator!=(const Reference<T>& other) const { return !(*this == other); }
+		bool operator!=(const Reference<T>& other) const { return !(this->operator==(other)); }
 
 		bool equals_object(const Reference<T>& other)
 		{

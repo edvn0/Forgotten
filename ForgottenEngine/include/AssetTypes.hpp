@@ -67,7 +67,7 @@ namespace ForgottenEngine {
 			if (asset_type == "SoundGraphSound")
 				return AssetType::SoundGraphSound;
 
-			CORE_ASSERT(false, "Unknown Asset Type");
+			core_assert(false, "Unknown Asset Type");
 			return AssetType::None;
 		}
 
@@ -107,7 +107,7 @@ namespace ForgottenEngine {
 			case AssetType::SoundGraphSound:
 				return "SoundGraphSound";
 			default:
-				CORE_ASSERT(false, "Unknown Asset Type");
+				core_assert(false, "Unknown Asset Type");
 			}
 		}
 	} // namespace Utils

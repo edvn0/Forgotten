@@ -22,19 +22,19 @@ namespace ForgottenEngine {
 
 		template <typename T, typename... Args> T& AddComponent(Args&&... args)
 		{
-			CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
+			core_assert(!HasComponent<T>(), "Entity already has component!");
 			return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 		}
 
 		template <typename T> T& GetComponent()
 		{
-			CORE_ASSERT(HasComponent<T>(), "Entity doesn't have component!");
+			core_assert(HasComponent<T>(), "Entity doesn't have component!");
 			return m_Scene->m_Registry.get<T>(m_EntityHandle);
 		}
 
 		template <typename T> const T& GetComponent() const
 		{
-			CORE_ASSERT(HasComponent<T>(), "Entity doesn't have component!");
+			core_assert(HasComponent<T>(), "Entity doesn't have component!");
 			return m_Scene->m_Registry.get<T>(m_EntityHandle);
 		}
 
@@ -48,7 +48,7 @@ namespace ForgottenEngine {
 
 		template <typename T> void RemoveComponent()
 		{
-			CORE_ASSERT(HasComponent<T>(), "Entity doesn't have component!");
+			core_assert(HasComponent<T>(), "Entity doesn't have component!");
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 

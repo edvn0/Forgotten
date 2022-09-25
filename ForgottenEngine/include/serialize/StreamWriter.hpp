@@ -25,7 +25,7 @@ namespace ForgottenEngine {
 		template <typename T> void write_raw(const T& type)
 		{
 			bool success = write_data((char*)&type, sizeof(T));
-			CORE_ASSERT_BOOL(success);
+			core_assert_bool(success);
 		}
 
 		template <typename T> void write_object(const T& obj) { T::serialize(this, obj); }

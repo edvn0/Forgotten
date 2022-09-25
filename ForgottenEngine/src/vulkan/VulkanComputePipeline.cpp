@@ -67,7 +67,7 @@ namespace ForgottenEngine {
 			pipelineLayoutCreateInfo.pPushConstantRanges = vulkanPushConstantRanges.data();
 		}
 
-		VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &compute_layout));
+		vk_check(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &compute_layout));
 
 		VkComputePipelineCreateInfo computePipelineCreateInfo {};
 		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -79,8 +79,8 @@ namespace ForgottenEngine {
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 
-		VK_CHECK(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &compute_cache));
-		VK_CHECK(vkCreateComputePipelines(device, compute_cache, 1, &computePipelineCreateInfo, nullptr, &compute_pipeline));
+		vk_check(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &compute_cache));
+		vk_check(vkCreateComputePipelines(device, compute_cache, 1, &computePipelineCreateInfo, nullptr, &compute_pipeline));
 	}
 
 	void VulkanComputePipeline::execute(
@@ -105,7 +105,7 @@ namespace ForgottenEngine {
 			VkFenceCreateInfo fenceCreateInfo {};
 			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &compute_fence));
+			vk_check(vkCreateFence(device, &fenceCreateInfo, nullptr, &compute_fence));
 		}
 
 		// Make sure previous compute shader in pipeline has completed (TODO: this shouldn't be needed for all cases)
@@ -116,7 +116,7 @@ namespace ForgottenEngine {
 		computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		computeSubmitInfo.commandBufferCount = 1;
 		computeSubmitInfo.pCommandBuffers = &computeCommandBuffer;
-		VK_CHECK(vkQueueSubmit(computeQueue, 1, &computeSubmitInfo, compute_fence));
+		vk_check(vkQueueSubmit(computeQueue, 1, &computeSubmitInfo, compute_fence));
 
 		// Wait for execution of compute shader to complete
 		// Currently this is here for "safety"
@@ -127,7 +127,7 @@ namespace ForgottenEngine {
 
 	void VulkanComputePipeline::begin(Reference<RenderCommandBuffer> renderCommandBuffer)
 	{
-		CORE_ASSERT(!active_command_buffer, "");
+		core_assert(!active_command_buffer, "");
 
 		if (renderCommandBuffer) {
 			uint32_t frameIndex = Renderer::get_current_frame_index();
@@ -142,7 +142,7 @@ namespace ForgottenEngine {
 
 	void VulkanComputePipeline::dispatch(VkDescriptorSet descriptorSet, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const
 	{
-		CORE_ASSERT(active_command_buffer, "");
+		core_assert(active_command_buffer, "");
 
 		vkCmdBindDescriptorSets(active_command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_layout, 0, 1, &descriptorSet, 0, 0);
 		vkCmdDispatch(active_command_buffer, groupCountX, groupCountY, groupCountZ);
@@ -150,7 +150,7 @@ namespace ForgottenEngine {
 
 	void VulkanComputePipeline::end()
 	{
-		CORE_ASSERT(active_command_buffer, "");
+		core_assert(active_command_buffer, "");
 
 		VkDevice device = get_device()->get_vulkan_device();
 		if (!using_graphics_queue) {
@@ -162,7 +162,7 @@ namespace ForgottenEngine {
 				VkFenceCreateInfo fenceCreateInfo {};
 				fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 				fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-				VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &compute_fence));
+				vk_check(vkCreateFence(device, &fenceCreateInfo, nullptr, &compute_fence));
 			}
 			vkWaitForFences(device, 1, &compute_fence, VK_TRUE, UINT64_MAX);
 			vkResetFences(device, 1, &compute_fence);
@@ -171,7 +171,7 @@ namespace ForgottenEngine {
 			computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			computeSubmitInfo.commandBufferCount = 1;
 			computeSubmitInfo.pCommandBuffers = &active_command_buffer;
-			VK_CHECK(vkQueueSubmit(computeQueue, 1, &computeSubmitInfo, compute_fence));
+			vk_check(vkQueueSubmit(computeQueue, 1, &computeSubmitInfo, compute_fence));
 
 			// Wait for execution of compute shader to complete
 			// Currently this is here for "safety"

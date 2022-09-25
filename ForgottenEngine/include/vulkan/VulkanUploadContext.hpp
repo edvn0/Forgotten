@@ -23,18 +23,18 @@ namespace ForgottenEngine {
 			// tell vulkan that
 			VkCommandBufferBeginInfo bi = VI::Upload::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-			VK_CHECK(vkBeginCommandBuffer(cmd, &bi));
+			vk_check(vkBeginCommandBuffer(cmd, &bi));
 
 			// execute the function
 			func(cmd);
 
-			VK_CHECK(vkEndCommandBuffer(cmd));
+			vk_check(vkEndCommandBuffer(cmd));
 
 			VkSubmitInfo submit = VI::Upload::submit_info(&cmd);
 
 			// submit command buffer to the queue and execute it.
 			//  _uploadFence will now block until the graphic commands finish execution
-			VK_CHECK(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submit, upload_fence));
+			vk_check(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &submit, upload_fence));
 
 			vkWaitForFences(VulkanContext::get_current_device()->get_vulkan_device(), 1, &upload_fence, true, 9999999999);
 			vkResetFences(VulkanContext::get_current_device()->get_vulkan_device(), 1, &upload_fence);

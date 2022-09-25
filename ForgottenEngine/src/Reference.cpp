@@ -15,21 +15,21 @@ namespace ForgottenEngine {
 		void add_to_live_references(void* instance)
 		{
 			std::scoped_lock<std::mutex> lock(live_reference_mutex);
-			CORE_ASSERT(instance != nullptr, "No instance");
+			core_assert(instance != nullptr, "No instance");
 			live_references.insert(instance);
 		}
 
 		void remove_from_live_references(void* instance)
 		{
 			std::scoped_lock<std::mutex> lock(live_reference_mutex);
-			CORE_ASSERT(instance != nullptr, "No instance");
-			CORE_ASSERT(is_in_map(live_references, instance), "Could not find instance");
+			core_assert(instance != nullptr, "No instance");
+			core_assert(is_in_map(live_references, instance), "Could not find instance");
 			live_references.erase(instance);
 		}
 
 		bool is_live(void* instance)
 		{
-			CORE_ASSERT(instance != nullptr, "No instance");
+			core_assert(instance != nullptr, "No instance");
 			return live_references.find(instance) != live_references.end();
 		}
 	} // namespace RefUtils

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "VulkanRenderPass.hpp"
 #include "render/Framebuffer.hpp"
+#include "VulkanRenderPass.hpp"
 
 namespace ForgottenEngine {
 
@@ -16,14 +16,14 @@ namespace ForgottenEngine {
 
 		void bind() const override {};
 		void unbind() const override {};
-		void resize(uint32_t width, uint32_t height, bool forceRecreate) override;
+		void resize(uint32_t width, uint32_t height, bool force_recreate) override;
 		void add_resize_callback(const std::function<void(Reference<Framebuffer>)>& func) override;
-		void bind_texture(uint32_t attachmentIndex, uint32_t slot) const override {};
+		void bind_texture(uint32_t attachment_index, uint32_t slot) const override {};
 		uint32_t get_width() const override { return width; };
 		uint32_t get_height() const override { return height; };
 		RendererID get_renderer_id() const override { return renderer_id; };
 
-		Reference<Image2D> get_image(uint32_t attachmentIndex) const override { return attachment_images[attachmentIndex]; };
+		Reference<Image2D> get_image(uint32_t attachment_index) const override { return attachment_images[attachment_index]; };
 		Reference<Image2D> get_depth_image() const override { return depth_image; };
 
 		VkRenderPass get_render_pass() const { return render_pass; }

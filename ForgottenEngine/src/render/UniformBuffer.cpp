@@ -20,7 +20,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanUniformBuffer>::create(size, binding);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

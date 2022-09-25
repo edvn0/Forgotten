@@ -51,7 +51,7 @@ namespace ForgottenEngine {
 		template <typename T> void set(const std::string& name, const T& value)
 		{
 			auto decl = find_uniform_declaration(name);
-			CORE_ASSERT(decl, "Could not find uniform!");
+			core_assert(decl, "Could not find uniform!");
 			if (!decl)
 				return;
 
@@ -62,7 +62,7 @@ namespace ForgottenEngine {
 		template <typename T> T& get(const std::string& name)
 		{
 			auto decl = find_uniform_declaration(name);
-			CORE_ASSERT(decl, "Could not find uniform with name 'x'");
+			core_assert(decl, "Could not find uniform with name 'x'");
 			auto& buffer = uniform_storage_buffer;
 			return buffer.read<T>(decl->get_offset());
 		}
@@ -70,9 +70,9 @@ namespace ForgottenEngine {
 		template <typename T> Reference<T> get_resource(const std::string& name)
 		{
 			auto decl = find_resource_declaration(name);
-			CORE_ASSERT(decl, "Could not find uniform with name 'x'");
+			core_assert(decl, "Could not find uniform with name 'x'");
 			uint32_t slot = decl->get_register();
-			CORE_ASSERT(slot < material_textures.size(), "Texture slot is invalid!");
+			core_assert(slot < material_textures.size(), "Texture slot is invalid!");
 			return Reference<T>(material_textures[slot]);
 		}
 

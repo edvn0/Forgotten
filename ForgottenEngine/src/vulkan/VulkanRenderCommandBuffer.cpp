@@ -29,7 +29,7 @@ namespace ForgottenEngine {
 		cpci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		cpci.queueFamilyIndex = device->get_physical_device()->get_queue_family_indices().graphics;
 		cpci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		VK_CHECK(vkCreateCommandPool(device->get_vulkan_device(), &cpci, nullptr, &command_pool));
+		vk_check(vkCreateCommandPool(device->get_vulkan_device(), &cpci, nullptr, &command_pool));
 
 		VkCommandBufferAllocateInfo cbai {};
 		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -39,14 +39,14 @@ namespace ForgottenEngine {
 			count = frames_in_flight;
 		cbai.commandBufferCount = count;
 		command_buffers.resize(count);
-		VK_CHECK(vkAllocateCommandBuffers(device->get_vulkan_device(), &cbai, command_buffers.data()));
+		vk_check(vkAllocateCommandBuffers(device->get_vulkan_device(), &cbai, command_buffers.data()));
 
 		VkFenceCreateInfo fci {};
 		fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fci.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		wait_fences.resize(frames_in_flight);
 		for (auto& wait_fence : wait_fences) {
-			VK_CHECK(vkCreateFence(device->get_vulkan_device(), &fci, nullptr, &wait_fence));
+			vk_check(vkCreateFence(device->get_vulkan_device(), &fci, nullptr, &wait_fence));
 		}
 
 		create_performance_queries();
@@ -76,7 +76,7 @@ namespace ForgottenEngine {
 		queryPoolCreateInfo.queryCount = timestamp_query_count;
 		timestamp_query_pools.resize(frames_in_flight);
 		for (auto& tqp : timestamp_query_pools)
-			VK_CHECK(vkCreateQueryPool(device, &queryPoolCreateInfo, nullptr, &tqp));
+			vk_check(vkCreateQueryPool(device, &queryPoolCreateInfo, nullptr, &tqp));
 
 		timestamp_query_results.resize(frames_in_flight);
 		for (auto& timestampQueryResults : timestamp_query_results)
@@ -97,7 +97,7 @@ namespace ForgottenEngine {
 
 		pipeline_statistics_query_pools.resize(frames_in_flight);
 		for (auto& pipelineStatisticsQueryPools : pipeline_statistics_query_pools)
-			VK_CHECK(vkCreateQueryPool(device, &queryPoolCreateInfo, nullptr, &pipelineStatisticsQueryPools));
+			vk_check(vkCreateQueryPool(device, &queryPoolCreateInfo, nullptr, &pipelineStatisticsQueryPools));
 
 		pipeline_statistics_query_results.resize(frames_in_flight);
 #endif
@@ -120,7 +120,7 @@ namespace ForgottenEngine {
 				[&cmd_buffer, frame_index] { cmd_buffer = Application::the().get_window().get_swapchain().get_drawbuffer(frame_index); },
 				[&cmd_buffer, frame_index, &instance] { cmd_buffer = instance->command_buffers[frame_index]; });
 			instance->active_command_buffer = cmd_buffer;
-			VK_CHECK(vkBeginCommandBuffer(cmd_buffer, &cbi));
+			vk_check(vkBeginCommandBuffer(cmd_buffer, &cbi));
 		});
 	}
 
@@ -129,7 +129,7 @@ namespace ForgottenEngine {
 		Reference<VulkanRenderCommandBuffer> instance = this;
 		Renderer::submit([instance]() mutable {
 			VkCommandBuffer cmd_buffer = instance->active_command_buffer;
-			VK_CHECK(vkEndCommandBuffer(cmd_buffer));
+			vk_check(vkEndCommandBuffer(cmd_buffer));
 
 			instance->active_command_buffer = nullptr;
 		});
@@ -151,9 +151,9 @@ namespace ForgottenEngine {
 			VkCommandBuffer cmd_buffer = instance->command_buffers[frame_index];
 			submit_info.pCommandBuffers = &cmd_buffer;
 
-			VK_CHECK(vkWaitForFences(device->get_vulkan_device(), 1, &instance->wait_fences[frame_index], VK_TRUE, UINT64_MAX));
-			VK_CHECK(vkResetFences(device->get_vulkan_device(), 1, &instance->wait_fences[frame_index]));
-			VK_CHECK(vkQueueSubmit(device->get_graphics_queue(), 1, &submit_info, instance->wait_fences[frame_index]));
+			vk_check(vkWaitForFences(device->get_vulkan_device(), 1, &instance->wait_fences[frame_index], VK_TRUE, UINT64_MAX));
+			vk_check(vkResetFences(device->get_vulkan_device(), 1, &instance->wait_fences[frame_index]));
+			vk_check(vkQueueSubmit(device->get_graphics_queue(), 1, &submit_info, instance->wait_fences[frame_index]));
 		});
 	}
 

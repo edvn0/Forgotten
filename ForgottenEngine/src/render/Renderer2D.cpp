@@ -4,9 +4,9 @@
 
 #include "render/Font.hpp"
 #include "render/IndexBuffer.hpp"
-#include "render/MSDFData.hpp"
 #include "render/Material.hpp"
 #include "render/Mesh.hpp"
+#include "render/MSDFData.hpp"
 #include "render/Pipeline.hpp"
 #include "render/RenderCommandBuffer.hpp"
 #include "render/Renderer.hpp"
@@ -34,65 +34,68 @@ namespace ForgottenEngine {
 
 	void Renderer2D::init()
 	{
-		if (specification.swap_chain_target)
+		if (specification.swap_chain_target) {
 			render_command_buffer = RenderCommandBuffer::create_from_swapchain();
-		else
+		} else {
 			render_command_buffer = RenderCommandBuffer::create(0);
+		}
 
 		uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
 
-		FramebufferSpecification framebufferSpec;
-		framebufferSpec.attachments = {
+		FramebufferSpecification framebuffer_spec;
+		framebuffer_spec.attachments = {
 			ImageFormat::RGBA32F,
 			ImageFormat::Depth,
 		};
-		framebufferSpec.samples = 1;
-		framebufferSpec.clear_colour_on_load = true;
-		framebufferSpec.clear_colour = { 0.1f, 0.9f, 0.5f, 1.0f };
-		framebufferSpec.debug_name = "Renderer2D Framebuffer";
+		framebuffer_spec.samples = 1;
+		framebuffer_spec.clear_colour_on_load = true;
+		framebuffer_spec.clear_colour = { 0.1f, 0.1f, 0.1f, 1.0f };
+		framebuffer_spec.width = 1280;
+		framebuffer_spec.height = 720;
+		framebuffer_spec.debug_name = "Renderer2D Framebuffer";
 
-		Reference<Framebuffer> framebuffer = Framebuffer::create(framebufferSpec);
+		Reference<Framebuffer> framebuffer = Framebuffer::create(framebuffer_spec);
 
-		RenderPassSpecification renderPassSpec;
-		renderPassSpec.target_framebuffer = framebuffer;
-		renderPassSpec.debug_name = "Renderer2D";
-		Reference<RenderPass> renderPass = RenderPass::create(renderPassSpec);
+		RenderPassSpecification render_pass_spec;
+		render_pass_spec.target_framebuffer = framebuffer;
+		render_pass_spec.debug_name = "Renderer2D";
+		Reference<RenderPass> render_pass = RenderPass::create(render_pass_spec);
 
 		{
-			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.debug_name = "Renderer2D-Quad";
-			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D");
-			pipelineSpecification.render_pass = renderPass;
-			pipelineSpecification.backface_culling = false;
-			pipelineSpecification.layout
+			PipelineSpecification pipeline_specification;
+			pipeline_specification.debug_name = "Renderer2D-Quad";
+			pipeline_specification.shader = Renderer::get_shader_library()->get("Renderer2D");
+			pipeline_specification.render_pass = render_pass;
+			pipeline_specification.backface_culling = false;
+			pipeline_specification.layout
 				= { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" }, { ShaderDataType::Float2, "a_TextureCoords" },
 					  { ShaderDataType::Float, "a_TextureIndex" }, { ShaderDataType::Float, "a_TilingFactor" } };
-			quad_pipeline = Pipeline::create(pipelineSpecification);
+			quad_pipeline = Pipeline::create(pipeline_specification);
 
 			quad_vertex_buffer.resize(frames_in_flight);
 			quad_vertex_buffer_base.resize(frames_in_flight);
 			for (uint32_t i = 0; i < frames_in_flight; i++) {
-				quad_vertex_buffer[i] = VertexBuffer::create(MaxVertices * sizeof(QuadVertex));
-				quad_vertex_buffer_base[i] = new QuadVertex[MaxVertices];
+				quad_vertex_buffer[i] = VertexBuffer::create(max_vertices * sizeof(QuadVertex));
+				quad_vertex_buffer_base[i] = new QuadVertex[max_vertices];
 			}
 
-			auto* quadIndices = new uint32_t[MaxIndices];
+			auto* quad_indices = new uint32_t[max_indices];
 
 			uint32_t offset = 0;
-			for (uint32_t i = 0; i < MaxIndices; i += 6) {
-				quadIndices[i + 0] = offset + 0;
-				quadIndices[i + 1] = offset + 1;
-				quadIndices[i + 2] = offset + 2;
+			for (uint32_t i = 0; i < max_indices; i += 6) {
+				quad_indices[i + 0] = offset + 0;
+				quad_indices[i + 1] = offset + 1;
+				quad_indices[i + 2] = offset + 2;
 
-				quadIndices[i + 3] = offset + 2;
-				quadIndices[i + 4] = offset + 3;
-				quadIndices[i + 5] = offset + 0;
+				quad_indices[i + 3] = offset + 2;
+				quad_indices[i + 4] = offset + 3;
+				quad_indices[i + 5] = offset + 0;
 
 				offset += 4;
 			}
 
-			quad_index_buffer = IndexBuffer::create(quadIndices, MaxIndices);
-			delete[] quadIndices;
+			quad_index_buffer = IndexBuffer::create(quad_indices, max_indices);
+			delete[] quad_indices;
 		}
 
 		white_texture = Renderer::get_white_texture();
@@ -107,56 +110,57 @@ namespace ForgottenEngine {
 
 		// Lines
 		{
-			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.debug_name = "Renderer2D-Line";
-			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D_Line");
-			pipelineSpecification.render_pass = renderPass;
-			pipelineSpecification.topology = PrimitiveTopology::Lines;
-			pipelineSpecification.line_width = 2.0f;
-			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" } };
-			line_pipeline = Pipeline::create(pipelineSpecification);
-			pipelineSpecification.depth_test = false;
-			line_on_top_pipeline = Pipeline::create(pipelineSpecification);
+			PipelineSpecification pipeline_specification;
+			pipeline_specification.debug_name = "Renderer2D-Line";
+			pipeline_specification.shader = Renderer::get_shader_library()->get("Renderer2D_Line");
+			pipeline_specification.render_pass = render_pass;
+			pipeline_specification.topology = PrimitiveTopology::Lines;
+			pipeline_specification.line_width = 2.0f;
+			pipeline_specification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" } };
+			line_pipeline = Pipeline::create(pipeline_specification);
+			pipeline_specification.depth_test = false;
+			line_on_top_pipeline = Pipeline::create(pipeline_specification);
 
 			line_vertex_buffer.resize(frames_in_flight);
 			line_vertex_buffer_base.resize(frames_in_flight);
 			for (uint32_t i = 0; i < frames_in_flight; i++) {
-				line_vertex_buffer[i] = VertexBuffer::create(MaxLineVertices * sizeof(LineVertex));
-				line_vertex_buffer_base[i] = new LineVertex[MaxLineVertices];
+				line_vertex_buffer[i] = VertexBuffer::create(max_line_vertices * sizeof(LineVertex));
+				line_vertex_buffer_base[i] = new LineVertex[max_line_vertices];
 			}
 
-			auto* lineIndices = new uint32_t[MaxLineIndices];
-			for (uint32_t i = 0; i < MaxLineIndices; i++)
-				lineIndices[i] = i;
+			auto* line_indices = new uint32_t[max_line_indices];
+			for (uint32_t i = 0; i < max_line_indices; i++) {
+				line_indices[i] = i;
+			}
 
-			line_index_buffer = IndexBuffer::create(lineIndices, MaxLineIndices);
-			delete[] lineIndices;
+			line_index_buffer = IndexBuffer::create(line_indices, max_line_indices);
+			delete[] line_indices;
 		}
 
 		// Text
 		{
-			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.debug_name = "Renderer2D-Text";
-			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D_Text");
-			pipelineSpecification.render_pass = renderPass;
-			pipelineSpecification.backface_culling = false;
-			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" },
+			PipelineSpecification pipeline_specification;
+			pipeline_specification.debug_name = "Renderer2D-Text";
+			pipeline_specification.shader = Renderer::get_shader_library()->get("Renderer2D_Text");
+			pipeline_specification.render_pass = render_pass;
+			pipeline_specification.backface_culling = false;
+			pipeline_specification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float4, "a_Color" },
 				{ ShaderDataType::Float2, "a_TextureCoords" }, { ShaderDataType::Float, "a_TextureIndex" } };
 
-			text_pipeline = Pipeline::create(pipelineSpecification);
-			text_material = Material::create(pipelineSpecification.shader);
+			text_pipeline = Pipeline::create(pipeline_specification);
+			text_material = Material::create(pipeline_specification.shader);
 
 			text_vertex_buffer.resize(frames_in_flight);
 			text_vertex_buffer_base.resize(frames_in_flight);
 			for (uint32_t i = 0; i < frames_in_flight; i++) {
-				text_vertex_buffer[i] = VertexBuffer::create(MaxVertices * sizeof(TextVertex));
-				text_vertex_buffer_base[i] = new TextVertex[MaxVertices];
+				text_vertex_buffer[i] = VertexBuffer::create(max_vertices * sizeof(TextVertex));
+				text_vertex_buffer_base[i] = new TextVertex[max_vertices];
 			}
 
-			auto* text_indices = new uint32_t[MaxIndices];
+			auto* text_indices = new uint32_t[max_indices];
 
 			uint32_t offset = 0;
-			for (uint32_t i = 0; i < MaxIndices; i += 6) {
+			for (uint32_t i = 0; i < max_indices; i += 6) {
 				text_indices[i + 0] = offset + 0;
 				text_indices[i + 1] = offset + 1;
 				text_indices[i + 2] = offset + 2;
@@ -168,112 +172,43 @@ namespace ForgottenEngine {
 				offset += 4;
 			}
 
-			text_index_buffer = IndexBuffer::create(text_indices, MaxIndices);
+			text_index_buffer = IndexBuffer::create(text_indices, max_indices);
 			delete[] text_indices;
 		}
 
 		// Circles
 		{
-			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.debug_name = "Renderer2D-Circle";
-			pipelineSpecification.shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
-			pipelineSpecification.backface_culling = false;
-			pipelineSpecification.render_pass = renderPass;
-			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_WorldPosition" }, { ShaderDataType::Float, "a_Thickness" },
+			PipelineSpecification pipeline_specification;
+			pipeline_specification.debug_name = "Renderer2D-Circle";
+			pipeline_specification.shader = Renderer::get_shader_library()->get("Renderer2D_Circle");
+			pipeline_specification.backface_culling = false;
+			pipeline_specification.render_pass = render_pass;
+			pipeline_specification.layout = { { ShaderDataType::Float3, "a_WorldPosition" }, { ShaderDataType::Float, "a_Thickness" },
 				{ ShaderDataType::Float2, "a_LocalPosition" }, { ShaderDataType::Float4, "a_Color" } };
-			circle_pipeline = Pipeline::create(pipelineSpecification);
-			circle_material = Material::create(pipelineSpecification.shader);
+			circle_pipeline = Pipeline::create(pipeline_specification);
+			circle_material = Material::create(pipeline_specification.shader);
 
 			circle_vertex_buffer.resize(frames_in_flight);
 			circle_vertex_buffer_base.resize(frames_in_flight);
 			for (uint32_t i = 0; i < frames_in_flight; i++) {
-				circle_vertex_buffer[i] = VertexBuffer::create(MaxVertices * sizeof(QuadVertex));
-				circle_vertex_buffer_base[i] = new CircleVertex[MaxVertices];
+				circle_vertex_buffer[i] = VertexBuffer::create(max_vertices * sizeof(QuadVertex));
+				circle_vertex_buffer_base[i] = new CircleVertex[max_vertices];
 			}
 		}
 
-		VertexBufferLayout vertexLayout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float3, "a_Normal" },
+		VertexBufferLayout vertex_layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" }, { ShaderDataType::Float3, "a_Binormal" }, { ShaderDataType::Float2, "a_TexCoord" } };
 
-		VertexBufferLayout instanceLayout = {
+		VertexBufferLayout instance_layout = {
 			{ ShaderDataType::Float4, "a_MRow0" },
 			{ ShaderDataType::Float4, "a_MRow1" },
 			{ ShaderDataType::Float4, "a_MRow2" },
 		};
 
-		VertexBufferLayout boneInfluenceLayout = {
+		VertexBufferLayout bone_influence_layout = {
 			{ ShaderDataType::Int4, "a_BoneIDs" },
 			{ ShaderDataType::Float4, "a_BoneWeights" },
 		};
-
-		{
-			FramebufferSpecification preDepthFramebufferSpec;
-			preDepthFramebufferSpec.debug_name = "PreDepth-Opaque";
-			// Linear depth, reversed device depth
-			preDepthFramebufferSpec.attachments = { /*ImageFormat::RED32F, */ ImageFormat::DEPTH32FSTENCIL8UINT };
-			preDepthFramebufferSpec.clear_colour = { 0.0f, 0.0f, 0.0f, 0.0f };
-			preDepthFramebufferSpec.depth_clear_value = 0.0f;
-
-			RenderPassSpecification preDepthRenderPassSpec;
-			preDepthRenderPassSpec.debug_name = preDepthFramebufferSpec.debug_name;
-			preDepthRenderPassSpec.target_framebuffer = Framebuffer::create(preDepthFramebufferSpec);
-
-			PipelineSpecification pipelineSpec;
-			pipelineSpec.debug_name = preDepthFramebufferSpec.debug_name;
-
-			pipelineSpec.shader = Renderer::get_shader_library()->get("PreDepth");
-			pipelineSpec.layout = vertexLayout;
-			pipelineSpec.instance_layout = instanceLayout;
-			pipelineSpec.render_pass = RenderPass::create(preDepthRenderPassSpec);
-			pre_depth_pipeline = Pipeline::create(pipelineSpec);
-		}
-
-		// Composite
-		{
-			FramebufferSpecification compFramebufferSpec;
-			compFramebufferSpec.debug_name = "SceneComposite";
-			compFramebufferSpec.clear_colour = { 0.5f, 0.1f, 0.1f, 1.0f };
-			compFramebufferSpec.attachments = { ImageFormat::RGBA32F, ImageFormat::Depth };
-			compFramebufferSpec.transfer = true;
-
-			Reference<Framebuffer> fb = Framebuffer::create(compFramebufferSpec);
-
-			PipelineSpecification pipelineSpecification;
-			pipelineSpecification.layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float2, "a_TexCoord" } };
-			pipelineSpecification.backface_culling = false;
-			pipelineSpecification.shader = Renderer::get_shader_library()->get("SceneComposite");
-
-			RenderPassSpecification rps;
-			rps.target_framebuffer = framebuffer;
-			rps.debug_name = "SceneComposite";
-			pipelineSpecification.render_pass = RenderPass::create(rps);
-			pipelineSpecification.debug_name = "SceneComposite";
-			pipelineSpecification.depth_write = false;
-			pipelineSpecification.depth_test = false;
-			composite_pipeline = Pipeline::create(pipelineSpecification);
-		}
-
-		{
-			FramebufferSpecification extCompFramebufferSpec;
-			extCompFramebufferSpec.debug_name = "External-Composite";
-			extCompFramebufferSpec.attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32FSTENCIL8UINT };
-			extCompFramebufferSpec.clear_colour = { 0.5f, 0.1f, 0.1f, 1.0f };
-			extCompFramebufferSpec.clear_colour_on_load = false;
-			extCompFramebufferSpec.clear_depth_on_load = false;
-			// Use the color buffer from the final compositing pass, but the depth buffer from
-			// the actual 3D geometry pass, in case we want to composite elements behind meshes
-			// in the scene
-			extCompFramebufferSpec.existing_images[0]
-				= composite_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
-			extCompFramebufferSpec.existing_images[1]
-				= pre_depth_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_depth_image();
-			Reference<Framebuffer> fb = Framebuffer::create(extCompFramebufferSpec);
-
-			RenderPassSpecification rps;
-			rps.debug_name = extCompFramebufferSpec.debug_name;
-			rps.target_framebuffer = framebuffer;
-			external_composite_render_pass = RenderPass::create(rps);
-		}
 
 		Renderer::compile_shaders();
 
@@ -286,34 +221,38 @@ namespace ForgottenEngine {
 
 	void Renderer2D::shut_down()
 	{
-		for (auto buffer : quad_vertex_buffer_base)
+		for (auto buffer : quad_vertex_buffer_base) {
 			delete[] buffer;
+		}
 
-		for (auto buffer : text_vertex_buffer_base)
+		for (auto buffer : text_vertex_buffer_base) {
 			delete[] buffer;
+		}
 
-		for (auto buffer : line_vertex_buffer_base)
+		for (auto buffer : line_vertex_buffer_base) {
 			delete[] buffer;
+		}
 
-		for (auto buffer : circle_vertex_buffer_base)
+		for (auto buffer : circle_vertex_buffer_base) {
 			delete[] buffer;
+		}
 	}
 
-	void Renderer2D::begin_scene(const glm::mat4& viewProj, const glm::mat4& view, bool depthTest)
+	void Renderer2D::begin_scene(const glm::mat4& view_proj, const glm::mat4& view, bool in_depth_test)
 	{
 		uint32_t frame_index = Renderer::get_current_frame_index();
 
 		// Dirty shader impl
 		// --------------------
 		// end dirty shader impl
-		camera_view_proj = viewProj;
+		camera_view_proj = view_proj;
 		camera_view = view;
-		depth_test = depthTest;
+		depth_test = in_depth_test;
 
-		Renderer::submit([ubs = uniform_buffer_set, viewProj]() mutable {
-			uint32_t bufferIndex = Renderer::get_current_frame_index();
-			auto ub = ubs->get(0, 0, bufferIndex);
-			ub->rt_set_data(&viewProj, sizeof(UBCamera), 0);
+		Renderer::submit([ubs = uniform_buffer_set, view_proj]() mutable {
+			uint32_t buffer_index = Renderer::get_current_frame_index();
+			auto ub = ubs->get(0, 0, buffer_index);
+			ub->render_thread_set_data(&view_proj, sizeof(UBCamera), 0);
 		});
 
 		quad_index_count = 0;
@@ -331,11 +270,13 @@ namespace ForgottenEngine {
 		texture_slot_index = 1;
 		font_texture_slot_index = 0;
 
-		for (uint32_t i = 1; i < texture_slots.size(); i++)
+		for (uint32_t i = 1; i < texture_slots.size(); i++) {
 			texture_slots[i] = nullptr;
+		}
 
-		for (auto& font_texture_slot : font_texture_slots)
+		for (auto& font_texture_slot : font_texture_slots) {
 			font_texture_slot = nullptr;
+		}
 	}
 
 	void Renderer2D::end_scene()
@@ -350,10 +291,11 @@ namespace ForgottenEngine {
 			quad_vertex_buffer[frame_index]->set_data(quad_vertex_buffer_base[frame_index], data_size);
 
 			for (uint32_t i = 0; i < texture_slots.size(); i++) {
-				if (texture_slots[i])
+				if (texture_slots[i]) {
 					quad_material->set("u_Textures", texture_slots[i], i);
-				else
+				} else {
 					quad_material->set("u_Textures", white_texture, i);
+				}
 			}
 
 			Renderer::render_geometry(render_command_buffer, quad_pipeline, uniform_buffer_set, nullptr, quad_material,
@@ -368,10 +310,11 @@ namespace ForgottenEngine {
 			text_vertex_buffer[frame_index]->set_data(text_vertex_buffer_base[frame_index], data_size);
 
 			for (uint32_t i = 0; i < font_texture_slots.size(); i++) {
-				if (font_texture_slots[i])
+				if (font_texture_slots[i]) {
 					text_material->set("u_FontAtlases", font_texture_slots[i], i);
-				else
+				} else {
 					text_material->set("u_FontAtlases", white_texture, i);
+				}
 			}
 
 			Renderer::render_geometry(render_command_buffer, text_pipeline, uniform_buffer_set, nullptr, text_material,
@@ -385,10 +328,10 @@ namespace ForgottenEngine {
 		if (data_size) {
 			line_vertex_buffer[frame_index]->set_data(line_vertex_buffer_base[frame_index], data_size);
 
-			Renderer::submit([lineWidth = line_width, renderCommandBuffer = render_command_buffer]() {
+			Renderer::submit([line_width = line_width, render_command_buffer = render_command_buffer]() {
 				uint32_t index = Renderer::get_current_frame_index();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.as<VulkanRenderCommandBuffer>()->get_command_buffer(index);
-				vkCmdSetLineWidth(commandBuffer, lineWidth);
+				VkCommandBuffer command_buffer = render_command_buffer.as<VulkanRenderCommandBuffer>()->get_command_buffer(index);
+				vkCmdSetLineWidth(command_buffer, line_width);
 			});
 			Renderer::render_geometry(render_command_buffer, line_pipeline, uniform_buffer_set, nullptr, line_material,
 				line_vertex_buffer[frame_index], line_index_buffer, glm::mat4(1.0f), line_index_count);
@@ -411,40 +354,41 @@ namespace ForgottenEngine {
 		render_command_buffer->submit();
 	}
 
-	void Renderer2D::Flush() { }
+	void Renderer2D::flush() { }
 
 	Reference<RenderPass> Renderer2D::get_target_render_pass() { return quad_pipeline->get_specification().render_pass; }
 
-	void Renderer2D::set_target_render_pass(const Reference<RenderPass>& renderPass)
+	void Renderer2D::set_target_render_pass(const Reference<RenderPass>& render_pass)
 	{
-		if (renderPass != quad_pipeline->get_specification().render_pass) {
+		if (render_pass != quad_pipeline->get_specification().render_pass) {
 			{
-				PipelineSpecification pipelineSpecification = quad_pipeline->get_specification();
-				pipelineSpecification.render_pass = renderPass;
-				quad_pipeline = Pipeline::create(pipelineSpecification);
+				PipelineSpecification pipeline_specification = quad_pipeline->get_specification();
+				pipeline_specification.render_pass = render_pass;
+				quad_pipeline = Pipeline::create(pipeline_specification);
 			}
 
 			{
-				PipelineSpecification pipelineSpecification = line_pipeline->get_specification();
-				pipelineSpecification.render_pass = renderPass;
-				line_pipeline = Pipeline::create(pipelineSpecification);
+				PipelineSpecification pipeline_specification = line_pipeline->get_specification();
+				pipeline_specification.render_pass = render_pass;
+				line_pipeline = Pipeline::create(pipeline_specification);
 			}
 
 			{
-				PipelineSpecification pipelineSpecification = text_pipeline->get_specification();
-				pipelineSpecification.render_pass = renderPass;
-				text_pipeline = Pipeline::create(pipelineSpecification);
+				PipelineSpecification pipeline_specification = text_pipeline->get_specification();
+				pipeline_specification.render_pass = render_pass;
+				text_pipeline = Pipeline::create(pipeline_specification);
 			}
 		}
 	}
 
 	void Renderer2D::on_recreate_swapchain()
 	{
-		if (specification.swap_chain_target)
+		if (specification.swap_chain_target) {
 			render_command_buffer = RenderCommandBuffer::create_from_swapchain();
+		}
 	}
 
-	void Renderer2D::FlushAndReset()
+	void Renderer2D::flush_and_reset()
 	{
 		uint32_t frame_index = Renderer::get_current_frame_index();
 		// end_scene();
@@ -455,24 +399,25 @@ namespace ForgottenEngine {
 		texture_slot_index = 1;
 	}
 
-	void Renderer2D::FlushAndResetLines() { }
+	void Renderer2D::flush_and_reset_lines() { }
 
 	void Renderer2D::draw_quad(const glm::mat4& transform, const glm::vec4& color)
 	{
-		constexpr size_t quadVertexCount = 4;
-		const float textureIndex = 0.0f; // White Texture
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		const float tilingFactor = 1.0f;
+		static constexpr size_t quad_vertex_count = 4;
+		static const float texture_index = 0.0f; // White Texture
+		static constexpr glm::vec2 texture_coords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		static const float tiling_factor = 1.0f;
 
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
-		for (size_t i = 0; i < quadVertexCount; i++) {
+		for (size_t i = 0; i < quad_vertex_count; i++) {
 			quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[i];
 			quad_vertex_buffer_ptr->Color = color;
-			quad_vertex_buffer_ptr->TextureCoords = textureCoords[i];
-			quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-			quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+			quad_vertex_buffer_ptr->TextureCoords = texture_coords[i];
+			quad_vertex_buffer_ptr->TextureIndex = texture_index;
+			quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 			quad_vertex_buffer_ptr++;
 		}
 
@@ -483,35 +428,37 @@ namespace ForgottenEngine {
 
 	void Renderer2D::draw_quad(const glm::mat4& transform, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		static constexpr size_t quad_vertex_count = 4;
+		static constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		static constexpr glm::vec2 texture_coords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
-		float textureIndex = 0.0f;
+		float texture_index = 0.0f;
 		for (uint32_t i = 1; i < texture_slot_index; i++) {
 			if (texture_slots[i]->get_hash() == texture->get_hash()) {
-				textureIndex = (float)i;
+				texture_index = (float)i;
 				break;
 			}
 		}
 
-		if (textureIndex == 0.0f) {
-			if (texture_slot_index >= MaxTextureSlots)
-				FlushAndReset();
+		if (texture_index == 0.0f) {
+			if (texture_slot_index >= max_texture_slots) {
+				flush_and_reset();
+			}
 
-			textureIndex = (float)texture_slot_index;
+			texture_index = (float)texture_slot_index;
 			texture_slots[texture_slot_index] = texture;
 			texture_slot_index++;
 		}
 
-		for (size_t i = 0; i < quadVertexCount; i++) {
+		for (size_t i = 0; i < quad_vertex_count; i++) {
 			quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[i];
 			quad_vertex_buffer_ptr->Color = color;
-			quad_vertex_buffer_ptr->TextureCoords = textureCoords[i];
-			quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+			quad_vertex_buffer_ptr->TextureCoords = texture_coords[i];
+			quad_vertex_buffer_ptr->TextureIndex = texture_index;
 			quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 			quad_vertex_buffer_ptr++;
 		}
@@ -528,40 +475,41 @@ namespace ForgottenEngine {
 
 	void Renderer2D::draw_quad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
-		const float textureIndex = 0.0f; // White Texture
-		const float tilingFactor = 1.0f;
+		const float texture_index = 0.0f; // White Texture
+		const float tiling_factor = 1.0f;
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[1];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[2];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[3];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_index_count += 6;
@@ -578,21 +526,22 @@ namespace ForgottenEngine {
 	void Renderer2D::draw_quad(
 		const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-		float textureIndex = 0.0f;
+		float texture_index = 0.0f;
 		for (uint32_t i = 1; i < texture_slot_index; i++) {
 			if (*texture_slots[i].raw() == *texture.raw()) {
-				textureIndex = (float)i;
+				texture_index = (float)i;
 				break;
 			}
 		}
 
-		if (textureIndex == 0.0f) {
-			textureIndex = (float)texture_slot_index;
+		if (texture_index == 0.0f) {
+			texture_index = (float)texture_slot_index;
 			texture_slots[texture_slot_index] = texture;
 			texture_slot_index++;
 		}
@@ -602,28 +551,28 @@ namespace ForgottenEngine {
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[1];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[2];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[3];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
@@ -634,45 +583,46 @@ namespace ForgottenEngine {
 
 	void Renderer2D::draw_quad_billboard(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
-		const float textureIndex = 0.0f; // White Texture
-		const float tilingFactor = 1.0f;
+		const float texture_index = 0.0f; // White Texture
+		const float tiling_factor = 1.0f;
 
-		glm::vec3 camRightWS = { camera_view[0][0], camera_view[1][0], camera_view[2][0] };
-		glm::vec3 camUpWS = { camera_view[0][1], camera_view[1][1], camera_view[2][1] };
+		glm::vec3 cam_right_ws = { camera_view[0][0], camera_view[1][0], camera_view[2][0] };
+		glm::vec3 cam_up_ws = { camera_view[0][1], camera_view[1][1], camera_view[2][1] };
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * (quad_vertex_positions[0].x) * size.x + camUpWS * quad_vertex_positions[0].y * size.y;
+			= position + cam_right_ws * (quad_vertex_positions[0].x) * size.x + cam_up_ws * quad_vertex_positions[0].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * quad_vertex_positions[1].x * size.x + camUpWS * quad_vertex_positions[1].y * size.y;
+			= position + cam_right_ws * quad_vertex_positions[1].x * size.x + cam_up_ws * quad_vertex_positions[1].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * quad_vertex_positions[2].x * size.x + camUpWS * quad_vertex_positions[2].y * size.y;
+			= position + cam_right_ws * quad_vertex_positions[2].x * size.x + cam_up_ws * quad_vertex_positions[2].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * quad_vertex_positions[3].x * size.x + camUpWS * quad_vertex_positions[3].y * size.y;
+			= position + cam_right_ws * quad_vertex_positions[3].x * size.x + cam_up_ws * quad_vertex_positions[3].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_index_count += 6;
@@ -683,57 +633,58 @@ namespace ForgottenEngine {
 	void Renderer2D::draw_quad_billboard(
 		const glm::vec3& position, const glm::vec2& size, const Reference<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-		float textureIndex = 0.0f;
+		float texture_index = 0.0f;
 		for (uint32_t i = 1; i < texture_slot_index; i++) {
 			if (texture_slots[i]->get_hash() == texture->get_hash()) {
-				textureIndex = (float)i;
+				texture_index = (float)i;
 				break;
 			}
 		}
 
-		if (textureIndex == 0.0f) {
-			textureIndex = (float)texture_slot_index;
+		if (texture_index == 0.0f) {
+			texture_index = (float)texture_slot_index;
 			texture_slots[texture_slot_index] = texture;
 			texture_slot_index++;
 		}
 
-		glm::vec3 camRightWS = { camera_view[0][0], camera_view[1][0], camera_view[2][0] };
-		glm::vec3 camUpWS = { camera_view[0][1], camera_view[1][1], camera_view[2][1] };
+		glm::vec3 cam_right_ws = { camera_view[0][0], camera_view[1][0], camera_view[2][0] };
+		glm::vec3 cam_up_ws = { camera_view[0][1], camera_view[1][1], camera_view[2][1] };
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * (quad_vertex_positions[0].x) * size.x + camUpWS * quad_vertex_positions[0].y * size.y;
+			= position + cam_right_ws * (quad_vertex_positions[0].x) * size.x + cam_up_ws * quad_vertex_positions[0].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * quad_vertex_positions[1].x * size.x + camUpWS * quad_vertex_positions[1].y * size.y;
+			= position + cam_right_ws * quad_vertex_positions[1].x * size.x + cam_up_ws * quad_vertex_positions[1].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * quad_vertex_positions[2].x * size.x + camUpWS * quad_vertex_positions[2].y * size.y;
+			= position + cam_right_ws * quad_vertex_positions[2].x * size.x + cam_up_ws * quad_vertex_positions[2].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position
-			= position + camRightWS * quad_vertex_positions[3].x * size.x + camUpWS * quad_vertex_positions[3].y * size.y;
+			= position + cam_right_ws * quad_vertex_positions[3].x * size.x + cam_up_ws * quad_vertex_positions[3].y * size.y;
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
 		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
 		quad_vertex_buffer_ptr++;
 
@@ -749,11 +700,12 @@ namespace ForgottenEngine {
 
 	void Renderer2D::draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
-		const float textureIndex = 0.0f; // White Texture
-		const float tilingFactor = 1.0f;
+		static constexpr float texture_index = 0.0f; // White Texture
+		static constexpr float tiling_factor = 1.0f;
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -761,29 +713,29 @@ namespace ForgottenEngine {
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[0];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[1];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 0.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[2];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 1.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_vertex_buffer_ptr->Position = transform * quad_vertex_positions[3];
 		quad_vertex_buffer_ptr->Color = color;
 		quad_vertex_buffer_ptr->TextureCoords = { 0.0f, 1.0f };
-		quad_vertex_buffer_ptr->TextureIndex = textureIndex;
-		quad_vertex_buffer_ptr->TilingFactor = tilingFactor;
+		quad_vertex_buffer_ptr->TextureIndex = texture_index;
+		quad_vertex_buffer_ptr->TilingFactor = tiling_factor;
 		quad_vertex_buffer_ptr++;
 
 		quad_index_count += 6;
@@ -800,8 +752,9 @@ namespace ForgottenEngine {
 	void Renderer2D::draw_rotated_quad(const glm::vec3& position, const glm::vec2& size, float rotation, const Reference<Texture2D>& texture,
 		float tilingFactor, const glm::vec4& tintColor)
 	{
-		if (quad_index_count >= MaxIndices)
-			FlushAndReset();
+		if (quad_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -862,8 +815,9 @@ namespace ForgottenEngine {
 
 	void Renderer2D::draw_rotated_rect(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		if (line_index_count >= MaxLineIndices)
-			FlushAndResetLines();
+		if (line_index_count >= max_line_indices) {
+			flush_and_reset_lines();
+		}
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -895,8 +849,9 @@ namespace ForgottenEngine {
 
 	void Renderer2D::fill_circle(const glm::vec3& position, float radius, const glm::vec4& color, float thickness)
 	{
-		if (circle_index_count >= MaxIndices)
-			FlushAndReset();
+		if (circle_index_count >= max_indices) {
+			flush_and_reset();
+		}
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), { radius * 2.0f, radius * 2.0f, 1.0f });
 
@@ -914,8 +869,9 @@ namespace ForgottenEngine {
 
 	void Renderer2D::draw_line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
 	{
-		if (line_index_count >= MaxLineIndices)
-			FlushAndResetLines();
+		if (line_index_count >= max_line_indices) {
+			flush_and_reset_lines();
+		}
 
 		line_vertex_buffer_ptr->Position = p0;
 		line_vertex_buffer_ptr->Color = color;
@@ -978,21 +934,25 @@ namespace ForgottenEngine {
 			transform * glm::vec4 { aabb.min.x, aabb.min.y, aabb.min.z, 1.0f }, transform * glm::vec4 { aabb.min.x, aabb.max.y, aabb.min.z, 1.0f },
 			transform * glm::vec4 { aabb.max.x, aabb.max.y, aabb.min.z, 1.0f }, transform * glm::vec4 { aabb.max.x, aabb.min.y, aabb.min.z, 1.0f } };
 
-		for (uint32_t i = 0; i < 4; i++)
+		for (uint32_t i = 0; i < 4; i++) {
 			draw_line(corners[i], corners[(i + 1) % 4], color);
+		}
 
-		for (uint32_t i = 0; i < 4; i++)
+		for (uint32_t i = 0; i < 4; i++) {
 			draw_line(corners[i + 4], corners[((i + 1) % 4) + 4], color);
+		}
 
-		for (uint32_t i = 0; i < 4; i++)
+		for (uint32_t i = 0; i < 4; i++) {
 			draw_line(corners[i], corners[i + 4], color);
+		}
 	}
 
 	static bool NextLine(int index, const std::vector<int>& lines)
 	{
 		for (int line : lines) {
-			if (line == index)
+			if (line == index) {
 				return true;
+			}
 		}
 		return false;
 	}
@@ -1010,7 +970,7 @@ namespace ForgottenEngine {
 	}
 
 	// From https://stackoverflow.com/questions/31302506/stdu32string-conversion-to-from-stdstring-and-stdu16string
-	static std::u32string To_UTF32(const std::string& s)
+	static std::u32string to_utf_32(const std::string& s)
 	{
 		std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 		return conv.from_bytes(s);
@@ -1019,54 +979,57 @@ namespace ForgottenEngine {
 	void Renderer2D::draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform, float maxWidth,
 		const glm::vec4& color, float lineHeightOffset, float kerningOffset)
 	{
-		if (string.empty())
+		if (string.empty()) {
 			return;
+		}
 
-		float textureIndex = 0.0f;
+		float texture_index = 0.0f;
 
 		// TODO(Yan): this isn't really ideal, but we need to iterate through UTF-8 code points
-		std::u32string utf32string = To_UTF32(string);
+		std::u32string utf32string = to_utf_32(string);
 
 		Reference<Texture2D> font_atlas = font->get_font_atlas();
-		CORE_ASSERT(font_atlas, "");
+		core_assert(font_atlas, "");
 
 		for (uint32_t i = 0; i < font_texture_slot_index; i++) {
 			if (*font_texture_slots[i].raw() == *font_atlas.raw()) {
-				textureIndex = (float)i;
+				texture_index = (float)i;
 				break;
 			}
 		}
 
-		if (textureIndex == 0.0f) {
-			textureIndex = (float)font_texture_slot_index;
+		if (texture_index == 0.0f) {
+			texture_index = (float)font_texture_slot_index;
 			font_texture_slots[font_texture_slot_index] = font_atlas;
 			font_texture_slot_index++;
 		}
 
-		auto& fontGeometry = font->get_msdf_data()->font_geometry;
-		const auto& metrics = fontGeometry.getMetrics();
+		auto& font_geometry = font->get_msdf_data()->font_geometry;
+		const auto& metrics = font_geometry.getMetrics();
 
 		// TODO(Yan): these font metrics really should be cleaned up/refactored...
 		//            (this is a first pass WIP)
-		std::vector<int> nextLines;
+		std::vector<int> next_lines;
 		{
 			double x = 0.0;
-			double fsScale = 1 / (metrics.ascenderY - metrics.descenderY);
-			double y = -fsScale * metrics.ascenderY;
-			int lastSpace = -1;
+			double fs_scale = 1 / (metrics.ascenderY - metrics.descenderY);
+			double y = -fs_scale * metrics.ascenderY;
+			int last_space = -1;
 			for (int i = 0; i < utf32string.size(); i++) {
 				char32_t character = utf32string[i];
 				if (character == '\n') {
 					x = 0;
-					y -= fsScale * metrics.lineHeight + lineHeightOffset;
+					y -= fs_scale * metrics.lineHeight + lineHeightOffset;
 					continue;
 				}
 
-				auto glyph = fontGeometry.getGlyph(character);
-				if (!glyph)
-					glyph = fontGeometry.getGlyph('?');
-				if (!glyph)
+				auto glyph = font_geometry.getGlyph(character);
+				if (!glyph) {
+					glyph = font_geometry.getGlyph('?');
+				}
+				if (!glyph) {
 					continue;
+				}
 
 				if (character != ' ') {
 					// Calc geo
@@ -1075,45 +1038,47 @@ namespace ForgottenEngine {
 					glm::vec2 quad_min((float)pl, (float)pb);
 					glm::vec2 quad_max((float)pr, (float)pt);
 
-					quad_min *= fsScale;
-					quad_max *= fsScale;
+					quad_min *= fs_scale;
+					quad_max *= fs_scale;
 					quad_min += glm::vec2(x, y);
 					quad_max += glm::vec2(x, y);
 
-					if (quad_max.x > maxWidth && lastSpace != -1) {
-						i = lastSpace;
-						nextLines.emplace_back(lastSpace);
-						lastSpace = -1;
+					if (quad_max.x > maxWidth && last_space != -1) {
+						i = last_space;
+						next_lines.emplace_back(last_space);
+						last_space = -1;
 						x = 0;
-						y -= fsScale * metrics.lineHeight + lineHeightOffset;
+						y -= fs_scale * metrics.lineHeight + lineHeightOffset;
 					}
 				} else {
-					lastSpace = i;
+					last_space = i;
 				}
 
 				double advance = glyph->getAdvance();
-				fontGeometry.getAdvance(advance, character, utf32string[i + 1]);
-				x += fsScale * advance + kerningOffset;
+				font_geometry.getAdvance(advance, character, utf32string[i + 1]);
+				x += fs_scale * advance + kerningOffset;
 			}
 		}
 
 		{
 			double x = 0.0;
-			double fsScale = 1 / (metrics.ascenderY - metrics.descenderY);
+			double fs_scale = 1 / (metrics.ascenderY - metrics.descenderY);
 			double y = 0.0; // -fsScale * metrics.ascenderY;
 			for (int i = 0; i < utf32string.size(); i++) {
 				char32_t character = utf32string[i];
-				if (character == '\n' || NextLine(i, nextLines)) {
+				if (character == '\n' || NextLine(i, next_lines)) {
 					x = 0;
-					y -= fsScale * metrics.lineHeight + lineHeightOffset;
+					y -= fs_scale * metrics.lineHeight + lineHeightOffset;
 					continue;
 				}
 
-				auto glyph = fontGeometry.getGlyph(character);
-				if (!glyph)
-					glyph = fontGeometry.getGlyph('?');
-				if (!glyph)
+				auto glyph = font_geometry.getGlyph(character);
+				if (!glyph) {
+					glyph = font_geometry.getGlyph('?');
+				}
+				if (!glyph) {
 					continue;
+				}
 
 				double l, b, r, t;
 				glyph->getQuadAtlasBounds(l, b, r, t);
@@ -1121,12 +1086,12 @@ namespace ForgottenEngine {
 				double pl, pb, pr, pt;
 				glyph->getQuadPlaneBounds(pl, pb, pr, pt);
 
-				pl *= fsScale, pb *= fsScale, pr *= fsScale, pt *= fsScale;
+				pl *= fs_scale, pb *= fs_scale, pr *= fs_scale, pt *= fs_scale;
 				pl += x, pb += y, pr += x, pt += y;
 
-				double texelWidth = 1. / font_atlas->get_width();
-				double texelHeight = 1. / font_atlas->get_height();
-				l *= texelWidth, b *= texelHeight, r *= texelWidth, t *= texelHeight;
+				double texel_width = 1. / font_atlas->get_width();
+				double texel_height = 1. / font_atlas->get_height();
+				l *= texel_width, b *= texel_height, r *= texel_width, t *= texel_height;
 
 				// ImGui::begin("Font");
 				// ImGui::Text("buffer_size: %d, %d", m_ExampleFontSheet->get_width(),
@@ -1137,32 +1102,32 @@ namespace ForgottenEngine {
 				text_vertex_buffer_ptr->Position = transform * glm::vec4(pl, pb, 0.0f, 1.0f);
 				text_vertex_buffer_ptr->Color = color;
 				text_vertex_buffer_ptr->TextureCoords = { l, b };
-				text_vertex_buffer_ptr->TextureIndex = textureIndex;
+				text_vertex_buffer_ptr->TextureIndex = texture_index;
 				text_vertex_buffer_ptr++;
 
 				text_vertex_buffer_ptr->Position = transform * glm::vec4(pl, pt, 0.0f, 1.0f);
 				text_vertex_buffer_ptr->Color = color;
 				text_vertex_buffer_ptr->TextureCoords = { l, t };
-				text_vertex_buffer_ptr->TextureIndex = textureIndex;
+				text_vertex_buffer_ptr->TextureIndex = texture_index;
 				text_vertex_buffer_ptr++;
 
 				text_vertex_buffer_ptr->Position = transform * glm::vec4(pr, pt, 0.0f, 1.0f);
 				text_vertex_buffer_ptr->Color = color;
 				text_vertex_buffer_ptr->TextureCoords = { r, t };
-				text_vertex_buffer_ptr->TextureIndex = textureIndex;
+				text_vertex_buffer_ptr->TextureIndex = texture_index;
 				text_vertex_buffer_ptr++;
 
 				text_vertex_buffer_ptr->Position = transform * glm::vec4(pr, pb, 0.0f, 1.0f);
 				text_vertex_buffer_ptr->Color = color;
 				text_vertex_buffer_ptr->TextureCoords = { r, b };
-				text_vertex_buffer_ptr->TextureIndex = textureIndex;
+				text_vertex_buffer_ptr->TextureIndex = texture_index;
 				text_vertex_buffer_ptr++;
 
 				text_index_count += 6;
 
 				double advance = glyph->getAdvance();
-				fontGeometry.getAdvance(advance, character, utf32string[i + 1]);
-				x += fsScale * advance + kerningOffset;
+				font_geometry.getAdvance(advance, character, utf32string[i + 1]);
+				x += fs_scale * advance + kerningOffset;
 
 				stats.quad_count++;
 			}

@@ -3,8 +3,8 @@
 #include "vulkan/compiler/VulkanShaderCache.hpp"
 
 #include "utilities/SerializationMacros.hpp"
-#include "vulkan/VulkanShaderUtils.hpp"
 #include "vulkan/compiler/preprocessor/ShaderPreprocessor.hpp"
+#include "vulkan/VulkanShaderUtils.hpp"
 #include "yaml-cpp/yaml.h"
 
 namespace ForgottenEngine {

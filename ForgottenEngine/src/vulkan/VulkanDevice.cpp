@@ -18,10 +18,10 @@ namespace ForgottenEngine {
 		uint32_t gpuCount = 0;
 		// Get number of available physical devices
 		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
-		CORE_ASSERT_BOOL(gpuCount > 0);
+		core_assert_bool(gpuCount > 0);
 		// Enumerate devices
 		std::vector<VkPhysicalDevice> devices_to_select_from(gpuCount);
-		VK_CHECK(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, devices_to_select_from.data()));
+		vk_check(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, devices_to_select_from.data()));
 
 		VkPhysicalDevice* selected_physical_device = nullptr;
 		for (VkPhysicalDevice physical : devices_to_select_from) {
@@ -42,7 +42,7 @@ namespace ForgottenEngine {
 			selected_physical_device = &devices_to_select_from.back();
 		}
 
-		CORE_ASSERT(selected_physical_device, "Could not find any physical devices!");
+		core_assert(selected_physical_device, "Could not find any physical devices!");
 		physical_device = *selected_physical_device;
 
 		vkGetPhysicalDeviceFeatures(physical_device, &features);
@@ -50,7 +50,7 @@ namespace ForgottenEngine {
 
 		uint32_t family_count;
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &family_count, nullptr);
-		CORE_ASSERT_BOOL(family_count > 0);
+		core_assert_bool(family_count > 0);
 		queue_family_properties.resize(family_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &family_count, queue_family_properties.data());
 
@@ -107,7 +107,7 @@ namespace ForgottenEngine {
 		}
 
 		depth_format = find_depth_format();
-		CORE_ASSERT_BOOL(depth_format);
+		core_assert_bool(depth_format);
 	}
 
 	VulkanPhysicalDevice::~VulkanPhysicalDevice() = default;
@@ -199,7 +199,7 @@ namespace ForgottenEngine {
 			typeBits >>= 1;
 		}
 
-		CORE_ASSERT(false, "Could not find a suitable memory type!", "");
+		core_assert(false, "Could not find a suitable memory type!", "");
 		return UINT32_MAX;
 	}
 
@@ -211,7 +211,7 @@ namespace ForgottenEngine {
 	{
 		std::vector<const char*> device_exts;
 
-		CORE_ASSERT_BOOL(physical_device->is_extension_supported(VK_KHR_SWAPCHAIN_EXTENSION_NAME));
+		core_assert_bool(physical_device->is_extension_supported(VK_KHR_SWAPCHAIN_EXTENSION_NAME));
 		device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
 #ifdef FORGOTTEN_MACOS
@@ -235,16 +235,16 @@ namespace ForgottenEngine {
 			dci.ppEnabledExtensionNames = device_exts.data();
 		}
 
-		VK_CHECK(vkCreateDevice(physical_device->get_vulkan_physical_device(), &dci, nullptr, &logical_device));
+		vk_check(vkCreateDevice(physical_device->get_vulkan_physical_device(), &dci, nullptr, &logical_device));
 
-		VkCommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		cmdPoolInfo.queueFamilyIndex = physical_device->queue_family_indices.graphics;
-		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		VK_CHECK(vkCreateCommandPool(logical_device, &cmdPoolInfo, nullptr, &command_pool));
+		VkCommandPoolCreateInfo cmd_pool_info = {};
+		cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cmd_pool_info.queueFamilyIndex = physical_device->queue_family_indices.graphics;
+		cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		vk_check(vkCreateCommandPool(logical_device, &cmd_pool_info, nullptr, &command_pool));
 
-		cmdPoolInfo.queueFamilyIndex = physical_device->queue_family_indices.compute;
-		VK_CHECK(vkCreateCommandPool(logical_device, &cmdPoolInfo, nullptr, &compute_command_pool));
+		cmd_pool_info.queueFamilyIndex = physical_device->queue_family_indices.compute;
+		vk_check(vkCreateCommandPool(logical_device, &cmd_pool_info, nullptr, &compute_command_pool));
 
 		// Get a graphics queue from the device
 		vkGetDeviceQueue(logical_device, physical_device->queue_family_indices.graphics, 0, &graphics_queue);
@@ -272,46 +272,46 @@ namespace ForgottenEngine {
 		cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		cbai.commandBufferCount = 1;
 
-		VK_CHECK(vkAllocateCommandBuffers(logical_device, &cbai, &cmd_buffer));
+		vk_check(vkAllocateCommandBuffers(logical_device, &cbai, &cmd_buffer));
 
 		if (begin) {
-			VkCommandBufferBeginInfo cmdBufferBeginInfo {};
-			cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			VK_CHECK(vkBeginCommandBuffer(cmd_buffer, &cmdBufferBeginInfo));
+			VkCommandBufferBeginInfo cmd_buffer_begin_info {};
+			cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			vk_check(vkBeginCommandBuffer(cmd_buffer, &cmd_buffer_begin_info));
 		}
 
 		return cmd_buffer;
 	}
 
-	void VulkanDevice::flush_command_buffer(VkCommandBuffer commandBuffer) { flush_command_buffer(commandBuffer, graphics_queue); }
+	void VulkanDevice::flush_command_buffer(VkCommandBuffer command_buffer) { flush_command_buffer(command_buffer, graphics_queue); }
 
-	void VulkanDevice::flush_command_buffer(VkCommandBuffer commandBuffer, VkQueue queue)
+	void VulkanDevice::flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue)
 	{
-		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
+		static constexpr uint64_t default_fence_timeout = 100000000000;
 
-		CORE_ASSERT_BOOL(commandBuffer != VK_NULL_HANDLE);
+		core_assert_bool(command_buffer != VK_NULL_HANDLE);
 
-		VK_CHECK(vkEndCommandBuffer(commandBuffer));
+		vk_check(vkEndCommandBuffer(command_buffer));
 
 		VkSubmitInfo qsi = {};
 		qsi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		qsi.commandBufferCount = 1;
-		qsi.pCommandBuffers = &commandBuffer;
+		qsi.pCommandBuffers = &command_buffer;
 
 		// Create fence to ensure that the command buffer has finished executing
 		VkFenceCreateInfo fci = {};
 		fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fci.flags = 0;
 		VkFence fence;
-		VK_CHECK(vkCreateFence(logical_device, &fci, nullptr, &fence));
+		vk_check(vkCreateFence(logical_device, &fci, nullptr, &fence));
 
 		// Submit to the queue
-		VK_CHECK(vkQueueSubmit(queue, 1, &qsi, fence));
+		vk_check(vkQueueSubmit(queue, 1, &qsi, fence));
 		// Wait for the fence to signal that command buffer has finished executing
-		VK_CHECK(vkWaitForFences(logical_device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
+		vk_check(vkWaitForFences(logical_device, 1, &fence, VK_TRUE, default_fence_timeout));
 
 		vkDestroyFence(logical_device, fence, nullptr);
-		vkFreeCommandBuffers(logical_device, command_pool, 1, &commandBuffer);
+		vkFreeCommandBuffers(logical_device, command_pool, 1, &command_buffer);
 	}
 
 	VkCommandBuffer VulkanDevice::get_secondary_buffer() const
@@ -324,7 +324,7 @@ namespace ForgottenEngine {
 		cbai.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 		cbai.commandBufferCount = 1;
 
-		VK_CHECK(vkAllocateCommandBuffers(logical_device, &cbai, &cmd_buffer));
+		vk_check(vkAllocateCommandBuffers(logical_device, &cbai, &cmd_buffer));
 		return cmd_buffer;
 	}
 

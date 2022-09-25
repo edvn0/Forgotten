@@ -159,11 +159,11 @@ namespace ForgottenEngine {
 					++index;
 					// Stages
 					if (tokens[index] == "stage") {
-						CORE_VERIFY(tokens[++index] == ":", "Stage pragma is invalid");
+						core_verify(tokens[++index] == ":", "Stage pragma is invalid");
 
 						// Skipped ':'
 						const std::string_view stage(tokens[++index]);
-						CORE_VERIFY(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
+						core_verify(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
 						VkShaderStageFlagBits foundStage = ShaderUtils::stage_to_vk_shader_stage(stage);
 
 						const bool alreadyIncluded
@@ -235,7 +235,7 @@ namespace ForgottenEngine {
 
 		std::unordered_map<VkShaderStageFlagBits, std::string> shaderSources;
 		std::vector<std::pair<VkShaderStageFlagBits, size_t>> stagePositions;
-		CORE_ASSERT(newSource.size(), "Shader is empty!");
+		core_assert(newSource.size(), "Shader is empty!");
 
 		size_t startOfStage = 0;
 		size_t pos = newSource.find('#');
@@ -244,7 +244,7 @@ namespace ForgottenEngine {
 		if constexpr (Lang == ShaderUtils::SourceLang::GLSL) {
 			const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
 			const std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
-			CORE_VERIFY(tokens.size() >= 3 && tokens[1] == "version", "Invalid #version encountered or #version is NOT encounted first.");
+			core_verify(tokens.size() >= 3 && tokens[1] == "version", "Invalid #version encountered or #version is NOT encounted first.");
 			pos = newSource.find('#', pos + 1);
 		}
 
@@ -261,11 +261,11 @@ namespace ForgottenEngine {
 				if (tokens[index] == "stage") {
 					++index;
 					// Jump over ':'
-					CORE_VERIFY(tokens[index] == ":", "Stage pragma is invalid");
+					core_verify(tokens[index] == ":", "Stage pragma is invalid");
 					++index;
 
 					const std::string_view stage = tokens[index];
-					CORE_VERIFY(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
+					core_verify(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
 					auto shaderStage = ShaderUtils::ShaderTypeFromString(stage);
 
 					stagePositions.emplace_back(shaderStage, startOfStage);
@@ -294,7 +294,7 @@ namespace ForgottenEngine {
 			pos = newSource.find('#', pos + 1);
 		}
 
-		CORE_VERIFY(stagePositions.size(), "Could not pre-process shader! There are no known stages defined in file.");
+		core_verify(stagePositions.size(), "Could not pre-process shader! There are no known stages defined in file.");
 		auto& [firstStage, firstStagePos] = stagePositions[0];
 		if (stagePositions.size() > 1) {
 			// Get first stage

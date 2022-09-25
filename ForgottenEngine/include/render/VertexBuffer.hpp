@@ -32,7 +32,7 @@ namespace ForgottenEngine {
 		case ShaderDataType::Bool:
 			return 1;
 		default:
-			CORE_ASSERT(false, "Unknown ShaderDataType!");
+			core_assert(false, "Unknown ShaderDataType!");
 		}
 
 		return 0;
@@ -82,7 +82,7 @@ namespace ForgottenEngine {
 			case ShaderDataType::Bool:
 				return 1;
 			default:
-				CORE_ASSERT(false, "Never reach here in VertexBuffer.");
+				core_assert(false, "Never reach here in VertexBuffer.");
 			}
 
 			return 0;

@@ -16,7 +16,7 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return "__COMPUTE_STAGE__";
 		default:
-			CORE_VERIFY(false, "Unknown shader stage.");
+			core_verify(false, "Unknown shader stage.");
 		}
 	}
 
@@ -28,7 +28,7 @@ namespace ForgottenEngine::ShaderUtils {
 			return "__FRAGMENT_STAGE__";
 		if (stage == "comp")
 			return "__COMPUTE_STAGE__";
-		CORE_VERIFY(false, "Unknown shader stage.");
+		core_verify(false, "Unknown shader stage.");
 		return "";
 	}
 
@@ -40,7 +40,7 @@ namespace ForgottenEngine::ShaderUtils {
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
 		if (stage == "comp")
 			return VK_SHADER_STAGE_COMPUTE_BIT;
-		CORE_VERIFY(false, "Unknown shader stage.");
+		core_verify(false, "Unknown shader stage.");
 		return VK_SHADER_STAGE_ALL;
 	}
 
@@ -54,7 +54,7 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return "comp";
 		default:
-			CORE_ASSERT_BOOL(false);
+			core_assert_bool(false);
 		}
 		return "UNKNOWN";
 	}
@@ -76,9 +76,9 @@ namespace ForgottenEngine::ShaderUtils {
 		if (type == ".glsl")
 			return SourceLang::GLSL;
 		if (type == ".hlsl")
-			CORE_ASSERT(false, "Cannot read HLSL.");
+			core_assert(false, "Cannot read HLSL.");
 
-		CORE_ASSERT_BOOL(false);
+		core_assert_bool(false);
 
 		return SourceLang::NONE;
 	}
@@ -93,9 +93,9 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return shaderc_compute_shader;
 		default:
-			CORE_ASSERT_BOOL(false);
+			core_assert_bool(false);
 		}
-		CORE_ASSERT_BOOL(false);
+		core_assert_bool(false);
 		return {};
 	}
 
@@ -110,7 +110,7 @@ namespace ForgottenEngine::ShaderUtils {
 			case VK_SHADER_STAGE_COMPUTE_BIT:
 				return ".cached_vulkan_debug.comp";
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 		} else {
 			switch (stage) {
@@ -121,7 +121,7 @@ namespace ForgottenEngine::ShaderUtils {
 			case VK_SHADER_STAGE_COMPUTE_BIT:
 				return ".cached_vulkan.comp";
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 		}
 
@@ -138,7 +138,7 @@ namespace ForgottenEngine::ShaderUtils {
 		case VK_SHADER_STAGE_COMPUTE_BIT:
 			return L"cs_6_0";
 		default:
-			CORE_ASSERT_BOOL(false);
+			core_assert_bool(false);
 		}
 		return L"";
 	}

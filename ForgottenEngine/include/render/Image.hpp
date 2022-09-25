@@ -105,7 +105,7 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		inline uint32_t GetImageFormatBPP(ImageFormat format)
+		inline uint32_t get_image_format_bpp(ImageFormat format)
 		{
 			switch (format) {
 			case ImageFormat::RED8UN:
@@ -130,12 +130,12 @@ namespace ForgottenEngine {
 			case ImageFormat::B10R11G11UF:
 				return 4;
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 			return 0;
 		}
 
-		inline bool IsIntegerBased(const ImageFormat format)
+		inline bool is_integer_based(const ImageFormat format)
 		{
 			switch (format) {
 			case ImageFormat::RED16UI:
@@ -158,16 +158,19 @@ namespace ForgottenEngine {
 			case ImageFormat::DEPTH24STENCIL8:
 				return false;
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 			return false;
 		}
 
-		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height) { return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1; }
+		inline uint32_t calculate_mip_count(uint32_t width, uint32_t height) { return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1; }
 
-		inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height) { return width * height * GetImageFormatBPP(format); }
+		inline uint32_t get_image_memory_size(ImageFormat format, uint32_t width, uint32_t height)
+		{
+			return width * height * get_image_format_bpp(format);
+		}
 
-		inline bool IsDepthFormat(ImageFormat format)
+		inline bool is_depth_format(ImageFormat format)
 		{
 			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F || format == ImageFormat::DEPTH32FSTENCIL8UINT)
 				return true;

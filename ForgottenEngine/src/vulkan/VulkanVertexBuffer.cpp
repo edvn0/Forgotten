@@ -82,7 +82,7 @@ namespace ForgottenEngine {
 
 	void VulkanVertexBuffer::set_data(void* buffer, uint32_t size, uint32_t offset)
 	{
-		CORE_ASSERT(size <= local_data.size, "");
+		core_assert(size <= local_data.size, "");
 		memcpy(local_data.data, (uint8_t*)buffer + offset, size);
 		;
 		Reference<VulkanVertexBuffer> instance = this;

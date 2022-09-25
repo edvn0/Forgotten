@@ -25,7 +25,7 @@ namespace ForgottenEngine {
 		vai.usage = memory_usage;
 
 		// allocate the buffer
-		VK_CHECK(vmaCreateBuffer(allocator, &bufferInfo, &vai, &allocated_buffer.buffer, &allocated_buffer.allocation, nullptr));
+		vk_check(vmaCreateBuffer(allocator, &bufferInfo, &vai, &allocated_buffer.buffer, &allocated_buffer.allocation, nullptr));
 	}
 
 	void VulkanBuffer::destroy() { vmaDestroyBuffer(allocator, allocated_buffer.buffer, allocated_buffer.allocation); }

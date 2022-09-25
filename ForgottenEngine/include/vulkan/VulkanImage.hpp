@@ -2,9 +2,9 @@
 
 #include "render/Image.hpp"
 #include "vk_mem_alloc.h"
+#include "vulkan/vulkan.h"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanDevice.hpp"
-#include "vulkan/vulkan.h"
 
 #include <unordered_map>
 
@@ -48,7 +48,7 @@ namespace ForgottenEngine {
 
 		VkImageView get_layer_image_view(uint32_t layer)
 		{
-			CORE_ASSERT(layer < per_layer_image_views.size(), "");
+			core_assert(layer < per_layer_image_views.size(), "");
 			return per_layer_image_views[layer];
 		}
 
@@ -81,7 +81,7 @@ namespace ForgottenEngine {
 
 	namespace Utils {
 
-		inline VkFormat VulkanImageFormat(ImageFormat format)
+		inline VkFormat vulkan_image_format(ImageFormat format)
 		{
 			switch (format) {
 			case ImageFormat::RED8UN:
@@ -115,7 +115,7 @@ namespace ForgottenEngine {
 			case ImageFormat::DEPTH24STENCIL8:
 				return VulkanContext::get_current_device()->get_physical_device()->get_depth_format();
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 
 			return VK_FORMAT_UNDEFINED;

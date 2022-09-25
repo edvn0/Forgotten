@@ -10,6 +10,8 @@
 
 namespace ForgottenEngine {
 
+	static constexpr uint64_t default_fence_timeout = 100000000000;
+
 	static VkDevice get_device()
 	{
 		static VkDevice device;
@@ -30,7 +32,7 @@ namespace ForgottenEngine {
 		// Get available queue family properties
 		uint32_t queue_count;
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_count, nullptr);
-		CORE_ASSERT(queue_count >= 1, "Could not create families");
+		core_assert(queue_count >= 1, "Could not create families");
 
 		std::vector<VkQueueFamilyProperties> queue_props(queue_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_count, queue_props.data());
@@ -63,8 +65,8 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_ASSERT_BOOL(graphics_queue_index != UINT32_MAX);
-		CORE_ASSERT_BOOL(present_queue_index != UINT32_MAX);
+		core_assert_bool(graphics_queue_index != UINT32_MAX);
+		core_assert_bool(present_queue_index != UINT32_MAX);
 
 		queue_node_index = graphics_queue_index;
 
@@ -82,14 +84,14 @@ namespace ForgottenEngine {
 
 		// Get physical device surface properties and formats
 		VkSurfaceCapabilitiesKHR surf_caps;
-		VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surf_caps));
+		vk_check(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surf_caps));
 
 		// Get available present modes
 		uint32_t present_mode_count;
-		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, nullptr));
-		CORE_ASSERT_BOOL(present_mode_count > 0);
+		vk_check(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, nullptr));
+		core_assert_bool(present_mode_count > 0);
 		std::vector<VkPresentModeKHR> present_modes(present_mode_count);
-		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, present_modes.data()));
+		vk_check(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &present_mode_count, present_modes.data()));
 
 		VkExtent2D sc_extent = {};
 		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the
@@ -148,7 +150,7 @@ namespace ForgottenEngine {
 			case VK_PRESENT_MODE_MAX_ENUM_KHR:
 				return "Max enum";
 			default:
-				CORE_ASSERT(false, "Could not find chosen present mode.");
+				core_assert(false, "Could not find chosen present mode.");
 			}
 		};
 		CORE_DEBUG("Chose [{}] as present mode.", present_mode_to_string(sc_present_mode));
@@ -216,7 +218,7 @@ namespace ForgottenEngine {
 			swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
 
-		VK_CHECK(vkCreateSwapchainKHR(get_device(), &swapchain_ci, nullptr, &swapchain));
+		vk_check(vkCreateSwapchainKHR(get_device(), &swapchain_ci, nullptr, &swapchain));
 
 		if (old_sc)
 			vkDestroySwapchainKHR(get_device(), old_sc, nullptr);
@@ -225,12 +227,12 @@ namespace ForgottenEngine {
 			vkDestroyImageView(get_device(), image.view, nullptr);
 		images.clear();
 
-		VK_CHECK(vkGetSwapchainImagesKHR(get_device(), swapchain, &image_count, nullptr));
+		vk_check(vkGetSwapchainImagesKHR(get_device(), swapchain, &image_count, nullptr));
 
 		// Get the swap chain images
 		images.resize(image_count);
 		vulkan_images.resize(image_count);
-		VK_CHECK(vkGetSwapchainImagesKHR(get_device(), swapchain, &image_count, vulkan_images.data()));
+		vk_check(vkGetSwapchainImagesKHR(get_device(), swapchain, &image_count, vulkan_images.data()));
 
 		// Get the swap chain buffers containing the image and imageview
 		images.resize(image_count);
@@ -251,7 +253,7 @@ namespace ForgottenEngine {
 
 			images[i].image = vulkan_images[i];
 
-			VK_CHECK(vkCreateImageView(get_device(), &cav, nullptr, &images[i].view));
+			vk_check(vkCreateImageView(get_device(), &cav, nullptr, &images[i].view));
 		}
 
 		// Create command buffers
@@ -271,10 +273,10 @@ namespace ForgottenEngine {
 
 			command_buffers.resize(image_count);
 			for (auto& cmd_buffer : command_buffers) {
-				VK_CHECK(vkCreateCommandPool(get_device(), &pci, nullptr, &cmd_buffer.command_pool));
+				vk_check(vkCreateCommandPool(get_device(), &pci, nullptr, &cmd_buffer.command_pool));
 
 				commandBufferAllocateInfo.commandPool = cmd_buffer.command_pool;
-				VK_CHECK(vkAllocateCommandBuffers(get_device(), &commandBufferAllocateInfo, &cmd_buffer.buffer));
+				vk_check(vkAllocateCommandBuffers(get_device(), &commandBufferAllocateInfo, &cmd_buffer.buffer));
 			}
 		}
 
@@ -282,62 +284,62 @@ namespace ForgottenEngine {
 		// Synchronization Objects
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if (!semaphores.render_complete_semaphore || !semaphores.present_complete_semaphore) {
-			VkSemaphoreCreateInfo semaphoreCreateInfo {};
-			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-			VK_CHECK(vkCreateSemaphore(get_device(), &semaphoreCreateInfo, nullptr, &semaphores.render_complete_semaphore));
-			VK_CHECK(vkCreateSemaphore(get_device(), &semaphoreCreateInfo, nullptr, &semaphores.present_complete_semaphore));
+			VkSemaphoreCreateInfo semaphore_create_info {};
+			semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+			vk_check(vkCreateSemaphore(get_device(), &semaphore_create_info, nullptr, &semaphores.render_complete_semaphore));
+			vk_check(vkCreateSemaphore(get_device(), &semaphore_create_info, nullptr, &semaphores.present_complete_semaphore));
 		}
 
 		if (wait_fences.size() != image_count) {
-			VkFenceCreateInfo fenceCreateInfo {};
-			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+			VkFenceCreateInfo fence_create_info {};
+			fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 			wait_fences.resize(image_count);
 			for (auto& fence : wait_fences) {
-				VK_CHECK(vkCreateFence(get_device(), &fenceCreateInfo, nullptr, &fence));
+				vk_check(vkCreateFence(get_device(), &fence_create_info, nullptr, &fence));
 			}
 		}
 
-		VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.pWaitDstStageMask = &pipelineStageFlags;
+		submit_info.pWaitDstStageMask = &pipeline_stage_flags;
 		submit_info.waitSemaphoreCount = 1;
 		submit_info.pWaitSemaphores = &semaphores.present_complete_semaphore;
 		submit_info.signalSemaphoreCount = 1;
 		submit_info.pSignalSemaphores = &semaphores.render_complete_semaphore;
 
 		// Render Pass
-		VkAttachmentDescription colorAttachmentDesc = {};
+		VkAttachmentDescription color_attachment_desc = {};
 		// Color attachment
-		colorAttachmentDesc.format = color_format;
-		colorAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		color_attachment_desc.format = color_format;
+		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		VkAttachmentReference colorReference = {};
-		colorReference.attachment = 0;
-		colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkAttachmentReference color_reference = {};
+		color_reference.attachment = 0;
+		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkAttachmentReference depthReference = {};
-		depthReference.attachment = 1;
-		depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		VkAttachmentReference depth_reference = {};
+		depth_reference.attachment = 1;
+		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		VkSubpassDescription subpassDescription = {};
-		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassDescription.colorAttachmentCount = 1;
-		subpassDescription.pColorAttachments = &colorReference;
-		subpassDescription.inputAttachmentCount = 0;
-		subpassDescription.pInputAttachments = nullptr;
-		subpassDescription.preserveAttachmentCount = 0;
-		subpassDescription.pPreserveAttachments = nullptr;
-		subpassDescription.pResolveAttachments = nullptr;
+		VkSubpassDescription subpass_description = {};
+		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass_description.colorAttachmentCount = 1;
+		subpass_description.pColorAttachments = &color_reference;
+		subpass_description.inputAttachmentCount = 0;
+		subpass_description.pInputAttachments = nullptr;
+		subpass_description.preserveAttachmentCount = 0;
+		subpass_description.pPreserveAttachments = nullptr;
+		subpass_description.pResolveAttachments = nullptr;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -350,13 +352,13 @@ namespace ForgottenEngine {
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		render_pass_info.attachmentCount = 1;
-		render_pass_info.pAttachments = &colorAttachmentDesc;
+		render_pass_info.pAttachments = &color_attachment_desc;
 		render_pass_info.subpassCount = 1;
-		render_pass_info.pSubpasses = &subpassDescription;
+		render_pass_info.pSubpasses = &subpass_description;
 		render_pass_info.dependencyCount = 1;
 		render_pass_info.pDependencies = &dependency;
 
-		VK_CHECK(vkCreateRenderPass(get_device(), &render_pass_info, nullptr, &render_pass));
+		vk_check(vkCreateRenderPass(get_device(), &render_pass_info, nullptr, &render_pass));
 
 		// Create framebuffers for every swapchain image
 		{
@@ -374,7 +376,7 @@ namespace ForgottenEngine {
 			framebuffers.resize(image_count);
 			for (uint32_t i = 0; i < framebuffers.size(); i++) {
 				framebuffer_create_info.pAttachments = &images[i].view;
-				VK_CHECK(vkCreateFramebuffer(get_device(), &framebuffer_create_info, nullptr, &framebuffers[i]));
+				vk_check(vkCreateFramebuffer(get_device(), &framebuffer_create_info, nullptr, &framebuffers[i]));
 			}
 		}
 	}
@@ -426,12 +428,11 @@ namespace ForgottenEngine {
 
 		current_image_index = acquire_next_image();
 
-		VK_CHECK(vkResetCommandPool(get_device(), command_buffers[current_buffer_index].command_pool, 0));
+		vk_check(vkResetCommandPool(get_device(), command_buffers[current_buffer_index].command_pool, 0));
 	}
 
 	void VulkanSwapchain::present()
 	{
-		static constexpr uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -445,22 +446,22 @@ namespace ForgottenEngine {
 		present_submit_info.pCommandBuffers = &command_buffers[current_buffer_index].buffer;
 		present_submit_info.commandBufferCount = 1;
 
-		VK_CHECK(vkResetFences(get_device(), 1, &wait_fences[current_buffer_index]));
-		VK_CHECK(
+		vk_check(vkResetFences(get_device(), 1, &wait_fences[current_buffer_index]));
+		vk_check(
 			vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &present_submit_info, wait_fences[current_buffer_index]));
 
 		VkResult result;
 		{
-			VkPresentInfoKHR presentInfo = {};
-			presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-			presentInfo.pNext = nullptr;
-			presentInfo.swapchainCount = 1;
-			presentInfo.pSwapchains = &swapchain;
-			presentInfo.pImageIndices = &current_image_index;
+			VkPresentInfoKHR present_info = {};
+			present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+			present_info.pNext = nullptr;
+			present_info.swapchainCount = 1;
+			present_info.pSwapchains = &swapchain;
+			present_info.pImageIndices = &current_image_index;
 
-			presentInfo.pWaitSemaphores = &semaphores.render_complete_semaphore;
-			presentInfo.waitSemaphoreCount = 1;
-			result = vkQueuePresentKHR(VulkanContext::get_current_device()->get_graphics_queue(), &presentInfo);
+			present_info.pWaitSemaphores = &semaphores.render_complete_semaphore;
+			present_info.waitSemaphoreCount = 1;
+			result = vkQueuePresentKHR(VulkanContext::get_current_device()->get_graphics_queue(), &present_info);
 		}
 
 		if (result != VK_SUCCESS) {
@@ -468,7 +469,7 @@ namespace ForgottenEngine {
 				on_resize(width, height);
 				return;
 			} else {
-				VK_CHECK(result);
+				vk_check(result);
 			}
 		}
 
@@ -476,15 +477,16 @@ namespace ForgottenEngine {
 			const auto& config = Renderer::get_config();
 			current_buffer_index = (current_buffer_index + 1) % config.frames_in_flight;
 			// Make sure the frame we're requesting has finished rendering
-			VK_CHECK(vkWaitForFences(get_device(), 1, &wait_fences[current_buffer_index], VK_TRUE, UINT64_MAX));
+			vk_check(vkWaitForFences(get_device(), 1, &wait_fences[current_buffer_index], VK_TRUE, default_fence_timeout));
 		}
 	}
 
 	uint32_t VulkanSwapchain::acquire_next_image()
 	{
-		uint32_t imageIndex;
-		VK_CHECK(vkAcquireNextImageKHR(get_device(), swapchain, UINT64_MAX, semaphores.present_complete_semaphore, (VkFence) nullptr, &imageIndex));
-		return imageIndex;
+		uint32_t image_index;
+		vk_check(vkAcquireNextImageKHR(
+			get_device(), swapchain, default_fence_timeout, semaphores.present_complete_semaphore, (VkFence) nullptr, &image_index));
+		return image_index;
 	}
 
 	void VulkanSwapchain::find_image_format_and_color_space()
@@ -493,11 +495,11 @@ namespace ForgottenEngine {
 
 		// Get list of supported surface formats
 		uint32_t format_count;
-		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr));
-		CORE_ASSERT_BOOL(format_count > 0);
+		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr));
+		core_assert_bool(format_count > 0);
 
 		std::vector<VkSurfaceFormatKHR> surface_formats(format_count);
-		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, surface_formats.data()));
+		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, surface_formats.data()));
 
 		if ((format_count == 1) && (surface_formats[0].format == VK_FORMAT_UNDEFINED)) {
 			color_format = VK_FORMAT_B8G8R8A8_UNORM;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "VulkanShaderResource.hpp"
 #include "render/Shader.hpp"
 #include "vk_mem_alloc.h"
+#include "VulkanShaderResource.hpp"
 
 #include <filesystem>
 #include <unordered_map>
@@ -65,7 +65,7 @@ namespace ForgottenEngine {
 
 		ShaderResource::UniformBuffer& get_uniform_buffer(const uint32_t binding = 0, const uint32_t set = 0)
 		{
-			CORE_ASSERT(reflection_data.shader_descriptor_sets.at(set).uniform_buffers.size() > binding, "");
+			core_assert(reflection_data.shader_descriptor_sets.at(set).uniform_buffers.size() > binding, "");
 			return reflection_data.shader_descriptor_sets.at(set).uniform_buffers.at(binding);
 		}
 
@@ -79,7 +79,7 @@ namespace ForgottenEngine {
 
 		const std::vector<ShaderResource::ShaderDescriptorSet>& get_shader_descriptor_sets() const { return reflection_data.shader_descriptor_sets; }
 
-		bool has_descriptor_set(uint32_t set) const { return type_counts.find(set) != type_counts.end(); }
+		bool has_descriptor_set(uint32_t set) const { return is_in_map(type_counts, set); }
 
 		const std::vector<ShaderResource::PushConstantRange>& get_push_constant_ranges() const { return reflection_data.push_constant_ranges; }
 

@@ -6,8 +6,8 @@
 #include <GLFW/glfw3.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
 #include <filesystem>
+#include <GLFW/glfw3native.h>
 
 namespace ForgottenEngine {
 
@@ -45,7 +45,7 @@ namespace ForgottenEngine {
 			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
 
 		if (directoryHandle == INVALID_HANDLE_VALUE) {
-			CORE_VERIFY(false, "Failed to open directory!");
+			core_verify(false, "Failed to open directory!");
 			return 0;
 		}
 
@@ -151,12 +151,12 @@ namespace ForgottenEngine {
 		Buffer buffer;
 
 		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		CORE_ASSERT_BOOL(stream);
+		core_assert_bool(stream);
 
 		std::streampos end = stream.tellg();
 		stream.seekg(0, std::ios::beg);
 		uint32_t size = end - stream.tellg();
-		CORE_ASSERT(size != 0, "");
+		core_assert(size != 0, "");
 
 		buffer.allocate(size);
 		stream.read((char*)buffer.data, buffer.size);

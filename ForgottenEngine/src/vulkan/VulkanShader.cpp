@@ -4,9 +4,9 @@
 
 #include "render/Renderer.hpp"
 #include "spirv_cross.hpp"
+#include "vulkan/compiler/VulkanShaderCompiler.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanRenderer.hpp"
-#include "vulkan/compiler/VulkanShaderCompiler.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -47,7 +47,7 @@ namespace ForgottenEngine {
 					return ShaderUniformType::Vec4;
 				break;
 			default:
-				CORE_ASSERT(false, "Unknown type!");
+				core_assert(false, "Unknown type!");
 			}
 			return ShaderUniformType::None;
 		}
@@ -133,7 +133,7 @@ namespace ForgottenEngine {
 		stage_create_infos.clear();
 		std::string moduleName;
 		for (auto [stage, data] : shaderData) {
-			CORE_ASSERT_BOOL(data.size());
+			core_assert_bool(data.size());
 			VkShaderModuleCreateInfo moduleCreateInfo {};
 
 			moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -141,7 +141,7 @@ namespace ForgottenEngine {
 			moduleCreateInfo.pCode = data.data();
 
 			VkShaderModule shaderModule;
-			VK_CHECK(vkCreateShaderModule(device, &moduleCreateInfo, nullptr, &shaderModule));
+			vk_check(vkCreateShaderModule(device, &moduleCreateInfo, nullptr, &shaderModule));
 
 			VkPipelineShaderStageCreateInfo& shaderStage = stage_create_infos.emplace_back();
 			shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -222,7 +222,7 @@ namespace ForgottenEngine {
 				layoutBinding.stageFlags = storageBuffer.ShaderStage;
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[storageBuffer.Name];
 				set = {};
@@ -240,8 +240,8 @@ namespace ForgottenEngine {
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
 				set = {};
@@ -259,9 +259,9 @@ namespace ForgottenEngine {
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
 				set = {};
@@ -279,10 +279,10 @@ namespace ForgottenEngine {
 				layoutBinding.pImmutableSamplers = nullptr;
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
-				CORE_ASSERT(
+				core_assert(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
+				core_assert(
 					shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
@@ -304,12 +304,12 @@ namespace ForgottenEngine {
 				// uint32_t descriptorSet = (bindingAndSet >> 32);
 				layoutBinding.binding = binding;
 
-				CORE_ASSERT(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
-				CORE_ASSERT(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
-				CORE_ASSERT(
+				core_assert(shader_desc_set.uniform_buffers.find(binding) == shader_desc_set.uniform_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.storage_buffers.find(binding) == shader_desc_set.storage_buffers.end(), "Binding is already present!");
+				core_assert(shader_desc_set.image_samplers.find(binding) == shader_desc_set.image_samplers.end(), "Binding is already present!");
+				core_assert(
 					shader_desc_set.separate_textures.find(binding) == shader_desc_set.separate_textures.end(), "Binding is already present!");
-				CORE_ASSERT(
+				core_assert(
 					shader_desc_set.separate_samplers.find(binding) == shader_desc_set.separate_samplers.end(), "Binding is already present!");
 
 				VkWriteDescriptorSet& set = shader_desc_set.write_descriptor_sets[imageSampler.Name];
@@ -328,13 +328,13 @@ namespace ForgottenEngine {
 
 			if (set >= descriptor_set_layouts.size())
 				descriptor_set_layouts.resize((set + 1));
-			VK_CHECK(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptor_set_layouts[set]));
+			vk_check(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptor_set_layouts[set]));
 		}
 	}
 
 	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::allocate_descriptor_set(uint32_t set)
 	{
-		CORE_ASSERT_BOOL(set < descriptor_set_layouts.size());
+		core_assert_bool(set < descriptor_set_layouts.size());
 		ShaderMaterialDescriptorSet result;
 
 		if (reflection_data.shader_descriptor_sets.empty())
@@ -348,7 +348,7 @@ namespace ForgottenEngine {
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &descriptor_set_layouts[set];
 		VkDescriptorSet descriptorSet = VulkanRenderer::rt_allocate_descriptor_set(alloc_info);
-		CORE_ASSERT_BOOL(descriptorSet);
+		core_assert_bool(descriptorSet);
 		result.descriptor_sets.push_back(descriptorSet);
 		return result;
 	}
@@ -359,7 +359,7 @@ namespace ForgottenEngine {
 
 		VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 
-		CORE_ASSERT_BOOL(type_counts.find(set) != type_counts.end());
+		core_assert_bool(type_counts.find(set) != type_counts.end());
 
 		// TODO: Move this to the centralized renderer
 		VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
@@ -369,7 +369,7 @@ namespace ForgottenEngine {
 		descriptorPoolInfo.pPoolSizes = type_counts.at(set).data();
 		descriptorPoolInfo.maxSets = 1;
 
-		VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.pool));
+		vk_check(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.pool));
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -377,7 +377,7 @@ namespace ForgottenEngine {
 		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = &descriptor_set_layouts[set];
 		result.descriptor_sets.emplace_back();
-		VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, result.descriptor_sets.data()));
+		vk_check(vkAllocateDescriptorSets(device, &allocInfo, result.descriptor_sets.data()));
 		return result;
 	}
 
@@ -442,7 +442,7 @@ namespace ForgottenEngine {
 			}
 		}
 
-		CORE_ASSERT_BOOL(poolSizes.find(desc_set) != poolSizes.end());
+		core_assert_bool(poolSizes.find(desc_set) != poolSizes.end());
 
 		// TODO: Move this to the centralized renderer
 		VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
@@ -452,7 +452,7 @@ namespace ForgottenEngine {
 		descriptorPoolInfo.pPoolSizes = poolSizes.at(desc_set).data();
 		descriptorPoolInfo.maxSets = numberOfSets;
 
-		VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.pool));
+		vk_check(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.pool));
 
 		result.descriptor_sets.resize(numberOfSets);
 
@@ -462,15 +462,15 @@ namespace ForgottenEngine {
 			allocInfo.descriptorPool = result.pool;
 			allocInfo.descriptorSetCount = 1;
 			allocInfo.pSetLayouts = &descriptor_set_layouts[desc_set];
-			VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, &result.descriptor_sets[i]));
+			vk_check(vkAllocateDescriptorSets(device, &allocInfo, &result.descriptor_sets[i]));
 		}
 		return result;
 	}
 
 	const VkWriteDescriptorSet* VulkanShader::get_descriptor_set(const std::string& desc_set_name, uint32_t set) const
 	{
-		CORE_ASSERT_BOOL(set < reflection_data.shader_descriptor_sets.size());
-		CORE_ASSERT_BOOL(reflection_data.shader_descriptor_sets[set]);
+		core_assert_bool(set < reflection_data.shader_descriptor_sets.size());
+		core_assert_bool(reflection_data.shader_descriptor_sets[set]);
 
 		if (reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.find(desc_set_name)
 			== reflection_data.shader_descriptor_sets.at(set).write_descriptor_sets.end()) {

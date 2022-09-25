@@ -21,7 +21,7 @@ namespace ForgottenEngine {
 
 		VkCommandBuffer get_command_buffer(uint32_t frame_index) const
 		{
-			CORE_ASSERT(frame_index < command_buffers.size(), "");
+			core_assert(frame_index < command_buffers.size(), "");
 			return command_buffers[frame_index];
 		}
 

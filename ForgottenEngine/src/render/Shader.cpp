@@ -4,8 +4,8 @@
 
 #include "render/Renderer.hpp"
 #include "render/RendererAPI.hpp"
-#include "vulkan/VulkanShader.hpp"
 #include "vulkan/compiler/VulkanShaderCompiler.hpp"
+#include "vulkan/VulkanShader.hpp"
 
 #include <utility>
 
@@ -31,7 +31,7 @@ namespace ForgottenEngine {
 
 	void ShaderLibrary::add(const std::string& name, const Reference<Shader>& shader)
 	{
-		CORE_ASSERT_BOOL(shaders.find(name) == shaders.end());
+		core_assert(is_in_map(shaders, name), "Could not find shader with name: {}", name);
 		shaders[name] = shader;
 	}
 
@@ -40,7 +40,7 @@ namespace ForgottenEngine {
 		Reference<Shader> shader;
 
 		auto found_path = Assets::find_resources_by_path(path, "shaders");
-		CORE_ASSERT_BOOL(found_path);
+		core_assert(found_path, "Could not find a shader at: {}", found_path);
 
 		if (!force_compile && shader_pack) {
 			if (shader_pack->contains(path))
@@ -53,20 +53,20 @@ namespace ForgottenEngine {
 		}
 
 		auto& name = shader->get_name();
-		CORE_ASSERT_BOOL(shaders.find(name) == shaders.end());
+		core_assert_bool(is_in_map(shaders, name));
 		shaders[name] = shader;
 	}
 
 	void ShaderLibrary::load(std::string_view name, const std::string& path)
 	{
 		std::string shader_name(name);
-		CORE_ASSERT_BOOL(shaders.find(shader_name) != shaders.end());
+		core_assert(is_in_map(shaders, shader_name), "Could not find shader with name: {}", name);
 		shaders[shader_name] = Shader::create(path);
 	}
 
 	const Reference<Shader>& ShaderLibrary::get(const std::string& name) const
 	{
-		CORE_ASSERT_BOOL(shaders.find(name) != shaders.end());
+		core_assert(is_in_map(shaders, name), "Could not find shader with name: {}", name);
 		return shaders.at(name);
 	}
 

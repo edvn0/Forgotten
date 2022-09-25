@@ -11,6 +11,7 @@
 
 #include <array>
 #include <glm/glm.hpp>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <unordered_map>
@@ -18,12 +19,27 @@
 #include <vector>
 
 template <typename T>
-concept MapType = std::same_as<T,
-	std::unordered_map<typename T::key_type, typename T::mapped_type, typename T::key_compare, typename T::allocator_type>> || std::same_as<T,
-	std::unordered_map<typename T::key_type, typename T::mapped_type, typename T::hasher, typename T::key_equal, typename T::allocator_type>> || std::
-	same_as<T, std::unordered_set<typename T::key_type, typename T::hasher, typename T::key_equal, typename T::allocator_type>>;
+using MapTypeThird = std::unordered_map < typename T::key_type,
+	  typename T::mapped_type, typename T::key_compare, typename T::allocator_type >> ;
 
-template <MapType T, typename ToFind> static constexpr bool is_in_map(const T& map, const ToFind& to_find) { return map.find(to_find) != map.end(); }
+template <typename T>
+using MapTypeSecond
+	= std::unordered_map<typename T::key_type, typename T::mapped_type, typename T::hasher, typename T::key_equal, typename T::allocator_type>;
+
+template <typename T>
+using MapTypeFirst = std::map<typename T::key_type, typename T::mapped_type, typename T::key_compare, typename T::allocator_type>;
+
+template <typename T>
+using MapTypeFourth = std::unordered_set<typename T::key_type, typename T::hasher, typename T::key_equal, typename T::allocator_type>;
+
+template <typename T>
+concept MapType
+	= std::same_as<T, MapTypeFirst<T>> || std::same_as<T, MapTypeSecond<T>> || std::same_as<T, MapTypeThird<T>> || std::same_as<T, MapTypeFourth<T>>;
+
+template <MapType T, typename ToFind> static inline constexpr bool is_in_map(const T& map, const ToFind& to_find)
+{
+	return map.find(to_find) != map.end();
+}
 
 #define BIT(x) (1u << (x))
 
@@ -36,29 +52,31 @@ template <MapType T, typename ToFind> static constexpr bool is_in_map(const T& m
 
 #ifdef FORGOTTEN_ENABLE_ASSERTS
 
-template <typename PositiveCondition = bool> static constexpr inline void CORE_ASSERT_BOOL(PositiveCondition&& x)
+template <typename PositiveCondition = bool> static constexpr inline void core_assert_bool(PositiveCondition&& x)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed.");
+		ForgottenEngine::Logger::get_core_logger()->error("Assertion failed.");
 		debug_break();
 	}
 }
 
-template <typename PositiveCondition = bool, typename... T> static constexpr inline void CORE_ASSERT(PositiveCondition&& x, T&&... args)
+template <typename PositiveCondition = bool, typename... T>
+static constexpr inline void core_assert(PositiveCondition&& x, std::string_view format, T&&... args)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Assertion failed. Message: {}", args...);
+		auto msg = fmt::format(format, args...);
+		ForgottenEngine::Logger::get_core_logger()->error("Assertion failed. Message: {}", msg);
 		debug_break();
 	}
 }
 
 #else
-#define CORE_ASSERT(condition, ...)
+#define core_assert(condition, ...)
 #endif
 
 #ifdef FORGOTTEN_ENABLE_VERIFY
 
-template <typename PositiveCondition = bool> static constexpr inline void CORE_VERIFY_BOOL(PositiveCondition&& x)
+template <typename PositiveCondition = bool> static constexpr inline void core_verify_bool(PositiveCondition&& x)
 {
 	if (!(x)) {
 		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed.");
@@ -66,7 +84,7 @@ template <typename PositiveCondition = bool> static constexpr inline void CORE_V
 	}
 }
 
-template <typename PositiveCondition = bool, typename... T> static constexpr inline void CORE_VERIFY(PositiveCondition&& x, T&&... args)
+template <typename PositiveCondition = bool, typename... T> static constexpr inline void core_verify(PositiveCondition&& x, T&&... args)
 {
 	if (!(x)) {
 		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed. Message: {}", args...);
@@ -75,7 +93,7 @@ template <typename PositiveCondition = bool, typename... T> static constexpr inl
 }
 
 #else
-#define CORE_VERIFY(condition, ...)
+#define core_verify(condition, ...)
 #endif
 
 namespace ForgottenEngine {
@@ -84,13 +102,13 @@ namespace ForgottenEngine {
 
 	typedef unsigned char byte;
 
-#define VK_CHECK(x)                                                                                                                                  \
-	do {                                                                                                                                             \
-		VkResult err = x;                                                                                                                            \
-		if (err) {                                                                                                                                   \
-			CORE_ERROR("Vulkan Error: {}", err);                                                                                                     \
-			debug_break();                                                                                                                           \
-		}                                                                                                                                            \
-	} while (0)
+	template <typename VulkanResult> static constexpr void vk_check(VulkanResult result)
+	{
+		VulkanResult err = result;
+		if (err) {
+			CORE_ERROR("Vulkan Error: {}", err);
+			debug_break();
+		}
+	}
 
 }; // namespace ForgottenEngine

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "preprocessor/ShaderPreprocessor.hpp"
+#include "vulkan/vulkan.h"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanShaderResource.hpp"
 #include "vulkan/VulkanShaderUtils.hpp"
-#include "vulkan/vulkan.h"
 
 #include <filesystem>
 #include <unordered_map>

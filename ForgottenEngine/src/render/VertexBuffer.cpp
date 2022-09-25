@@ -16,7 +16,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanVertexBuffer>::create(data, size, usage);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 	Reference<VertexBuffer> VertexBuffer::create(uint32_t size, VertexBufferUsage usage)
 	{
@@ -26,7 +26,7 @@ namespace ForgottenEngine {
 		case RendererAPIType::Vulkan:
 			return Reference<VulkanVertexBuffer>::create(size, usage);
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

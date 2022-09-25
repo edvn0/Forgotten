@@ -1,23 +1,23 @@
 ﻿---
 BasedOnStyle: WebKit
-AllowShortLoopsOnASingleLine: "false"
-FixNamespaceComments: "true"
+AllowShortLoopsOnASingleLine: false
+FixNamespaceComments: true
 IncludeBlocks: Regroup
 IncludeCategories:
-    - Regex: "fg_pch.hpp"
-      Priority: -1
-    - Regex: '^"'
-      Priority: 1
-    - Regex: "(projectDir1|projectDir2|projectDir3)"
-      Priority: 2
-    - Regex: "(someDep1|someDep2)"
-      Priority: 3
-    - Regex: ".*"
-      Priority: 4
+  - Regex: "fg_pch.hpp"
+    Priority: -1
+  - Regex: '^"'
+    Priority: 1
+  - Regex: "(projectDir1|projectDir2|projectDir3)"
+    Priority: 2
+  - Regex: "(someDep1|someDep2)"
+    Priority: 3
+  - Regex: ".*"
+    Priority: 4
 NamespaceIndentation: All
-SortIncludes: "true"
-SortUsingDeclarations: "true"
-Standard: Cpp11
-TabWidth: "4"
+SortIncludes: CaseInsensitive
+SortUsingDeclarations: true
+Standard: c++20
+TabWidth: 4
 UseTab: Always
 ColumnLimit: 150

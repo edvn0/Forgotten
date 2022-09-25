@@ -101,7 +101,7 @@ namespace ForgottenEngine {
 			case VK_RESULT_MAX_ENUM:
 				return "VK_RESULT_MAX_ENUM";
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 		}
 
@@ -193,7 +193,7 @@ namespace ForgottenEngine {
 			case VK_OBJECT_TYPE_MAX_ENUM:
 				return "VK_OBJECT_TYPE_MAX_ENUM";
 			default:
-				CORE_ASSERT_BOOL(false);
+				core_assert_bool(false);
 			}
 		}
 
@@ -330,7 +330,7 @@ namespace ForgottenEngine {
 			CORE_ERROR("Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled");
 		}
 
-		VK_CHECK(vkCreateInstance(&create_fino, nullptr, &vulkan_instance));
+		vk_check(vkCreateInstance(&create_fino, nullptr, &vulkan_instance));
 
 		physical_device = VulkanPhysicalDevice::select();
 
@@ -352,7 +352,7 @@ namespace ForgottenEngine {
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		auto vulkan_device = device->get_vulkan_device();
-		VK_CHECK(vkCreatePipelineCache(vulkan_device, &pipelineCacheCreateInfo, nullptr, &pipeline_cache));
+		vk_check(vkCreatePipelineCache(vulkan_device, &pipelineCacheCreateInfo, nullptr, &pipeline_cache));
 	}
 
 	VulkanContext::~VulkanContext()

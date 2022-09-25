@@ -30,7 +30,7 @@ namespace ForgottenEngine::StringUtils {
 		}
 
 		std::ifstream& in = *path;
-		CORE_ASSERT(in, "Could not open shader file.");
+		core_assert(in, "Could not open shader file.");
 
 		size_t file_size = in.tellg();
 		in.seekg(0);

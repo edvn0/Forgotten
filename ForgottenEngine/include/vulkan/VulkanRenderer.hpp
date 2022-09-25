@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render/RendererAPI.hpp"
+#include "vulkan/vulkan.h"
 #include "vulkan/VulkanIndexBuffer.hpp"
 #include "vulkan/VulkanMaterial.hpp"
 #include "vulkan/VulkanPipeline.hpp"
@@ -8,7 +9,6 @@
 #include "vulkan/VulkanStorageBuffer.hpp"
 #include "vulkan/VulkanUniformBuffer.hpp"
 #include "vulkan/VulkanVertexBuffer.hpp"
-#include "vulkan/vulkan.h"
 
 namespace ForgottenEngine {
 
@@ -19,11 +19,11 @@ namespace ForgottenEngine {
 			VkImageLayout oldimagelayout, VkImageLayout newimagelayout, VkPipelineStageFlags srcstagemask, VkPipelineStageFlags dststagemask,
 			VkImageSubresourceRange subresourcerange);
 
-		void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageLayout oldimagelayout, VkImageLayout newimagelayout,
+		void set_image_layout(VkCommandBuffer command_buffer, VkImage image, VkImageLayout oldimagelayout, VkImageLayout newimagelayout,
 			VkImageSubresourceRange subresourcerange, VkPipelineStageFlags srcstagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 			VkPipelineStageFlags dststagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
-		void set_image_layout(VkCommandBuffer cmdbuffer, VkImage image, VkImageAspectFlags aspectmask, VkImageLayout oldimagelayout,
+		void set_image_layout(VkCommandBuffer command_buffer, VkImage image, VkImageAspectFlags aspectmask, VkImageLayout oldimagelayout,
 			VkImageLayout newimagelayout, VkPipelineStageFlags srcstagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 			VkPipelineStageFlags dststagemask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 	} // namespace Utils
@@ -55,7 +55,7 @@ namespace ForgottenEngine {
 			const glm::mat4& transform, uint32_t index_count) override;
 
 		void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,
-			const Reference<UniformBufferSet>& uniformBufferSet, const Reference<Material>& material) override;
+			const Reference<UniformBufferSet>& uniform_buffer_set, const Reference<Material>& material) override;
 
 		void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline_in,
 			const Reference<UniformBufferSet>& ub, const Reference<StorageBufferSet>& sb, const Reference<Material>& material) override;

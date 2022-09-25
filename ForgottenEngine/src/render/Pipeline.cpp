@@ -16,10 +16,13 @@ namespace ForgottenEngine {
 		switch (RendererAPI::current()) {
 		case RendererAPIType::None:
 			return nullptr;
-		case RendererAPIType::Vulkan:
-			return Reference<VulkanPipeline>::create(spec);
+		case RendererAPIType::Vulkan: {
+			auto pipeline = Reference<VulkanPipeline>::create(spec);
+			pipeline->invalidate();
+			return pipeline;
 		}
-		CORE_ASSERT(false, "Unknown RendererAPI");
+		}
+		core_assert(false, "Unknown RendererAPI");
 	}
 
 } // namespace ForgottenEngine

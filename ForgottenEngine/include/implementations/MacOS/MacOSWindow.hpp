@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Reference.hpp"
-#include "Window.hpp"
 #include "render/RendererContext.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
+#include "Window.hpp"
 
 #include <GLFW/glfw3.h>
 

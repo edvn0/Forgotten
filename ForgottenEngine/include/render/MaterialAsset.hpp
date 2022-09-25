@@ -78,7 +78,7 @@ namespace ForgottenEngine {
 
 		Reference<MaterialAsset> get_material(uint32_t materialIndex) const
 		{
-			CORE_ASSERT(has_material(materialIndex), "");
+			core_assert(has_material(materialIndex), "");
 			return materials.at(materialIndex);
 		}
 		std::unordered_map<uint32_t, Reference<MaterialAsset>>& get_materials() { return materials; }

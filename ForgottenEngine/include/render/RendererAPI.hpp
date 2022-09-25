@@ -40,7 +40,7 @@ namespace ForgottenEngine {
 			= 0;
 
 		virtual void submit_fullscreen_quad(const Reference<RenderCommandBuffer>& command_buffer, const Reference<Pipeline>& pipeline,
-			const Reference<UniformBufferSet>& uniformBufferSet, const Reference<Material>& material)
+			const Reference<UniformBufferSet>& uniform_buffer_set, const Reference<Material>& material)
 			= 0;
 		// END SUBMITS
 
@@ -48,7 +48,7 @@ namespace ForgottenEngine {
 		static RendererAPIType current() { return current_api; }
 		static void set_api(RendererAPIType api)
 		{
-			CORE_ASSERT(api == RendererAPIType::Vulkan, "Must be Vulkan for now.");
+			core_assert(api == RendererAPIType::Vulkan, "Must be Vulkan for now.");
 			current_api = api;
 		}
 

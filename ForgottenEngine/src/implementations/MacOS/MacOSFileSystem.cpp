@@ -7,8 +7,8 @@
 
 #define GLFW_EXPOSE_NATIVE_COCOA
 
-#include <GLFW/glfw3native.h>
 #include <filesystem>
+#include <GLFW/glfw3native.h>
 
 namespace ForgottenEngine {
 
@@ -54,7 +54,7 @@ namespace ForgottenEngine {
 
 		if (directoryHandle == INVALID_HANDLE_VALUE)
 		{
-			HZ_CORE_VERIFY(false, "Failed to open directory!");
+			HZ_core_verify(false, "Failed to open directory!");
 			return 0;
 		}
 
@@ -182,12 +182,12 @@ namespace ForgottenEngine {
 		Buffer buffer;
 
 		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		CORE_ASSERT_BOOL(stream);
+		core_assert_bool(stream);
 
 		std::streampos end = stream.tellg();
 		stream.seekg(0, std::ios::beg);
 		uint32_t size = end - stream.tellg();
-		CORE_ASSERT(size != 0, "");
+		core_assert(size != 0, "");
 
 		buffer.allocate(size);
 		stream.read((char*)buffer.data, buffer.size);
