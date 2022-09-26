@@ -286,7 +286,7 @@ namespace ForgottenEngine {
 		render_command_buffer->begin();
 		Renderer::begin_render_pass(render_command_buffer, quad_pipeline->get_specification().render_pass, false);
 
-		auto data_size = (uint32_t)((uint8_t*)quad_vertex_buffer_ptr - (uint8_t*)quad_vertex_buffer_base[frame_index]);
+		auto data_size = quad_vertex_buffer_ptr - quad_vertex_buffer_base[frame_index];
 		if (data_size) {
 			quad_vertex_buffer[frame_index]->set_data(quad_vertex_buffer_base[frame_index], data_size);
 

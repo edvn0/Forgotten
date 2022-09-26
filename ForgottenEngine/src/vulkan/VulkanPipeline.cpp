@@ -341,7 +341,7 @@ namespace ForgottenEngine {
 		});
 	}
 
-	void VulkanPipeline::set_uniform_buffer(Reference<ForgottenEngine::UniformBuffer> ub, uint32_t binding, uint32_t set)
+	void VulkanPipeline::set_uniform_buffer(const Reference<UniformBuffer>& ub, uint32_t binding, uint32_t set)
 	{
 		Reference<VulkanPipeline> instance = this;
 		Renderer::submit([instance, ub, binding, set]() mutable { instance->rt_set_uniform_buffer(ub, binding, set); });

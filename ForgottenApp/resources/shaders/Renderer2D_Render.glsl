@@ -52,11 +52,10 @@ struct VertexOutput {
 layout(location = 0) in VertexOutput Input;
 layout(location = 5) in flat float TexIndex;
 
-layout (binding = 1) uniform sampler2D u_Textures[16];
-
+layout (binding = 1) uniform sampler2D u_Texture;
 
 void main()
 {
-	color = texture(u_Textures[int(TexIndex)], Input.TexCoord * Input.TilingFactor) * Input.Color;
+	color = texture(u_Texture, Input.TexCoord * Input.TilingFactor) * Input.Color;
 }
 

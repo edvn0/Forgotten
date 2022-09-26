@@ -19,8 +19,7 @@
 #include <vector>
 
 template <typename T>
-using MapTypeThird = std::unordered_map < typename T::key_type,
-	  typename T::mapped_type, typename T::key_compare, typename T::allocator_type >> ;
+using MapTypeThird = std::unordered_map<typename T::key_type, typename T::mapped_type, typename T::key_compare, typename T::allocator_type>;
 
 template <typename T>
 using MapTypeSecond
@@ -84,10 +83,12 @@ template <typename PositiveCondition = bool> static constexpr inline void core_v
 	}
 }
 
-template <typename PositiveCondition = bool, typename... T> static constexpr inline void core_verify(PositiveCondition&& x, T&&... args)
+template <typename PositiveCondition = bool, typename... T>
+static constexpr inline void core_verify(PositiveCondition&& x, std::string_view format, T&&... args)
 {
 	if (!(x)) {
-		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed. Message: {}", args...);
+		auto msg = fmt::format(format, args...);
+		::ForgottenEngine::Logger::get_core_logger()->error("Verification failed. Message: {}", msg);
 		debug_break();
 	}
 }

@@ -60,7 +60,7 @@ namespace ForgottenEngine {
 		// TEMP: remove this when render command buffers are a thing
 		virtual void bind() = 0;
 
-		virtual void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set) = 0;
+		virtual void set_uniform_buffer(const Reference<UniformBuffer>& ub, uint32_t binding, uint32_t set) = 0;
 
 		static Reference<Pipeline> create(const PipelineSpecification& spec);
 	};

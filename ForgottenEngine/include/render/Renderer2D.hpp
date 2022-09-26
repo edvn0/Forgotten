@@ -31,11 +31,11 @@ namespace ForgottenEngine {
 		void init();
 		void shut_down();
 
-		void begin_scene(const glm::mat4& view_proj, const glm::mat4& view, bool depthTest = true);
+		void begin_scene(const glm::mat4& view_proj, const glm::mat4& view, bool depth_test = true);
 		void end_scene();
 
 		Reference<RenderPass> get_target_render_pass();
-		void set_target_render_pass(const Reference<RenderPass>& renderPass);
+		void set_target_render_pass(const Reference<RenderPass>& render_pass);
 
 		void on_recreate_swapchain();
 
@@ -76,13 +76,13 @@ namespace ForgottenEngine {
 		void draw_aabb(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 		void draw_aabb(Reference<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 
-		void draw_string(const std::string& string, const glm::vec3& position, float maxWidth, const glm::vec4& color = glm::vec4(1.0f));
-		void draw_string(const std::string& string, const Reference<Font>& font, const glm::vec3& position, float maxWidth,
+		void draw_string(const std::string& string, const glm::vec3& position, float max_width, const glm::vec4& color = glm::vec4(1.0f));
+		void draw_string(const std::string& string, const Reference<Font>& font, const glm::vec3& position, float max_width,
 			const glm::vec4& color = glm::vec4(1.0f));
-		void draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform, float maxWidth,
-			const glm::vec4& color = glm::vec4(1.0f), float lineHeightOffset = 0.0f, float kerningOffset = 0.0f);
+		void draw_string(const std::string& string, const Reference<Font>& font, const glm::mat4& transform, float max_width,
+			const glm::vec4& color = glm::vec4(1.0f), float line_height_offset = 0.0f, float kerning_offset = 0.0f);
 
-		void set_line_width(float lineWidth);
+		void set_line_width(float line_width);
 
 		// Stats
 		struct Statistics {

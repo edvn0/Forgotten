@@ -21,7 +21,7 @@ namespace ForgottenEngine {
 
 	class VulkanShaderCompiler : public ReferenceCounted {
 	public:
-		VulkanShaderCompiler(const std::filesystem::path& shader_source_path, bool disableOptimization = false);
+		VulkanShaderCompiler(const std::filesystem::path& shader_source_path, bool disable_optimization = false);
 
 		bool reload(bool forceCompile = false);
 
@@ -43,11 +43,11 @@ namespace ForgottenEngine {
 			bool Optimize = true;
 		};
 
-		std::string compile(std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
+		std::string compile(std::vector<uint32_t>& output_binary, const VkShaderStageFlagBits stage, CompilationOptions options) const;
 
 		bool compile_or_get_vulkan_binaries(std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputDebugBinary,
 			std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>>& outputBinary, const VkShaderStageFlagBits changedStages,
-			const bool forceCompile);
+			const bool force_compile);
 
 		bool compile_or_get_vulkan_binary(
 			VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool forceCompile);

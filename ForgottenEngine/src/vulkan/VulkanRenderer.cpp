@@ -592,7 +592,6 @@ namespace ForgottenEngine {
 	void VulkanRenderer::end_render_pass(Reference<RenderCommandBuffer> command_buffer)
 	{
 		Renderer::submit([cmd_buffer = command_buffer]() {
-			Renderer::get_current_frame_index();
 			VkCommandBuffer command_buffer = cmd_buffer.as<VulkanRenderCommandBuffer>()->get_active_command_buffer();
 
 			vkCmdEndRenderPass(command_buffer);

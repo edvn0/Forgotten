@@ -185,34 +185,34 @@ namespace ForgottenEngine {
 	}
 
 	std::string VulkanShaderCompiler::compile(
-		std::vector<uint32_t>& outputBinary, const VkShaderStageFlagBits stage, CompilationOptions options) const
+		std::vector<uint32_t>& output_binary, const VkShaderStageFlagBits stage, CompilationOptions options) const
 	{
-		const std::string& stageSource = shader_source.at(stage);
+		const std::string& stage_source = shader_source.at(stage);
 
 		if (language == ShaderUtils::SourceLang::GLSL) {
 			static shaderc::Compiler compiler;
-			shaderc::CompileOptions shaderCOptions;
+			shaderc::CompileOptions shader_c_options;
 #ifdef FORGOTTEN_WINDOWS
 			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
 #elif defined(FORGOTTEN_MACOS)
-			shaderCOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
+			shader_c_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
 #endif
-			shaderCOptions.SetWarningsAsErrors();
+			shader_c_options.SetWarningsAsErrors();
 			if (options.GenerateDebugInfo)
-				shaderCOptions.SetGenerateDebugInfo();
+				shader_c_options.SetGenerateDebugInfo();
 
 			if (options.Optimize)
-				shaderCOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+				shader_c_options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
 			// compile shader
 			const shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(
-				stageSource, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), shaderCOptions);
+				stage_source, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), shader_c_options);
 
 			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				return fmt::format("\n{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(), shader_source_path.string(),
 					ShaderUtils::shader_stage_to_string(stage));
 
-			outputBinary = std::vector<uint32_t>(module.begin(), module.end());
+			output_binary = std::vector<uint32_t>(module.begin(), module.end());
 			return {}; // Success
 		}
 		return "Unknown language!";

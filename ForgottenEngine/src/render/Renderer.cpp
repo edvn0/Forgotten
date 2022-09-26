@@ -89,9 +89,9 @@ namespace ForgottenEngine {
 		if (!config.shader_pack_path.empty())
 			shader_library->load_shader_pack(config.shader_pack_path);
 
-		// Renderer2D Shaders
 		shader_library->load("SceneComposite.glsl");
 		shader_library->load("Renderer2D_Circle.glsl");
+		shader_library->load("Renderer2D_Render.glsl");
 		shader_library->load("Renderer2D_Line.glsl");
 		shader_library->load("Renderer2D.glsl");
 		shader_library->load("Renderer2D_Text.glsl");

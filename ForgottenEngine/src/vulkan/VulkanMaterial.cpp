@@ -222,7 +222,7 @@ namespace ForgottenEngine {
 		core_assert(image.as<VulkanImage2D>()->get_image_info().image_view, "ImageView is null");
 
 		const ShaderResourceDeclaration* resource = find_resource_declaration(name);
-		core_verify_bool(resource);
+		core_verify(resource, "Could not find resource with name {1} declared in shader {0}.", this->material_shader->get_name(), name);
 
 		uint32_t binding = resource->get_register();
 		// Image is already set

@@ -40,7 +40,7 @@ namespace ForgottenEngine {
 		Reference<Shader> shader;
 
 		auto found_path = Assets::find_resources_by_path(path, "shaders");
-		core_assert(found_path, "Could not find a shader at: {}", found_path);
+		core_assert(found_path, "Could not find a shader at: {}", *found_path);
 
 		if (!force_compile && shader_pack) {
 			if (shader_pack->contains(path))
@@ -53,14 +53,14 @@ namespace ForgottenEngine {
 		}
 
 		auto& name = shader->get_name();
-		core_assert_bool(is_in_map(shaders, name));
+		core_assert(!is_in_map(shaders, name), "Shader with name [{}] already linked", name);
 		shaders[name] = shader;
 	}
 
 	void ShaderLibrary::load(std::string_view name, const std::string& path)
 	{
 		std::string shader_name(name);
-		core_assert(is_in_map(shaders, shader_name), "Could not find shader with name: {}", name);
+		core_assert(!is_in_map(shaders, shader_name), "Shader with name [{}] already linked", name);
 		shaders[shader_name] = Shader::create(path);
 	}
 

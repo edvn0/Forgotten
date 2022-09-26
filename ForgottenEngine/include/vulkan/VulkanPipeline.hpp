@@ -24,7 +24,7 @@ namespace ForgottenEngine {
 
 		auto get_descriptor_set(uint32_t set) { return descriptor_sets.descriptor_sets[set]; }
 
-		void set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set) override;
+		void set_uniform_buffer(const Reference<UniformBuffer>& ub, uint32_t binding, uint32_t set) override;
 		void rt_set_uniform_buffer(Reference<UniformBuffer> ub, uint32_t binding, uint32_t set = 0);
 
 	private:

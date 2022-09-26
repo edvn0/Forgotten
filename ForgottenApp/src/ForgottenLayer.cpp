@@ -20,17 +20,12 @@ void ForgottenLayer::on_attach()
 	const auto [w, h] = Application::the().get_window().get_size<float>();
 	width = w;
 	height = h;
-	VertexBufferLayout vertex_layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float3, "a_Normal" },
-		{ ShaderDataType::Float3, "a_Tangent" }, { ShaderDataType::Float3, "a_Binormal" }, { ShaderDataType::Float2, "a_TexCoord" } };
+	VertexBufferLayout vertex_layout = { { ShaderDataType::Float3, "a_Position" }, { ShaderDataType::Float3, "a_Color" },
+		{ ShaderDataType::Float2, "a_Tangent" }, { ShaderDataType::Float, "a_TexIndex" }, { ShaderDataType::Float, "a_TilingFactor" } };
 
-	VertexBufferLayout instance_layout = {
-		{ ShaderDataType::Float4, "a_MRow0" },
-		{ ShaderDataType::Float4, "a_MRow1" },
-		{ ShaderDataType::Float4, "a_MRow2" },
-	};
 	{
 		FramebufferSpecification geo_framebuffer_spec;
-		geo_framebuffer_spec.attachments = { ImageFormat::RGBA32F, ImageFormat::RGBA16F, ImageFormat::RGBA, ImageFormat::DEPTH32FSTENCIL8UINT };
+		geo_framebuffer_spec.attachments = { ImageFormat::RGBA32F, ImageFormat::RGBA16F, ImageFormat::RGBA };
 
 		// Don't blend with luminance in the alpha channel.
 		geo_framebuffer_spec.attachments.texture_attachments[1].blend = false;
@@ -46,23 +41,14 @@ void ForgottenLayer::on_attach()
 		auto render_pass = RenderPass::create(render_pass_spec);
 
 		PipelineSpecification pipeline_specification;
-		pipeline_specification.debug_name = "PBR-Static";
-		pipeline_specification.shader = Renderer::get_shader_library()->get("HazelPBR_Static");
+		pipeline_specification.debug_name = "Renderer2D_Render";
+		pipeline_specification.shader = Renderer::get_shader_library()->get("Renderer2D_Render");
 		pipeline_specification.depth_operator = DepthCompareOperator::Equal;
 		pipeline_specification.depth_write = false;
 		pipeline_specification.layout = vertex_layout;
-		pipeline_specification.instance_layout = instance_layout;
-		pipeline_specification.line_width = 2.0f;
+		pipeline_specification.line_width = 1.0f;
 		pipeline_specification.render_pass = render_pass;
 		geometry_pipeline = Pipeline::create(pipeline_specification);
-
-		//
-		// Transparent Geometry
-		//
-		pipeline_specification.debug_name = "PBR-Transparent";
-		pipeline_specification.shader = Renderer::get_shader_library()->get("HazelPBR_Transparent");
-		pipeline_specification.depth_operator = DepthCompareOperator::GreaterOrEqual;
-		transparent_geometry_pipeline = Pipeline::create(pipeline_specification);
 
 		swapchain_material = Material::create(pipeline_specification.shader);
 	}
@@ -106,22 +92,21 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 
 	user_camera.on_update(ts);
 
+	draw_debug_stats();
 	// Render final image to swapchain
 	Reference<Image2D> final_image = geometry_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
-	if (final_image) {
+	if (!final_image) {
 		swapchain_material->set("u_Texture", final_image);
 
 		command_buffer->begin();
 		Renderer::begin_render_pass(command_buffer, geometry_pipeline->get_specification().render_pass, false);
-		draw_debug_stats();
 		Renderer::submit_fullscreen_quad(command_buffer, geometry_pipeline, nullptr, swapchain_material);
 		Renderer::end_render_pass(command_buffer);
 		command_buffer->end();
 	} else {
 		// Clear render pass if no image is present
 		command_buffer->begin();
-		Renderer::begin_render_pass(command_buffer, geometry_pipeline->get_specification().render_pass, false);
-		draw_debug_stats();
+		Renderer::begin_render_pass(command_buffer, geometry_pipeline->get_specification().render_pass, true);
 		Renderer::end_render_pass(command_buffer);
 		command_buffer->end();
 	}
@@ -130,13 +115,13 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 void ForgottenLayer::update_fps_stats()
 {
 	auto& app = Application::the();
-	frames_per_second = 1.0f / (float)app.get_frametime();
+	frames_per_second = 1.0f / static_cast<float>(app.get_frametime());
 }
 
 void ForgottenLayer::update_performance_timers()
 {
 	auto& app = Application::the();
-	frame_time = (float)app.get_frametime();
+	frame_time = static_cast<float>(app.get_frametime());
 }
 
 void ForgottenLayer::on_ui_render(const TimeStep& ts)
