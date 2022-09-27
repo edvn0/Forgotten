@@ -58,7 +58,7 @@ namespace ForgottenEngine {
 
 				out << YAML::BeginMap; // Stage_
 
-				out << YAML::Key << "Stage" << YAML::Value << ShaderUtils::shader_stage_to_string(stage);
+				out << YAML::Key << "Stage" << YAML::Value << ShaderUtils::shader_stage_to_string(stage).data();
 				out << YAML::Key << "StageHash" << YAML::Value << stageData.HashValue;
 
 				out << YAML::Key << "Headers" << YAML::BeginSeq; // Headers_
@@ -129,7 +129,7 @@ namespace ForgottenEngine {
 				FG_DESERIALIZE_PROPERTY("Stage", stage_type, stage, std::string());
 				FG_DESERIALIZE_PROPERTY("StageHash", stage_hash, stage, 0u);
 
-				auto& stage_cache = shader_cache[path][ShaderUtils::ShaderTypeFromString(stage_type)];
+				auto& stage_cache = shader_cache[path][ShaderUtils::shader_type_from_string(stage_type)];
 				stage_cache.HashValue = stage_hash;
 
 				for (auto header : stage["Headers"]) {

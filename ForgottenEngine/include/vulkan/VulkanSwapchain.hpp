@@ -58,7 +58,7 @@ namespace ForgottenEngine {
 			return command_buffers[index].buffer;
 		}
 
-		[[nodiscard]] VkSemaphore get_render_complete_semaphore() const { return semaphores.render_complete_semaphore; }
+		[[nodiscard]] VkSemaphore get_render_complete_semaphore() const { return semaphores.render_complete_semaphore[current_image_index]; }
 
 		void set_vsync(const bool enabled) { is_vsync = enabled; }
 
@@ -99,9 +99,9 @@ namespace ForgottenEngine {
 
 		struct {
 			// Swap chain
-			VkSemaphore present_complete_semaphore = nullptr;
+			std::vector<VkSemaphore> present_complete_semaphore {};
 			// Command buffer
-			VkSemaphore render_complete_semaphore = nullptr;
+			std::vector<VkSemaphore> render_complete_semaphore {};
 		} semaphores;
 		VkSubmitInfo submit_info {};
 

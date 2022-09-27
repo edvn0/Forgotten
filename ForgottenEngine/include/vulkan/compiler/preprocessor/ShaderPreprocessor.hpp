@@ -38,7 +38,7 @@ namespace ForgottenEngine {
 		// From https://wandbox.org/permlink/iXC7DWaU8Tk8jrf3 and is modified.
 		enum class State : char { SlashOC, StarIC, SingleLineComment, MultiLineComment, NotAComment };
 
-		template <typename InputIt, typename OutputIt> void CopyWithoutComments(InputIt first, InputIt last, OutputIt out)
+		template <typename InputIt, typename OutputIt> void copy_without_comments(InputIt first, InputIt last, OutputIt out)
 		{
 			State state = State::NotAComment;
 
@@ -134,7 +134,7 @@ namespace ForgottenEngine {
 		const std::unordered_set<IncludeData>& includeData, const std::filesystem::path& fullPath)
 	{
 		std::stringstream sourceStream;
-		PreprocessUtils::CopyWithoutComments(contents.begin(), contents.end(), std::ostream_iterator<char>(sourceStream));
+		PreprocessUtils::copy_without_comments(contents.begin(), contents.end(), std::ostream_iterator<char>(sourceStream));
 		contents = sourceStream.str();
 
 		VkShaderStageFlagBits stagesInHeader = {};
@@ -230,28 +230,28 @@ namespace ForgottenEngine {
 		const std::string& source, std::unordered_set<std::string>& specialMacros)
 	{
 		std::stringstream sourceStream;
-		PreprocessUtils::CopyWithoutComments(source.begin(), source.end(), std::ostream_iterator<char>(sourceStream));
+		PreprocessUtils::copy_without_comments(source.begin(), source.end(), std::ostream_iterator<char>(sourceStream));
 		std::string newSource = sourceStream.str();
 
-		std::unordered_map<VkShaderStageFlagBits, std::string> shaderSources;
-		std::vector<std::pair<VkShaderStageFlagBits, size_t>> stagePositions;
+		std::unordered_map<VkShaderStageFlagBits, std::string> shader_sources;
+		std::vector<std::pair<VkShaderStageFlagBits, size_t>> stage_positions;
 		core_assert(newSource.size(), "Shader is empty!");
 
-		size_t startOfStage = 0;
+		size_t start_of_stage = 0;
 		size_t pos = newSource.find('#');
 
 		// Check first #version
 		if constexpr (Lang == ShaderUtils::SourceLang::GLSL) {
-			const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
-			const std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
+			const size_t end_of_line = newSource.find_first_of("\r\n", pos) + 1;
+			const std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, end_of_line - pos));
 			core_verify(tokens.size() >= 3 && tokens[1] == "version", "Invalid #version encountered or #version is NOT encounted first.");
 			pos = newSource.find('#', pos + 1);
 		}
 
 		while (pos != std::string::npos) {
 
-			const size_t endOfLine = newSource.find_first_of("\r\n", pos) + 1;
-			std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, endOfLine - pos));
+			const size_t end_of_line = newSource.find_first_of("\r\n", pos) + 1;
+			std::vector<std::string> tokens = StringUtils::split_string_keep_delims(newSource.substr(pos, end_of_line - pos));
 
 			size_t index = 1; // Skip #
 
@@ -266,9 +266,9 @@ namespace ForgottenEngine {
 
 					const std::string_view stage = tokens[index];
 					core_verify(stage == "vert" || stage == "frag" || stage == "comp", "Invalid shader type specified");
-					auto shaderStage = ShaderUtils::ShaderTypeFromString(stage);
+					auto shader_stage = ShaderUtils::shader_type_from_string(stage);
 
-					stagePositions.emplace_back(shaderStage, startOfStage);
+					stage_positions.emplace_back(shader_stage, start_of_stage);
 				}
 			} else if (tokens[index] == "ifdef") {
 				++index;
@@ -287,41 +287,41 @@ namespace ForgottenEngine {
 			} else if constexpr (Lang == ShaderUtils::SourceLang::GLSL) {
 				if (tokens[index] == "version") {
 					++index;
-					startOfStage = pos;
+					start_of_stage = pos;
 				}
 			}
 
 			pos = newSource.find('#', pos + 1);
 		}
 
-		core_verify(stagePositions.size(), "Could not pre-process shader! There are no known stages defined in file.");
-		auto& [firstStage, firstStagePos] = stagePositions[0];
-		if (stagePositions.size() > 1) {
+		core_verify(stage_positions.size(), "Could not pre-process shader! There are no known stages defined in file.");
+		auto& [firstStage, firstStagePos] = stage_positions[0];
+		if (stage_positions.size() > 1) {
 			// Get first stage
-			const std::string firstStageStr = newSource.substr(0, stagePositions[1].second);
+			const std::string firstStageStr = newSource.substr(0, stage_positions[1].second);
 			size_t lineCount = std::count(firstStageStr.begin(), firstStageStr.end(), '\n') + 1;
-			shaderSources[firstStage] = firstStageStr;
+			shader_sources[firstStage] = firstStageStr;
 
 			// Get stages in the middle
-			for (size_t i = 1; i < stagePositions.size() - 1; ++i) {
-				auto& [stage, stagePos] = stagePositions[i];
-				std::string stageStr = newSource.substr(stagePos, stagePositions[i + 1].second - stagePos);
+			for (size_t i = 1; i < stage_positions.size() - 1; ++i) {
+				auto& [stage, stagePos] = stage_positions[i];
+				std::string stageStr = newSource.substr(stagePos, stage_positions[i + 1].second - stagePos);
 				const size_t secondLinePos = stageStr.find_first_of('\n', 1) + 1;
 				stageStr.insert(secondLinePos, fmt::format("#line {}\n", lineCount));
-				shaderSources[stage] = stageStr;
+				shader_sources[stage] = stageStr;
 				lineCount += std::count(stageStr.begin(), stageStr.end(), '\n') + 1;
 			}
 
 			// Get last stage
-			auto& [stage, stagePos] = stagePositions[stagePositions.size() - 1];
+			auto& [stage, stagePos] = stage_positions[stage_positions.size() - 1];
 			std::string lastStageStr = newSource.substr(stagePos);
 			const size_t secondLinePos = lastStageStr.find_first_of('\n', 1) + 1;
 			lastStageStr.insert(secondLinePos, fmt::format("#line {}\n", lineCount + 1));
-			shaderSources[stage] = lastStageStr;
+			shader_sources[stage] = lastStageStr;
 		} else {
-			shaderSources[firstStage] = newSource;
+			shader_sources[firstStage] = newSource;
 		}
 
-		return shaderSources;
+		return shader_sources;
 	}
 } // namespace ForgottenEngine

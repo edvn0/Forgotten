@@ -87,17 +87,4 @@ namespace ForgottenEngine {
 	{
 	}
 
-	constexpr std::string_view ShaderUniform::uniform_type_to_string(const ShaderUniformType type)
-	{
-		if (type == ShaderUniformType::Bool) {
-			return "Boolean";
-		} else if (type == ShaderUniformType::Int) {
-			return "Int";
-		} else if (type == ShaderUniformType::Float) {
-			return "Float";
-		}
-
-		return "None";
-	}
-
 } // namespace ForgottenEngine

@@ -1,7 +1,9 @@
 #include "ForgottenLayer.hpp"
 
+#include "Enumeration.hpp"
 #include "fg.hpp"
 #include "imgui/CoreUserInterface.hpp"
+#include "render/RendererAPI.hpp"
 
 // Note: Switch this to true to enable dockspace
 static auto is_dockspace_open = true;
@@ -25,10 +27,9 @@ void ForgottenLayer::on_attach()
 
 	{
 		FramebufferSpecification geo_framebuffer_spec;
-		geo_framebuffer_spec.attachments = { ImageFormat::RGBA32F, ImageFormat::RGBA16F, ImageFormat::RGBA };
+		geo_framebuffer_spec.attachments = { ImageFormat::RGBA32F };
 
-		// Don't blend with luminance in the alpha channel.
-		geo_framebuffer_spec.attachments.texture_attachments[1].blend = false;
+		geo_framebuffer_spec.attachments.texture_attachments[0].blend = false;
 		geo_framebuffer_spec.samples = 1;
 		geo_framebuffer_spec.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 		geo_framebuffer_spec.debug_name = "Geometry";
@@ -53,7 +54,14 @@ void ForgottenLayer::on_attach()
 		swapchain_material = Material::create(pipeline_specification.shader);
 	}
 
+	texture = Texture2D::create("textures/gripen.jpeg");
+	swapchain_material->set("u_Texture", texture);
+
 	Renderer::wait_and_render();
+
+	std::string_view renderer_api = Enumeration::enum_name(RendererAPI::current());
+	std::string title = fmt::format("{0} ({1}) - ForgottenEngine - Renderer: {2}", "ForgottenScene", Application::platform_name(), renderer_api);
+	Application::the().get_window().set_title(title);
 
 	command_buffer = RenderCommandBuffer::create_from_swapchain();
 	projection_matrix = glm::ortho(0.0f, w, 0.0f, h);
@@ -95,8 +103,8 @@ void ForgottenLayer::on_update(const TimeStep& ts)
 	draw_debug_stats();
 	// Render final image to swapchain
 	Reference<Image2D> final_image = geometry_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
-	if (!final_image) {
-		swapchain_material->set("u_Texture", final_image);
+	if (final_image) {
+		// swapchain_material->set("u_Texture", final_image);
 
 		command_buffer->begin();
 		Renderer::begin_render_pass(command_buffer, geometry_pipeline->get_specification().render_pass, false);

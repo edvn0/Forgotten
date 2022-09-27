@@ -266,28 +266,32 @@ namespace ForgottenEngine {
 			pci.queueFamilyIndex = queue_node_index;
 			pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo {};
-			commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			commandBufferAllocateInfo.commandBufferCount = 1;
+			VkCommandBufferAllocateInfo command_buffer_allocate_info {};
+			command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			command_buffer_allocate_info.commandBufferCount = 1;
 
 			command_buffers.resize(image_count);
 			for (auto& cmd_buffer : command_buffers) {
 				vk_check(vkCreateCommandPool(get_device(), &pci, nullptr, &cmd_buffer.command_pool));
 
-				commandBufferAllocateInfo.commandPool = cmd_buffer.command_pool;
-				vk_check(vkAllocateCommandBuffers(get_device(), &commandBufferAllocateInfo, &cmd_buffer.buffer));
+				command_buffer_allocate_info.commandPool = cmd_buffer.command_pool;
+				vk_check(vkAllocateCommandBuffers(get_device(), &command_buffer_allocate_info, &cmd_buffer.buffer));
 			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Synchronization Objects
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		if (!semaphores.render_complete_semaphore || !semaphores.present_complete_semaphore) {
-			VkSemaphoreCreateInfo semaphore_create_info {};
-			semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-			vk_check(vkCreateSemaphore(get_device(), &semaphore_create_info, nullptr, &semaphores.render_complete_semaphore));
-			vk_check(vkCreateSemaphore(get_device(), &semaphore_create_info, nullptr, &semaphores.present_complete_semaphore));
+		semaphores.present_complete_semaphore.clear();
+		semaphores.render_complete_semaphore.clear();
+		semaphores.render_complete_semaphore.resize(asked_sc_images);
+		semaphores.present_complete_semaphore.resize(asked_sc_images);
+		VkSemaphoreCreateInfo semaphore_create_info {};
+		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		for (auto i = 0; i < asked_sc_images; i++) {
+			vk_check(vkCreateSemaphore(get_device(), &semaphore_create_info, nullptr, &semaphores.render_complete_semaphore[i]));
+			vk_check(vkCreateSemaphore(get_device(), &semaphore_create_info, nullptr, &semaphores.present_complete_semaphore[i]));
 		}
 
 		if (wait_fences.size() != image_count) {
@@ -306,10 +310,10 @@ namespace ForgottenEngine {
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.pWaitDstStageMask = &pipeline_stage_flags;
-		submit_info.waitSemaphoreCount = 1;
-		submit_info.pWaitSemaphores = &semaphores.present_complete_semaphore;
-		submit_info.signalSemaphoreCount = 1;
-		submit_info.pSignalSemaphores = &semaphores.render_complete_semaphore;
+		submit_info.waitSemaphoreCount = asked_sc_images;
+		submit_info.pWaitSemaphores = semaphores.present_complete_semaphore.data();
+		submit_info.signalSemaphoreCount = asked_sc_images;
+		submit_info.pSignalSemaphores = semaphores.render_complete_semaphore.data();
 
 		// Render Pass
 		VkAttachmentDescription color_attachment_desc = {};
@@ -327,27 +331,19 @@ namespace ForgottenEngine {
 		color_reference.attachment = 0;
 		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkAttachmentReference depth_reference = {};
-		depth_reference.attachment = 1;
-		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
 		VkSubpassDescription subpass_description = {};
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
 		subpass_description.inputAttachmentCount = 0;
-		subpass_description.pInputAttachments = nullptr;
-		subpass_description.preserveAttachmentCount = 0;
-		subpass_description.pPreserveAttachments = nullptr;
-		subpass_description.pResolveAttachments = nullptr;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -401,11 +397,13 @@ namespace ForgottenEngine {
 		for (auto framebuffer : framebuffers)
 			vkDestroyFramebuffer(vk_device, framebuffer, nullptr);
 
-		if (semaphores.render_complete_semaphore)
-			vkDestroySemaphore(vk_device, semaphores.render_complete_semaphore, nullptr);
+		for (auto i = 0; i < semaphores.present_complete_semaphore.size(); i++)
+			if (semaphores.present_complete_semaphore[i])
+				vkDestroySemaphore(vk_device, semaphores.present_complete_semaphore[i], nullptr);
 
-		if (semaphores.present_complete_semaphore)
-			vkDestroySemaphore(vk_device, semaphores.present_complete_semaphore, nullptr);
+		for (auto i = 0; i < semaphores.render_complete_semaphore.size(); i++)
+			if (semaphores.render_complete_semaphore[i])
+				vkDestroySemaphore(vk_device, semaphores.render_complete_semaphore[i], nullptr);
 
 		for (auto& fence : wait_fences)
 			vkDestroyFence(vk_device, fence, nullptr);
@@ -423,32 +421,30 @@ namespace ForgottenEngine {
 	void VulkanSwapchain::begin_frame()
 	{
 		// Resource release queue
-		auto& queue = Renderer::get_render_resource_free_queue(current_buffer_index);
+		auto& queue = Renderer::get_render_resource_free_queue(current_image_index);
 		queue.execute();
 
 		current_image_index = acquire_next_image();
 
-		vk_check(vkResetCommandPool(get_device(), command_buffers[current_buffer_index].command_pool, 0));
+		vk_check(vkResetCommandPool(get_device(), command_buffers[current_image_index].command_pool, 0));
 	}
 
 	void VulkanSwapchain::present()
 	{
-
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo present_submit_info = {};
 		present_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		present_submit_info.pWaitDstStageMask = &wait_stage_mask;
-		present_submit_info.pWaitSemaphores = &semaphores.present_complete_semaphore;
+		present_submit_info.pWaitSemaphores = &semaphores.present_complete_semaphore[current_image_index];
 		present_submit_info.waitSemaphoreCount = 1;
-		present_submit_info.pSignalSemaphores = &semaphores.render_complete_semaphore;
+		present_submit_info.pSignalSemaphores = &semaphores.render_complete_semaphore[current_image_index];
 		present_submit_info.signalSemaphoreCount = 1;
-		present_submit_info.pCommandBuffers = &command_buffers[current_buffer_index].buffer;
+		present_submit_info.pCommandBuffers = &command_buffers[current_image_index].buffer;
 		present_submit_info.commandBufferCount = 1;
 
-		vk_check(vkResetFences(get_device(), 1, &wait_fences[current_buffer_index]));
-		vk_check(
-			vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &present_submit_info, wait_fences[current_buffer_index]));
+		vk_check(vkResetFences(get_device(), 1, &wait_fences[current_image_index]));
+		vk_check(vkQueueSubmit(VulkanContext::get_current_device()->get_graphics_queue(), 1, &present_submit_info, wait_fences[current_image_index]));
 
 		VkResult result;
 		{
@@ -459,7 +455,7 @@ namespace ForgottenEngine {
 			present_info.pSwapchains = &swapchain;
 			present_info.pImageIndices = &current_image_index;
 
-			present_info.pWaitSemaphores = &semaphores.render_complete_semaphore;
+			present_info.pWaitSemaphores = &semaphores.render_complete_semaphore[current_image_index];
 			present_info.waitSemaphoreCount = 1;
 			result = vkQueuePresentKHR(VulkanContext::get_current_device()->get_graphics_queue(), &present_info);
 		}
@@ -477,15 +473,15 @@ namespace ForgottenEngine {
 			const auto& config = Renderer::get_config();
 			current_buffer_index = (current_buffer_index + 1) % config.frames_in_flight;
 			// Make sure the frame we're requesting has finished rendering
-			vk_check(vkWaitForFences(get_device(), 1, &wait_fences[current_buffer_index], VK_TRUE, default_fence_timeout));
+			vk_check(vkWaitForFences(get_device(), 1, &wait_fences[current_image_index], VK_TRUE, default_fence_timeout));
 		}
 	}
 
 	uint32_t VulkanSwapchain::acquire_next_image()
 	{
 		uint32_t image_index;
-		vk_check(vkAcquireNextImageKHR(
-			get_device(), swapchain, default_fence_timeout, semaphores.present_complete_semaphore, (VkFence) nullptr, &image_index));
+		vk_check(vkAcquireNextImageKHR(get_device(), swapchain, default_fence_timeout, semaphores.present_complete_semaphore[current_image_index],
+			(VkFence) nullptr, &image_index));
 		return image_index;
 	}
 
@@ -505,17 +501,17 @@ namespace ForgottenEngine {
 			color_format = VK_FORMAT_B8G8R8A8_UNORM;
 			color_space = surface_formats[0].colorSpace;
 		} else {
-			bool found_B8G8R8A8_UNORM = false;
-			for (auto&& surfaceFormat : surface_formats) {
-				if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_UNORM) {
-					color_format = surfaceFormat.format;
-					color_space = surfaceFormat.colorSpace;
-					found_B8G8R8A8_UNORM = true;
+			bool found_b8_g8_r8_a8_unorm = false;
+			for (auto&& surface_format : surface_formats) {
+				if (surface_format.format == VK_FORMAT_B8G8R8A8_UNORM) {
+					color_format = surface_format.format;
+					color_space = surface_format.colorSpace;
+					found_b8_g8_r8_a8_unorm = true;
 					break;
 				}
 			}
 
-			if (!found_B8G8R8A8_UNORM) {
+			if (!found_b8_g8_r8_a8_unorm) {
 				color_format = surface_formats[0].format;
 				color_space = surface_formats[0].colorSpace;
 			}

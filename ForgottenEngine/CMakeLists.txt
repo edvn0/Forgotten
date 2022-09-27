@@ -78,14 +78,14 @@ if(APPLE)
 endif()
 
 set(Forgotten_INCLUDE_DIRS
-    CACHE vendor/assimp/include
+    CACHE /usr/local/include
+          /opt/homebrew/include
+          /opt/homebrew/Cellar
+          vendor/assimp/include
           vendor/imgui
           vendor/yaml-cpp/include
           vendor/msdf-atlas-gen/msdf-atlas-gen
           vendor/msdf-atlas-gen/msdfgen
-          /usr/local/include
-          /opt/homebrew/include
-          /opt/homebrew/Cellar
           vendor/VulkanMemoryAllocator/include
           vendor/glm
           vendor/spdlog/include
@@ -99,12 +99,36 @@ set(Forgotten_INCLUDE_DIRS
           vendor/shaderc/libshaderc_util/include
           vendor/entt/src/entt
           vendor/entt/single_include
-          vendor/box2d/include)
+          vendor/box2d/include
+          vendor/magic-enum/include)
 
 target_include_directories(
   ForgottenEngine
-  PUBLIC . ${Boost_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS}
-  PRIVATE include src ${Forgotten_INCLUDE_DIRS})
+  PUBLIC .
+         include
+         src
+         ${Boost_INCLUDE_DIRS}
+         ${Vulkan_INCLUDE_DIRS}
+         vendor/assimp/include
+         vendor/imgui
+         vendor/yaml-cpp/include
+         vendor/msdf-atlas-gen/msdf-atlas-gen
+         vendor/msdf-atlas-gen/msdfgen
+         vendor/VulkanMemoryAllocator/include
+         vendor/glm
+         vendor/spdlog/include
+         vendor/vk_init
+         vendor/glfw/include
+         vendor/tinyobjloader
+         vendor/stb
+         vendor/spirv-cross
+         vendor/shaderc
+         vendor/shaderc/libshaderc/include
+         vendor/shaderc/libshaderc_util/include
+         vendor/entt/src/entt
+         vendor/entt/single_include
+         vendor/box2d/include
+         vendor/magic-enum/include)
 
 target_link_libraries(
   ForgottenEngine

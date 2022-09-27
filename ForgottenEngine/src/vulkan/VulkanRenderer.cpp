@@ -399,6 +399,7 @@ namespace ForgottenEngine {
 			// Reset descriptor pools here
 			VkDevice device = VulkanContext::get_current_device()->get_vulkan_device();
 			uint32_t buffer_index = swap_chain.get_current_buffer_index();
+			CORE_INFO("{}", buffer_index);
 			vkResetDescriptorPool(device, renderer_data().descriptor_pools[buffer_index], 0);
 			memset(renderer_data().descriptor_pool_allocation_count.data(), 0,
 				renderer_data().descriptor_pool_allocation_count.size() * sizeof(uint32_t));
@@ -520,6 +521,11 @@ namespace ForgottenEngine {
 
 			VkPipelineLayout layout = vulkan_pipeline->get_vulkan_pipeline_layout();
 
+			VkPipeline vk_pipeline = vulkan_pipeline->get_vulkan_pipeline();
+			vkCmdBindPipeline(render_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
+			const auto& write_descriptors = rt_retrieve_or_create_uniform_buffer_write_descriptors(ubs, vulkan_material);
+			vulkan_material->rt_update_for_rendering(write_descriptors);
 			auto vulkan_mesh_vb = vb.as<VulkanVertexBuffer>();
 			VkBuffer vb_mesh_buffer = vulkan_mesh_vb->get_vulkan_buffer();
 			VkDeviceSize offsets[1] = { 0 };
@@ -528,12 +534,6 @@ namespace ForgottenEngine {
 			auto vulkan_mesh_ib = ib.as<VulkanIndexBuffer>();
 			VkBuffer ib_mesh_buffer = vulkan_mesh_ib->get_vulkan_buffer();
 			vkCmdBindIndexBuffer(render_command_buffer, ib_mesh_buffer, 0, VK_INDEX_TYPE_UINT32);
-
-			VkPipeline vk_pipeline = vulkan_pipeline->get_vulkan_pipeline();
-			vkCmdBindPipeline(render_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
-
-			const auto& write_descriptors = rt_retrieve_or_create_uniform_buffer_write_descriptors(ubs, vulkan_material);
-			vulkan_material->rt_update_for_rendering(write_descriptors);
 
 			uint32_t buffer_index = Renderer::get_current_frame_index();
 			VkDescriptorSet descriptor_set = vulkan_material->get_descriptor_set(buffer_index);

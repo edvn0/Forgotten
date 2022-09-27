@@ -96,7 +96,7 @@ namespace ForgottenEngine {
 				// trivially destructible");
 				function_pointer->~SubmittedFunction();
 			};
-			auto storage_buffer = get_render_command_queue().allocate(render_command, sizeof(func));
+			auto storage_buffer = command_queue().allocate(render_command, sizeof(func));
 			new (storage_buffer) SubmittedFunction(std::forward<SubmittedFunction>(func));
 		}
 
@@ -124,7 +124,7 @@ namespace ForgottenEngine {
 		static uint32_t get_current_frame_index();
 
 	private:
-		static RenderCommandQueue& get_render_command_queue();
+		static RenderCommandQueue& command_queue();
 	};
 
 } // namespace ForgottenEngine

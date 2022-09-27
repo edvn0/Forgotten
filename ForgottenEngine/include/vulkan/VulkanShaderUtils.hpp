@@ -1,6 +1,7 @@
 #pragma once
 #include "render/Shader.hpp"
 
+#include <Enumeration.hpp>
 #include <shaderc/shaderc.h>
 #include <vulkan/vulkan_core.h>
 
@@ -44,22 +45,9 @@ namespace ForgottenEngine::ShaderUtils {
 		return VK_SHADER_STAGE_ALL;
 	}
 
-	inline static const char* shader_stage_to_string(const VkShaderStageFlagBits stage)
-	{
-		switch (stage) {
-		case VK_SHADER_STAGE_VERTEX_BIT:
-			return "vert";
-		case VK_SHADER_STAGE_FRAGMENT_BIT:
-			return "frag";
-		case VK_SHADER_STAGE_COMPUTE_BIT:
-			return "comp";
-		default:
-			core_assert_bool(false);
-		}
-		return "UNKNOWN";
-	}
+	inline static std::string_view shader_stage_to_string(const VkShaderStageFlagBits stage) { return Enumeration::enum_name(stage); }
 
-	inline static VkShaderStageFlagBits ShaderTypeFromString(const std::string_view type)
+	inline static VkShaderStageFlagBits shader_type_from_string(const std::string_view type)
 	{
 		if (type == "vert")
 			return VK_SHADER_STAGE_VERTEX_BIT;
@@ -71,7 +59,7 @@ namespace ForgottenEngine::ShaderUtils {
 		return VK_SHADER_STAGE_ALL;
 	}
 
-	inline static SourceLang ShaderLangFromExtension(const std::string_view type)
+	inline static SourceLang shader_lang_from_extension(const std::string_view type)
 	{
 		if (type == ".glsl")
 			return SourceLang::GLSL;
@@ -83,7 +71,7 @@ namespace ForgottenEngine::ShaderUtils {
 		return SourceLang::NONE;
 	}
 
-	inline static shaderc_shader_kind ShaderStageToShaderC(const VkShaderStageFlagBits stage)
+	inline static shaderc_shader_kind shader_stage_to_shader_c(const VkShaderStageFlagBits stage)
 	{
 		switch (stage) {
 		case VK_SHADER_STAGE_VERTEX_BIT:
@@ -95,11 +83,10 @@ namespace ForgottenEngine::ShaderUtils {
 		default:
 			core_assert_bool(false);
 		}
-		core_assert_bool(false);
 		return {};
 	}
 
-	inline static const char* ShaderStageCachedFileExtension(const VkShaderStageFlagBits stage, bool debug)
+	inline static const char* shader_stage_cached_file_extension(const VkShaderStageFlagBits stage, bool debug)
 	{
 		if (debug) {
 			switch (stage) {
@@ -128,18 +115,4 @@ namespace ForgottenEngine::ShaderUtils {
 		return "";
 	}
 
-	inline static const wchar_t* HLSLShaderProfile(const VkShaderStageFlagBits stage)
-	{
-		switch (stage) {
-		case VK_SHADER_STAGE_VERTEX_BIT:
-			return L"vs_6_0";
-		case VK_SHADER_STAGE_FRAGMENT_BIT:
-			return L"ps_6_0";
-		case VK_SHADER_STAGE_COMPUTE_BIT:
-			return L"cs_6_0";
-		default:
-			core_assert_bool(false);
-		}
-		return L"";
-	}
 } // namespace ForgottenEngine::ShaderUtils

@@ -22,9 +22,10 @@ namespace ForgottenEngine {
 		[[nodiscard]] virtual size_t get_width() const = 0;
 		[[nodiscard]] virtual size_t get_height() const = 0;
 
-		template <typename T>
-		requires arithmetic<T>
-		[[nodiscard]] inline std::pair<T, T> get_size() const { return { static_cast<T>(get_width()), static_cast<T>(get_height()) }; };
+		template <arithmetic T> [[nodiscard]] inline std::pair<T, T> get_size() const
+		{
+			return { static_cast<T>(get_width()), static_cast<T>(get_height()) };
+		};
 
 		virtual void on_update() = 0;
 
@@ -33,6 +34,7 @@ namespace ForgottenEngine {
 		virtual void set_event_callback(const EventCallback& callback) = 0;
 		virtual void set_vsync(bool enabled) = 0;
 		virtual void process_events() = 0;
+		virtual void set_title(const std::string new_title) = 0;
 		virtual bool is_vsync() = 0;
 		virtual void resize_window(float w, float h) const = 0;
 		virtual void resize_framebuffer(int w, int h) const = 0;

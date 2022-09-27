@@ -46,4 +46,5 @@ private:
 	UserCamera user_camera;
 	Reference<Pipeline> geometry_pipeline;
 	Reference<Pipeline> transparent_geometry_pipeline;
+	Reference<Texture2D> texture;
 };

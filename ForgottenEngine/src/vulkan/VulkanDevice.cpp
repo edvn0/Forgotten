@@ -2,48 +2,45 @@
 
 #include "vulkan/VulkanDevice.hpp"
 
-#include "Application.hpp"
 #include "vk_mem_alloc.h"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanInitializers.hpp"
-
-#include <GLFW/glfw3.h>
 
 namespace ForgottenEngine {
 
 	VulkanPhysicalDevice::VulkanPhysicalDevice()
 	{
-		auto vkInstance = VulkanContext::get_instance();
+		auto vk_instance = VulkanContext::get_instance();
 
-		uint32_t gpuCount = 0;
+		uint32_t gpu_count = 0;
 		// Get number of available physical devices
-		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
-		core_assert_bool(gpuCount > 0);
+		vkEnumeratePhysicalDevices(vk_instance, &gpu_count, nullptr);
+		core_assert_bool(gpu_count > 0);
 		// Enumerate devices
-		std::vector<VkPhysicalDevice> devices_to_select_from(gpuCount);
-		vk_check(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, devices_to_select_from.data()));
+		std::vector<VkPhysicalDevice> devices_to_select_from(gpu_count);
+		vk_check(vkEnumeratePhysicalDevices(vk_instance, &gpu_count, devices_to_select_from.data()));
 
-		VkPhysicalDevice* selected_physical_device = nullptr;
-		for (VkPhysicalDevice physical : devices_to_select_from) {
+		VkPhysicalDevice selected_physical_device;
+		for (auto physical : devices_to_select_from) {
 
 			vkGetPhysicalDeviceProperties(physical, &properties);
 			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-				selected_physical_device = &physical;
+				selected_physical_device = physical;
 				break;
 			}
 
 			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-				selected_physical_device = &physical;
+				selected_physical_device = physical;
 				break;
 			}
 		}
 
 		if (!selected_physical_device) {
-			selected_physical_device = &devices_to_select_from.back();
+			selected_physical_device = devices_to_select_from.back();
 		}
 
 		core_assert(selected_physical_device, "Could not find any physical devices!");
-		physical_device = *selected_physical_device;
+		physical_device = std::move(selected_physical_device);
 
 		vkGetPhysicalDeviceFeatures(physical_device, &features);
 		vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
@@ -58,51 +55,52 @@ namespace ForgottenEngine {
 		vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
 		if (extension_count > 0) {
 			std::vector<VkExtensionProperties> extensions(extension_count);
-			if (vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, &extensions.front()) == VK_SUCCESS) {
-				for (const auto& ext : extensions) {
-					supported_extensions.emplace(ext.extensionName);
-				}
+
+			vk_check(vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, &extensions.front()));
+
+			for (const auto& ext : extensions) {
+				supported_extensions.emplace(ext.extensionName);
 			}
 		}
 
-		static const float defaultQueuePriority(0.0f);
+		static const float default_queue_priority(0.0f);
 
-		int requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
-		queue_family_indices = get_queue_family_indices(requestedQueueTypes);
+		int requested_queue_types = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
+		queue_family_indices = get_queue_family_indices(requested_queue_types);
 
 		// Graphics queue
-		if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT) {
-			VkDeviceQueueCreateInfo queueInfo {};
-			queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			queueInfo.queueFamilyIndex = queue_family_indices.graphics;
-			queueInfo.queueCount = 1;
-			queueInfo.pQueuePriorities = &defaultQueuePriority;
-			queue_create_infos.push_back(queueInfo);
+		if (requested_queue_types & VK_QUEUE_GRAPHICS_BIT) {
+			VkDeviceQueueCreateInfo queue_info {};
+			queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queue_info.queueFamilyIndex = queue_family_indices.graphics;
+			queue_info.queueCount = 1;
+			queue_info.pQueuePriorities = &default_queue_priority;
+			queue_create_infos.push_back(queue_info);
 		}
 
 		// Dedicated compute queue
-		if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT) {
+		if (requested_queue_types & VK_QUEUE_COMPUTE_BIT) {
 			if (queue_family_indices.compute != queue_family_indices.graphics) {
 				// If compute family index differs, we need an additional queue create info for the compute queue
-				VkDeviceQueueCreateInfo queueInfo {};
-				queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-				queueInfo.queueFamilyIndex = queue_family_indices.compute;
-				queueInfo.queueCount = 1;
-				queueInfo.pQueuePriorities = &defaultQueuePriority;
-				queue_create_infos.push_back(queueInfo);
+				VkDeviceQueueCreateInfo queue_info {};
+				queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				queue_info.queueFamilyIndex = queue_family_indices.compute;
+				queue_info.queueCount = 1;
+				queue_info.pQueuePriorities = &default_queue_priority;
+				queue_create_infos.push_back(queue_info);
 			}
 		}
 
 		// Dedicated transfer queue
-		if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT) {
+		if (requested_queue_types & VK_QUEUE_TRANSFER_BIT) {
 			if ((queue_family_indices.transfer != queue_family_indices.graphics) && (queue_family_indices.transfer != queue_family_indices.compute)) {
 				// If compute family index differs, we need an additional queue create info for the compute queue
-				VkDeviceQueueCreateInfo queueInfo {};
-				queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-				queueInfo.queueFamilyIndex = queue_family_indices.transfer;
-				queueInfo.queueCount = 1;
-				queueInfo.pQueuePriorities = &defaultQueuePriority;
-				queue_create_infos.push_back(queueInfo);
+				VkDeviceQueueCreateInfo queue_info {};
+				queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				queue_info.queueFamilyIndex = queue_family_indices.transfer;
+				queue_info.queueCount = 1;
+				queue_info.pQueuePriorities = &default_queue_priority;
+				queue_create_infos.push_back(queue_info);
 			}
 		}
 
@@ -116,22 +114,22 @@ namespace ForgottenEngine {
 	{
 		// Since all depth formats may be optional, we need to find a suitable depth format to use
 		// Start with the highest precision packed format
-		std::vector<VkFormat> depthFormats
+		std::vector<VkFormat> depth_formats
 			= { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM };
 
-		for (auto& format : depthFormats) {
-			VkFormatProperties formatProps;
-			vkGetPhysicalDeviceFormatProperties(physical_device, format, &formatProps);
+		for (auto& format : depth_formats) {
+			VkFormatProperties format_props;
+			vkGetPhysicalDeviceFormatProperties(physical_device, format, &format_props);
 			// Format must support depth stencil attachment for optimal tiling
-			if (formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+			if (format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
 				return format;
 		}
 		return VK_FORMAT_UNDEFINED;
 	}
 
-	bool VulkanPhysicalDevice::is_extension_supported(const std::string& extensionName) const
+	bool VulkanPhysicalDevice::is_extension_supported(const std::string& extension_name) const
 	{
-		return supported_extensions.find(extensionName) != supported_extensions.end();
+		return supported_extensions.find(extension_name) != supported_extensions.end();
 	}
 
 	VulkanPhysicalDevice::QueueFamilyIndices VulkanPhysicalDevice::get_queue_family_indices(int flags)
@@ -142,8 +140,8 @@ namespace ForgottenEngine {
 		// Try to find a queue family index that supports compute but not graphics
 		if (flags & VK_QUEUE_COMPUTE_BIT) {
 			for (uint32_t i = 0; i < queue_family_properties.size(); i++) {
-				auto& queueFamilyProperties = queue_family_properties[i];
-				if ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT) && ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
+				const auto& props = queue_family_properties[i];
+				if ((props.queueFlags & VK_QUEUE_COMPUTE_BIT) && ((props.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
 					indices.compute = static_cast<int32_t>(i);
 					break;
 				}
@@ -154,9 +152,9 @@ namespace ForgottenEngine {
 		// Try to find a queue family index that supports transfer but not graphics and compute
 		if (flags & VK_QUEUE_TRANSFER_BIT) {
 			for (uint32_t i = 0; i < queue_family_properties.size(); i++) {
-				auto& queueFamilyProperties = queue_family_properties[i];
-				if ((queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT) && ((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)
-					&& ((queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
+				const auto& props = queue_family_properties[i];
+				if ((props.queueFlags & VK_QUEUE_TRANSFER_BIT) && ((props.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)
+					&& ((props.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
 					indices.transfer = static_cast<int32_t>(i);
 					break;
 				}
@@ -169,38 +167,20 @@ namespace ForgottenEngine {
 			if ((flags & VK_QUEUE_TRANSFER_BIT) && indices.transfer == -1) {
 				if (queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
 					indices.transfer = static_cast<int32_t>(i);
-				;
 			}
 
 			if ((flags & VK_QUEUE_COMPUTE_BIT) && indices.compute == -1) {
 				if (queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
 					indices.compute = static_cast<int32_t>(i);
-				;
 			}
 
 			if (flags & VK_QUEUE_GRAPHICS_BIT) {
 				if (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					indices.graphics = static_cast<int32_t>(i);
-				;
 			}
 		}
 
 		return indices;
-	}
-
-	uint32_t VulkanPhysicalDevice::get_memory_type_index(uint32_t typeBits, VkMemoryPropertyFlags in_properties) const
-	{
-		// Iterate over all memory types available for the device used in this example
-		for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
-			if ((typeBits & 1) == 1) {
-				if ((memory_properties.memoryTypes[i].propertyFlags & in_properties) == in_properties)
-					return i;
-			}
-			typeBits >>= 1;
-		}
-
-		core_assert(false, "Could not find a suitable memory type!", "");
-		return UINT32_MAX;
 	}
 
 	Reference<VulkanPhysicalDevice> VulkanPhysicalDevice::select() { return Reference<VulkanPhysicalDevice>::create(); }
@@ -227,7 +207,6 @@ namespace ForgottenEngine {
 		// Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
 		if (physical_device->is_extension_supported(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) {
 			device_exts.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
-			enable_debug_markers = true;
 		}
 
 		if (!device_exts.empty()) {

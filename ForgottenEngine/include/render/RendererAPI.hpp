@@ -2,6 +2,8 @@
 
 #include "Common.hpp"
 
+#include <ostream>
+
 namespace ForgottenEngine {
 
 	class RenderPass;
@@ -51,6 +53,7 @@ namespace ForgottenEngine {
 			core_assert(api == RendererAPIType::Vulkan, "Must be Vulkan for now.");
 			current_api = api;
 		}
+		friend std::ostream& operator<<(std::ostream& os, const RendererAPI& api);
 
 	private:
 		inline static RendererAPIType current_api = RendererAPIType::Vulkan;

@@ -28,7 +28,7 @@ namespace ForgottenEngine {
 		void set(const std::string& name, const glm::mat4& value) override;
 
 		void set(const std::string& name, const Reference<Texture2D>& texture) override;
-		void set(const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex) override;
+		void set(const std::string& name, const Reference<Texture2D>& texture, uint32_t array_index) override;
 		void set(const std::string& name, const Reference<TextureCube>& texture) override;
 		void set(const std::string& name, const Reference<Image2D>& image) override;
 
@@ -106,8 +106,8 @@ namespace ForgottenEngine {
 
 		Buffer get_uniform_storage_buffer() { return uniform_storage_buffer; }
 
-		void rt_update_for_rendering(
-			const std::vector<std::vector<VkWriteDescriptorSet>>& uniformBufferWriteDescriptors = std::vector<std::vector<VkWriteDescriptorSet>>());
+		void rt_update_for_rendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniform_buffer_write_descriptors
+			= std::vector<std::vector<VkWriteDescriptorSet>>());
 		void invalidate_descriptor_sets();
 
 		VkDescriptorSet get_descriptor_set(uint32_t index) const
@@ -120,7 +120,7 @@ namespace ForgottenEngine {
 		void allocate_storage();
 
 		void set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture);
-		void set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex);
+		void set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture, uint32_t array_index);
 		void set_vulkan_descriptor(const std::string& name, const Reference<TextureCube>& texture);
 		void set_vulkan_descriptor(const std::string& name, const Reference<Image2D>& image);
 

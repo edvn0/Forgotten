@@ -32,8 +32,6 @@ namespace ForgottenEngine {
 		[[nodiscard]] uint32_t get_size() const { return size; }
 		[[nodiscard]] uint32_t get_offset() const { return offset; }
 
-		static constexpr std::string_view uniform_type_to_string(ShaderUniformType type);
-
 		static void serialize(StreamWriter* serializer, const ShaderUniform& instance)
 		{
 			serializer->write_string(instance.name);

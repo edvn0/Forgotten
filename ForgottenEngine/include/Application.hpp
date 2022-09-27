@@ -45,6 +45,7 @@ namespace ForgottenEngine {
 		}
 
 		static inline Application& the() { return *instance; }
+		static std::string_view platform_name();
 		Window& get_window();
 		inline Layer* get_imgui_layer() { return stack.get_imgui_layer(); }
 		[[nodiscard]] inline float get_frametime() const { return frame_time; };

@@ -35,7 +35,6 @@ namespace ForgottenEngine {
 
 	struct RendererData {
 	public:
-		size_t* temp { nullptr };
 		Reference<ShaderLibrary> shader_library;
 		Reference<Texture2D> white_texture;
 		Reference<Texture2D> black_texture;
@@ -50,7 +49,6 @@ namespace ForgottenEngine {
 	std::unique_ptr<RendererAPI> renderer_api;
 
 	static RenderCommandQueue resource_free_queue[3];
-	static RenderCommandQueue* command_queue = nullptr;
 	static RendererConfig config;
 
 	static std::unique_ptr<RendererAPI> init_renderer_api()
@@ -73,9 +71,6 @@ namespace ForgottenEngine {
 	void Renderer::init()
 	{
 		CORE_DEBUG("Initializing renderer.");
-		command_queue = new RenderCommandQueue();
-
-		CORE_DEBUG("Initializing renderer API.");
 		renderer_api = init_renderer_api();
 
 		auto fif = Application::the().get_window().get_swapchain().get_image_count();
@@ -176,11 +171,9 @@ namespace ForgottenEngine {
 			auto& queue = Renderer::get_render_resource_free_queue(i);
 			queue.execute();
 		}
-
-		delete command_queue;
 	}
 
-	void Renderer::wait_and_render() { command_queue->execute(); }
+	void Renderer::wait_and_render() { command_queue().execute(); }
 
 	void Renderer::begin_frame() { renderer_api->begin_frame(); }
 
@@ -298,7 +291,16 @@ namespace ForgottenEngine {
 
 	RenderCommandQueue& Renderer::get_render_resource_free_queue(uint32_t index) { return resource_free_queue[index]; }
 
-	RenderCommandQueue& Renderer::get_render_command_queue() { return *command_queue; }
+	RenderCommandQueue& Renderer::command_queue()
+	{
+		static RenderCommandQueue* cmd;
+
+		if (!cmd) {
+			cmd = new RenderCommandQueue();
+		}
+
+		return *cmd;
+	}
 
 	RendererConfig& Renderer::get_config() { return config; }
 

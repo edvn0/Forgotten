@@ -26,14 +26,13 @@ namespace ForgottenEngine {
 
 		template <typename T> T* map_memory(VmaAllocation allocation)
 		{
-			T* mappedMemory;
-			vmaMapMemory(VulkanAllocator::get_vma_allocator(), allocation, (void**)&mappedMemory);
-			return mappedMemory;
+			T* mapped_memory;
+			vmaMapMemory(VulkanAllocator::get_vma_allocator(), allocation, (void**)&mapped_memory);
+			return mapped_memory;
 		}
 
 		void unmap_memory(VmaAllocation allocation);
 
-		static void init(Reference<VulkanDevice> device);
 		static void shutdown();
 
 		static VmaAllocator& get_vma_allocator();

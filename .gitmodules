@@ -49,3 +49,6 @@
 [submodule "ForgottenEngine/vendor/freetype"]
 	path = ForgottenEngine/vendor/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "ForgottenEngine/vendor/magic_enum"]
+	path = ForgottenEngine/vendor/magic-enum
+	url = https://github.com/edvn0/magic_enum.git

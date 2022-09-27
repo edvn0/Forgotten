@@ -334,25 +334,23 @@ namespace ForgottenEngine {
 
 		physical_device = VulkanPhysicalDevice::select();
 
-		VkPhysicalDeviceFeatures enabledFeatures {};
-		enabledFeatures.samplerAnisotropy = true;
-		enabledFeatures.fillModeNonSolid = true;
-		enabledFeatures.independentBlend = true;
+		VkPhysicalDeviceFeatures enabled_features {};
+		enabled_features.samplerAnisotropy = true;
+		enabled_features.fillModeNonSolid = true;
+		enabled_features.independentBlend = true;
 
 #ifdef FORGOTTEN_WINDOWS
 		enabledFeatures.pipelineStatisticsQuery = true;
 		enabledFeatures.wideLines = true;
 #endif
 
-		device = Reference<VulkanDevice>::create(physical_device, enabledFeatures);
-
-		VulkanAllocator::init(device);
+		device = Reference<VulkanDevice>::create(physical_device, enabled_features);
 
 		// Pipeline Cache
-		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		VkPipelineCacheCreateInfo pipeline_cache_create_info = {};
+		pipeline_cache_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		auto vulkan_device = device->get_vulkan_device();
-		vk_check(vkCreatePipelineCache(vulkan_device, &pipelineCacheCreateInfo, nullptr, &pipeline_cache));
+		vk_check(vkCreatePipelineCache(vulkan_device, &pipeline_cache_create_info, nullptr, &pipeline_cache));
 	}
 
 	VulkanContext::~VulkanContext()

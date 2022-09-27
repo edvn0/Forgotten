@@ -13,7 +13,7 @@ namespace ForgottenEngine {
 
 		virtual ~VulkanVertexBuffer() override;
 
-		virtual void set_data(void* buffer, uint32_t size, uint32_t offset = 0) override;
+		virtual void set_data(void* buffer, uint32_t in_size, uint32_t offset = 0) override;
 		virtual void rt_set_data(void* buffer, uint32_t size, uint32_t offset = 0) override;
 		virtual void bind() const override { }
 

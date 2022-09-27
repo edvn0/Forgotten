@@ -83,7 +83,7 @@ namespace ForgottenEngine {
 		: shader_source_path(shader_source_path)
 		, disable_optimization(disable_optim)
 	{
-		language = ShaderUtils::ShaderLangFromExtension(shader_source_path.extension().string());
+		language = ShaderUtils::shader_lang_from_extension(shader_source_path.extension().string());
 	}
 
 	bool VulkanShaderCompiler::reload(bool force_compile)
@@ -98,16 +98,16 @@ namespace ForgottenEngine {
 		core_verify(source.size(), "Failed to load shader!");
 
 		shader_source = pre_process(source);
-		const VkShaderStageFlagBits changedStages = VulkanShaderCache::has_changed(this);
+		const VkShaderStageFlagBits changed_stages = VulkanShaderCache::has_changed(this);
 
-		bool compile_success = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changedStages, force_compile);
+		bool compile_success = compile_or_get_vulkan_binaries(spirv_debug_data, spirv_data, changed_stages, force_compile);
 		if (!compile_success) {
 			core_assert_bool(false);
 			return false;
 		}
 
 		// Reflection
-		if (force_compile || changedStages || !try_read_cached_reflection_data()) {
+		if (force_compile || changed_stages || !try_read_cached_reflection_data()) {
 			reflect_all_shader_stages(spirv_debug_data);
 			serialize_reflection_data();
 		}
@@ -164,7 +164,7 @@ namespace ForgottenEngine {
 			const auto fp = Assets::c_str(shader_source_path);
 
 			PreprocessorOptions preprocessor_options
-				= { .source = shader_source, .stage = ShaderUtils::ShaderStageToShaderC(stage), .file_path = fp, .options = options };
+				= { .source = shader_source, .stage = ShaderUtils::shader_stage_to_shader_c(stage), .file_path = fp, .options = options };
 
 			const auto result = compiler.PreprocessGlsl(
 				preprocessor_options.source, preprocessor_options.stage, preprocessor_options.file_path, preprocessor_options.options);
@@ -206,7 +206,7 @@ namespace ForgottenEngine {
 
 			// compile shader
 			const shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(
-				stage_source, ShaderUtils::ShaderStageToShaderC(stage), shader_source_path.string().c_str(), shader_c_options);
+				stage_source, ShaderUtils::shader_stage_to_shader_c(stage), shader_source_path.string().c_str(), shader_c_options);
 
 			if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				return fmt::format("\n{}While compiling shader file: {} \nAt stage: {}", module.GetErrorMessage(), shader_source_path.string(),
@@ -275,18 +275,18 @@ namespace ForgottenEngine {
 	}
 
 	bool VulkanShaderCompiler::compile_or_get_vulkan_binary(
-		VkShaderStageFlagBits stage, std::vector<uint32_t>& outputBinary, bool debug, VkShaderStageFlagBits changedStages, bool force_compile)
+		VkShaderStageFlagBits stage, std::vector<uint32_t>& output_binary, bool debug, VkShaderStageFlagBits changed_stages, bool force_compile)
 	{
 		const std::filesystem::path cache_dir = Utils::get_cache_directory();
 
 		// compile shader with debug info so we can reflect
-		const auto extension = ShaderUtils::ShaderStageCachedFileExtension(stage, debug);
-		if (!force_compile && stage & ~changedStages) // Per-stage cache is found and is unchanged
+		const auto extension = ShaderUtils::shader_stage_cached_file_extension(stage, debug);
+		if (!force_compile && stage & ~changed_stages) // Per-stage cache is found and is unchanged
 		{
-			try_get_vulkan_cached_binary(cache_dir, extension, outputBinary);
+			try_get_vulkan_cached_binary(cache_dir, extension, output_binary);
 		}
 
-		if (outputBinary.empty()) {
+		if (output_binary.empty()) {
 			CompilationOptions options;
 			if (debug) {
 				options.GenerateDebugInfo = true;
@@ -297,10 +297,10 @@ namespace ForgottenEngine {
 				options.Optimize = !disable_optimization && stage != VK_SHADER_STAGE_COMPUTE_BIT;
 			}
 
-			if (std::string error = compile(outputBinary, stage, options); error.size()) {
+			if (std::string error = compile(output_binary, stage, options); error.size()) {
 				CORE_ERROR("Renderer {}", error);
-				try_get_vulkan_cached_binary(cache_dir, extension, outputBinary);
-				if (outputBinary.empty()) {
+				try_get_vulkan_cached_binary(cache_dir, extension, output_binary);
+				if (output_binary.empty()) {
 					CORE_ERROR("Failed to compile shader and couldn't find a cached version.");
 				} else {
 					CORE_ERROR("Failed to compile {}:{} so a cached version was loaded instead.", shader_source_path.string(),
@@ -315,7 +315,7 @@ namespace ForgottenEngine {
 				FILE* f = fopen(cachedFilePath.c_str(), "wb");
 				if (!f)
 					core_assert(false, "Failed to cache shader binary!");
-				fwrite(outputBinary.data(), sizeof(uint32_t), outputBinary.size(), f);
+				fwrite(output_binary.data(), sizeof(uint32_t), output_binary.size(), f);
 				fclose(f);
 			}
 		}

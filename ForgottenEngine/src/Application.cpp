@@ -143,4 +143,17 @@ namespace ForgottenEngine {
 
 	void Application::process_events() { window->process_events(); }
 
+	std::string_view Application::platform_name()
+	{
+#ifdef FORGOTTEN_MACOS
+		return "MacOS";
+#elif defined(FORGOTTEN_WINDOWS)
+		return "Windows";
+#elif defined(FORGOTTEN_LINUX)
+		return "Linux";
+#else
+#error "No supported platform"
+#endif
+	}
+
 } // namespace ForgottenEngine

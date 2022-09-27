@@ -18,7 +18,7 @@ namespace ForgottenEngine {
 
 	static bool is_glfw_initialized = false;
 
-	Window* Window::create(const ApplicationProperties& props) { return new MacOSWindow(props); };
+	Window* Window::create(const ApplicationProperties& props) { return new MacOSWindow(props); }
 
 	MacOSWindow::MacOSWindow(ApplicationProperties props)
 		: props(std::move(props)) {};
@@ -205,5 +205,7 @@ namespace ForgottenEngine {
 	}
 
 	void MacOSWindow::process_events() { glfwPollEvents(); }
+
+	void MacOSWindow::set_title(const std::string new_title) { glfwSetWindowTitle(glfw_window, new_title.data()); }
 
 } // namespace ForgottenEngine

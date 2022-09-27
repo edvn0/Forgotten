@@ -34,15 +34,15 @@ namespace ForgottenEngine {
 
 		Renderer::register_shader_dependency(material_shader, this);
 
-		auto vulkanMaterial = material.as<VulkanMaterial>();
-		uniform_storage_buffer = Buffer::copy(vulkanMaterial->uniform_storage_buffer.data, vulkanMaterial->uniform_storage_buffer.size);
+		auto vulkan_material = material.as<VulkanMaterial>();
+		uniform_storage_buffer = Buffer::copy(vulkan_material->uniform_storage_buffer.data, vulkan_material->uniform_storage_buffer.size);
 
-		resident_descriptors = vulkanMaterial->resident_descriptors;
-		resident_descriptors_array = vulkanMaterial->resident_descriptors_array;
-		pending_descriptors = vulkanMaterial->pending_descriptors;
-		material_textures = vulkanMaterial->material_textures;
-		texture_arrays = vulkanMaterial->texture_arrays;
-		images = vulkanMaterial->images;
+		resident_descriptors = vulkan_material->resident_descriptors;
+		resident_descriptors_array = vulkan_material->resident_descriptors_array;
+		pending_descriptors = vulkan_material->pending_descriptors;
+		material_textures = vulkan_material->material_textures;
+		texture_arrays = vulkan_material->texture_arrays;
+		images = vulkan_material->images;
 	}
 
 	VulkanMaterial::~VulkanMaterial() { uniform_storage_buffer.release(); }
@@ -59,11 +59,10 @@ namespace ForgottenEngine {
 
 	void VulkanMaterial::invalidate()
 	{
-		uint32_t framesInFlight = Renderer::get_config().frames_in_flight;
 		auto shader = material_shader.as<VulkanShader>();
 		if (shader->has_descriptor_set(0)) {
-			const auto& shaderDescriptorSets = shader->get_shader_descriptor_sets();
-			if (!shaderDescriptorSets.empty()) {
+			const auto& shader_descriptor_sets = shader->get_shader_descriptor_sets();
+			if (!shader_descriptor_sets.empty()) {
 				for (auto&& [binding, descriptor] : resident_descriptors)
 					pending_descriptors.push_back(descriptor);
 			}
@@ -72,11 +71,11 @@ namespace ForgottenEngine {
 
 	void VulkanMaterial::allocate_storage()
 	{
-		const auto& shaderBuffers = material_shader->get_shader_buffers();
+		const auto& shader_buffers = material_shader->get_shader_buffers();
 
-		if (shaderBuffers.size() > 0) {
+		if (shader_buffers.size() > 0) {
 			uint32_t size = 0;
-			for (auto [name, shaderBuffer] : shaderBuffers)
+			for (auto [name, shaderBuffer] : shader_buffers)
 				size += shaderBuffer.Size;
 
 			uniform_storage_buffer.allocate(size);
@@ -86,18 +85,18 @@ namespace ForgottenEngine {
 
 	void VulkanMaterial::on_shader_reloaded()
 	{
-		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptor>> newDescriptors;
-		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptorArray>> newDescriptorArrays;
+		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptor>> new_descriptors;
+		std::unordered_map<uint32_t, std::shared_ptr<PendingDescriptorArray>> new_descriptor_arrays;
 		for (auto [name, resource] : material_shader->get_resources()) {
 			const uint32_t binding = resource.get_register();
 
 			if (resident_descriptors.find(binding) != resident_descriptors.end())
-				newDescriptors[binding] = std::move(resident_descriptors.at(binding));
+				new_descriptors[binding] = std::move(resident_descriptors.at(binding));
 			else if (resident_descriptors_array.find(binding) != resident_descriptors_array.end())
-				newDescriptorArrays[binding] = std::move(resident_descriptors_array.at(binding));
+				new_descriptor_arrays[binding] = std::move(resident_descriptors_array.at(binding));
 		}
-		resident_descriptors = std::move(newDescriptors);
-		resident_descriptors_array = std::move(newDescriptorArrays);
+		resident_descriptors = std::move(new_descriptors);
+		resident_descriptors_array = std::move(new_descriptor_arrays);
 
 		invalidate();
 		invalidate_descriptor_sets();
@@ -105,12 +104,12 @@ namespace ForgottenEngine {
 
 	const ShaderUniform* VulkanMaterial::find_uniform_declaration(const std::string& name)
 	{
-		const auto& shaderBuffers = material_shader->get_shader_buffers();
+		const auto& shader_buffers = material_shader->get_shader_buffers();
 
-		core_assert(shaderBuffers.size() <= 1, "We currently only support ONE material buffer!", "");
+		core_assert(shader_buffers.size() <= 1, "We currently only support ONE material buffer!");
 
-		if (shaderBuffers.size() > 0) {
-			const ShaderBuffer& buffer = (*shaderBuffers.begin()).second;
+		if (shader_buffers.size() > 0) {
+			const ShaderBuffer& buffer = (*shader_buffers.begin()).second;
 			if (buffer.Uniforms.find(name) == buffer.Uniforms.end())
 				return nullptr;
 
@@ -154,24 +153,24 @@ namespace ForgottenEngine {
 		invalidate_descriptor_sets();
 	}
 
-	void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex)
+	void VulkanMaterial::set_vulkan_descriptor(const std::string& name, const Reference<Texture2D>& texture, uint32_t array_index)
 	{
 		const ShaderResourceDeclaration* resource = find_resource_declaration(name);
 		core_assert_bool(resource);
 
 		uint32_t binding = resource->get_register();
 		// Texture is already set
-		if (binding < texture_arrays.size() && texture_arrays[binding].size() < arrayIndex
-			&& texture->get_hash() == texture_arrays[binding][arrayIndex]->get_hash())
+		if (binding < texture_arrays.size() && texture_arrays[binding].size() < array_index
+			&& texture->get_hash() == texture_arrays[binding][array_index]->get_hash())
 			return;
 
 		if (binding >= texture_arrays.size())
 			texture_arrays.resize(binding + 1);
 
-		if (arrayIndex >= texture_arrays[binding].size())
-			texture_arrays[binding].resize(arrayIndex + 1);
+		if (array_index >= texture_arrays[binding].size())
+			texture_arrays[binding].resize(array_index + 1);
 
-		texture_arrays[binding][arrayIndex] = texture;
+		texture_arrays[binding][array_index] = texture;
 
 		const VkWriteDescriptorSet* wds = material_shader.as<VulkanShader>()->get_descriptor_set(name);
 		core_assert_bool(wds);
@@ -180,11 +179,11 @@ namespace ForgottenEngine {
 				= std::make_shared<PendingDescriptorArray>(PendingDescriptorArray { PendingDescriptorType::Texture2D, *wds, {}, {}, {} });
 		}
 
-		auto& residentDesriptorArray = resident_descriptors_array.at(binding);
-		if (arrayIndex >= residentDesriptorArray->textures.size())
-			residentDesriptorArray->textures.resize(arrayIndex + 1);
+		auto& resident_descriptor_array = resident_descriptors_array.at(binding);
+		if (array_index >= resident_descriptor_array->textures.size())
+			resident_descriptor_array->textures.resize(array_index + 1);
 
-		residentDesriptorArray->textures[arrayIndex] = texture;
+		resident_descriptor_array->textures[array_index] = texture;
 
 		// pending_descriptors.push_back(resident_descriptors.at(binding));
 
@@ -225,8 +224,6 @@ namespace ForgottenEngine {
 		core_verify(resource, "Could not find resource with name {1} declared in shader {0}.", this->material_shader->get_name(), name);
 
 		uint32_t binding = resource->get_register();
-		// Image is already set
-		// TODO(Karim): Shouldn't need to check resident descriptors..
 		if (binding < images.size() && images[binding] && resident_descriptors.find(binding) != resident_descriptors.end())
 			return;
 
@@ -273,9 +270,9 @@ namespace ForgottenEngine {
 
 	void VulkanMaterial::set(const std::string& name, const Reference<Texture2D>& texture) { set_vulkan_descriptor(name, texture); }
 
-	void VulkanMaterial::set(const std::string& name, const Reference<Texture2D>& texture, uint32_t arrayIndex)
+	void VulkanMaterial::set(const std::string& name, const Reference<Texture2D>& texture, uint32_t array_index)
 	{
-		set_vulkan_descriptor(name, texture, arrayIndex);
+		set_vulkan_descriptor(name, texture, array_index);
 	}
 
 	void VulkanMaterial::set(const std::string& name, const Reference<TextureCube>& texture) { set_vulkan_descriptor(name, texture); }
@@ -308,9 +305,9 @@ namespace ForgottenEngine {
 
 	Reference<TextureCube> VulkanMaterial::try_get_texture_cube(const std::string& name) { return try_get_resource<TextureCube>(name); }
 
-	void VulkanMaterial::rt_update_for_rendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniformBufferWriteDescriptors)
+	void VulkanMaterial::rt_update_for_rendering(const std::vector<std::vector<VkWriteDescriptorSet>>& uniform_buffer_write_descriptors)
 	{
-		auto vulkanDevice = VulkanContext::get_current_device()->get_vulkan_device();
+		auto vulkan_device = VulkanContext::get_current_device()->get_vulkan_device();
 		for (auto&& [binding, descriptor] : resident_descriptors) {
 			if (descriptor->type == PendingDescriptorType::Image2D) {
 				Reference<VulkanImage2D> image = descriptor->image.as<VulkanImage2D>();
@@ -324,18 +321,16 @@ namespace ForgottenEngine {
 			}
 		}
 
-		std::vector<VkDescriptorImageInfo> arrayImageInfos;
+		std::vector<VkDescriptorImageInfo> array_image_infos;
 
-		uint32_t frameIndex = Renderer::get_current_frame_index();
-		// NOTE(Yan): we can't cache the results atm because we might render the same material in different viewports,
-		//            and so we can't bind to the same uniform buffers
-		if (dirty_descriptor_sets[frameIndex] || true) {
-			dirty_descriptor_sets[frameIndex] = false;
-			write_descriptors[frameIndex].clear();
+		uint32_t frame_index = Renderer::get_current_frame_index();
+		if (dirty_descriptor_sets[frame_index] || true) {
+			dirty_descriptor_sets[frame_index] = false;
+			write_descriptors[frame_index].clear();
 
-			if (!uniformBufferWriteDescriptors.empty()) {
-				for (auto& wd : uniformBufferWriteDescriptors[frameIndex])
-					write_descriptors[frameIndex].push_back(wd);
+			if (!uniform_buffer_write_descriptors.empty()) {
+				for (auto& wd : uniform_buffer_write_descriptors[frame_index])
+					write_descriptors[frame_index].push_back(wd);
 			}
 
 			for (auto&& [binding, pd] : resident_descriptors) {
@@ -353,7 +348,7 @@ namespace ForgottenEngine {
 					pd->wds.pImageInfo = &pd->image_info;
 				}
 
-				write_descriptors[frameIndex].push_back(pd->wds);
+				write_descriptors[frame_index].push_back(pd->wds);
 			}
 
 			for (auto&& [binding, pd] : resident_descriptors_array) {
@@ -361,30 +356,30 @@ namespace ForgottenEngine {
 					for (const auto& tex : pd->textures) {
 						if (tex) {
 							Reference<VulkanTexture2D> texture = tex.as<VulkanTexture2D>();
-							arrayImageInfos.emplace_back(texture->get_vulkan_descriptor_info());
+							array_image_infos.emplace_back(texture->get_vulkan_descriptor_info());
 						}
 					}
 				}
-				pd->wds.pImageInfo = arrayImageInfos.data();
-				pd->wds.descriptorCount = (uint32_t)arrayImageInfos.size();
-				write_descriptors[frameIndex].push_back(pd->wds);
+				pd->wds.pImageInfo = array_image_infos.data();
+				pd->wds.descriptorCount = (uint32_t)array_image_infos.size();
+				write_descriptors[frame_index].push_back(pd->wds);
 			}
 		}
 
-		auto vulkanShader = material_shader.as<VulkanShader>();
-		auto descriptorSet = vulkanShader->allocate_descriptor_set(0);
-		descriptor_sets[frameIndex] = descriptorSet;
-		for (auto& writeDescriptor : write_descriptors[frameIndex])
-			writeDescriptor.dstSet = descriptorSet.descriptor_sets[0];
+		auto vulkan_shader = material_shader.as<VulkanShader>();
+		auto descriptor_set = vulkan_shader->allocate_descriptor_set(0);
+		descriptor_sets[frame_index] = descriptor_set;
+		for (auto& write_descriptor : write_descriptors[frame_index])
+			write_descriptor.dstSet = descriptor_set.descriptor_sets[0];
 
-		vkUpdateDescriptorSets(vulkanDevice, (uint32_t)write_descriptors[frameIndex].size(), write_descriptors[frameIndex].data(), 0, nullptr);
+		vkUpdateDescriptorSets(vulkan_device, (uint32_t)write_descriptors[frame_index].size(), write_descriptors[frame_index].data(), 0, nullptr);
 		pending_descriptors.clear();
 	}
 
 	void VulkanMaterial::invalidate_descriptor_sets()
 	{
-		const uint32_t framesInFlight = Renderer::get_config().frames_in_flight;
-		for (uint32_t i = 0; i < framesInFlight; i++)
+		const uint32_t frames_in_flight = Renderer::get_config().frames_in_flight;
+		for (uint32_t i = 0; i < frames_in_flight; i++)
 			dirty_descriptor_sets[i] = true;
 	}
 

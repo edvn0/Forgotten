@@ -27,6 +27,7 @@ namespace ForgottenEngine {
 		bool is_vsync() override;
 		void resize_window(float w, float h) const override;
 		void resize_framebuffer(int w, int h) const override;
+		void set_title(const std::string new_title) override;
 
 		[[nodiscard]] inline void* get_natively() const override { return glfw_window; };
 
